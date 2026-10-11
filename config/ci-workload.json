@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "platform": "linux",
+  "required_platforms": [
+    "linux"
+  ],
+  "target_branch": "main",
+  "unsupported_requirements": [
+    "GitHub PR dependency-review action at moderate severity requires native GitHub control-plane acceptance; Linux build-plugin success is not the complete PR gate."
+  ],
+  "artifacts": [
+    "release"
+  ],
+  "repository": "fsafey/atlas-vtt",
+  "checks": [
+    {
+      "name": "toolchain",
+      "command": "test \"$(node --version | cut -d. -f1)\" = v22\ncommand -v npm\ncommand -v uv"
+    },
+    {
+      "name": "npm-install",
+      "command": "npm ci"
+    },
+    {
+      "name": "typecheck",
+      "command": "npx tsc --noEmit"
+    },
+    {
+      "name": "lint",
+      "command": "npm run lint"
+    },
+    {
+      "name": "community-scan",
+      "command": "npm run lint:scan"
+    },
+    {
+      "name": "release-channel",
+      "command": "node scripts/release-channel.js --branch \"$CI_EVENT_BRANCH\""
+    },
+    {
+      "name": "changelog",
+      "command": "npm run changelog:check"
+    },
+    {
+      "name": "reporter-tests",
+      "command": "uv run --no-project python -m unittest discover -s services/issue-reporter"
+    },
+    {
+      "name": "vitest",
+      "command": "npx vitest run"
+    },
+    {
+      "name": "build",
+      "command": "npm run build:ci"
+    },
+    {
+      "name": "postbuild",
+      "command": "npm run postbuild"
+    },
+    {
+      "name": "preflight",
+      "command": "npm run preflight"
+    },
+    {
+      "name": "release-prepare",
+      "command": "npm run release:prepare"
+    }
+  ]
+}
