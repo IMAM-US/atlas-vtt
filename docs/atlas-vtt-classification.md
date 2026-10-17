@@ -1,6 +1,6 @@
 # Atlas VTT classification
 
-Status: initial classification. Evaluation and translation to agent workflows have not begun.
+Status: initial feature classification. Agent-workspace exploration is tracked in the [working document](agent-workspace/WORKING.md); the table below remains the original README-based inventory.
 
 ## Method
 
