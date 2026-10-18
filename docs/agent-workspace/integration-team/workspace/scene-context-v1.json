@@ -1,0 +1,233 @@
+{
+  "capturedAt": "2026-10-18T01:28:13.036637+00:00",
+  "suppliedBy": "external Codex coordinator",
+  "supplyMode": "Explicit read-only file snapshot of native scene saved by Atlas; no subscription",
+  "nativeVisualVerification": "pending: native view/store opened; compositor currently shows an older frame after plugin reload",
+  "vault": "/Users/farieds/Project/atlas-agent-workspace-review",
+  "scenePath": "/Users/farieds/Project/atlas-agent-workspace-review/atlas-vtt/collections/Default/scenes/Atlas OpenRig integration workspace.atlasmap",
+  "sceneSha256": "0d65fdedd1a5d4cc2cb714df77cbae174583308f59f66456e1a56033ab2758d2",
+  "sceneMeaning": "Atlas/OpenRig integration project, exploratory authored meaning",
+  "objects": {
+    "tokens": {
+      "tok_recording_0": {
+        "id": "tok_recording_0",
+        "kind": "token",
+        "x": 350,
+        "y": 280,
+        "imagePath": "",
+        "showRing": true,
+        "ringColor": "#60a5fa",
+        "size": 1.5,
+        "hasVision": false,
+        "recordingReference": {
+          "recordingId": "atlas-openrig-integration-m1",
+          "sourceRevision": "integration-milestone-1",
+          "kind": "seat",
+          "id": "01M569M8QKR9085ZDEG6CFHVVN"
+        }
+      },
+      "tok_recording_1": {
+        "id": "tok_recording_1",
+        "kind": "token",
+        "x": 1050,
+        "y": 280,
+        "imagePath": "",
+        "showRing": true,
+        "ringColor": "#c084fc",
+        "size": 1.5,
+        "hasVision": false,
+        "recordingReference": {
+          "recordingId": "atlas-openrig-integration-m1",
+          "sourceRevision": "integration-milestone-1",
+          "kind": "seat",
+          "id": "01M569MJ4HHP75EEKF6AEWWM98"
+        }
+      }
+    },
+    "texts": {
+      "text_recording_seat_0": {
+        "id": "text_recording_seat_0",
+        "kind": "text",
+        "text": "Atlas representative",
+        "x": 350,
+        "y": 390,
+        "width": 540,
+        "fontSize": 21,
+        "fontFamily": "sans-serif",
+        "color": "#e8edf6",
+        "backgroundColor": "#202b40",
+        "padding": 20,
+        "borderRadius": 12,
+        "recordingReference": {
+          "recordingId": "atlas-openrig-integration-m1",
+          "sourceRevision": "integration-milestone-1",
+          "kind": "seat",
+          "id": "01M569M8QKR9085ZDEG6CFHVVN"
+        }
+      },
+      "text_recording_seat_1": {
+        "id": "text_recording_seat_1",
+        "kind": "text",
+        "text": "OpenRig representative",
+        "x": 1050,
+        "y": 390,
+        "width": 540,
+        "fontSize": 21,
+        "fontFamily": "sans-serif",
+        "color": "#e8edf6",
+        "backgroundColor": "#202b40",
+        "padding": 20,
+        "borderRadius": 12,
+        "recordingReference": {
+          "recordingId": "atlas-openrig-integration-m1",
+          "sourceRevision": "integration-milestone-1",
+          "kind": "seat",
+          "id": "01M569MJ4HHP75EEKF6AEWWM98"
+        }
+      },
+      "text_recording_work_0": {
+        "id": "text_recording_work_0",
+        "kind": "text",
+        "text": "Joint mapping and implementation slice",
+        "x": 350,
+        "y": 490,
+        "width": 540,
+        "fontSize": 21,
+        "fontFamily": "sans-serif",
+        "color": "#e8edf6",
+        "backgroundColor": "#202b40",
+        "padding": 20,
+        "borderRadius": 12,
+        "recordingReference": {
+          "recordingId": "atlas-openrig-integration-m1",
+          "sourceRevision": "integration-milestone-1",
+          "kind": "work",
+          "id": "atlas-integration-mapping-20261018"
+        }
+      },
+      "text_recording_artifact_0": {
+        "id": "text_recording_artifact_0",
+        "kind": "text",
+        "text": "Mapping proposal",
+        "x": 350,
+        "y": 980,
+        "width": 540,
+        "fontSize": 21,
+        "fontFamily": "sans-serif",
+        "color": "#e8edf6",
+        "backgroundColor": "#202b40",
+        "padding": 20,
+        "borderRadius": 12,
+        "recordingReference": {
+          "recordingId": "atlas-openrig-integration-m1",
+          "sourceRevision": "integration-milestone-1",
+          "kind": "artifact",
+          "id": "mapping-proposal"
+        }
+      },
+      "text_recording_artifact_1": {
+        "id": "text_recording_artifact_1",
+        "kind": "text",
+        "text": "Mapping review",
+        "x": 1050,
+        "y": 980,
+        "width": 540,
+        "fontSize": 21,
+        "fontFamily": "sans-serif",
+        "color": "#e8edf6",
+        "backgroundColor": "#202b40",
+        "padding": 20,
+        "borderRadius": 12,
+        "recordingReference": {
+          "recordingId": "atlas-openrig-integration-m1",
+          "sourceRevision": "integration-milestone-1",
+          "kind": "artifact",
+          "id": "mapping-review"
+        }
+      },
+      "text_recording_intro": {
+        "id": "text_recording_intro",
+        "kind": "text",
+        "text": "Atlas OpenRig integration workspace\nArrange tokens and cards, edit labels, or add your own annotations.\nSelect a referenced object to inspect the historical evidence.",
+        "x": 700,
+        "y": 100,
+        "width": 1160,
+        "fontSize": 21,
+        "fontFamily": "sans-serif",
+        "color": "#e8edf6",
+        "backgroundColor": "#202b40",
+        "padding": 20,
+        "borderRadius": 12
+      },
+      "text_integration_context_0": {
+        "id": "text_integration_context_0",
+        "kind": "text",
+        "text": "Atlas repository\nScene objects, editing and history",
+        "x": 350,
+        "y": 720,
+        "width": 540,
+        "fontSize": 21,
+        "fontFamily": "sans-serif",
+        "color": "#e8edf6",
+        "backgroundColor": "#202b40",
+        "padding": 20,
+        "borderRadius": 12
+      },
+      "text_integration_context_1": {
+        "id": "text_integration_context_1",
+        "kind": "text",
+        "text": "OpenRig repository\nSeats, owned work and continuity",
+        "x": 1050,
+        "y": 720,
+        "width": 540,
+        "fontSize": 21,
+        "fontFamily": "sans-serif",
+        "color": "#e8edf6",
+        "backgroundColor": "#202b40",
+        "padding": 20,
+        "borderRadius": 12
+      }
+    },
+    "fog": {},
+    "pins": {
+      "pin_integration_entry": {
+        "id": "pin_integration_entry",
+        "kind": "pin",
+        "x": 700,
+        "y": 1200,
+        "notePath": "Integration workspace/Start here.md",
+        "icon": "book-open"
+      },
+      "pin_integration_atlas": {
+        "id": "pin_integration_atlas",
+        "kind": "pin",
+        "x": 350,
+        "y": 830,
+        "notePath": "Integration workspace/Atlas repository.md",
+        "icon": "file-text"
+      },
+      "pin_integration_openrig": {
+        "id": "pin_integration_openrig",
+        "kind": "pin",
+        "x": 1050,
+        "y": 830,
+        "notePath": "Integration workspace/OpenRig repository.md",
+        "icon": "file-text"
+      }
+    },
+    "drawings": {},
+    "walls": {},
+    "lights": {}
+  },
+  "notes": {
+    "OpenRig repository.md": "# OpenRig repository\n\nRepository: /Users/farieds/Project/openrig\nRepresentative: openrig-representative@atlas-integration\nStable OpenRig seat: 01M569MJ4HHP75EEKF6AEWWM98\n\nOwns accurate seat, native conversation, session, generation, queue, handoff and acceptance semantics. The source checkout and installed 0.6.10 runtime are distinct. Topology and placement do not grant permission. See [[Start here]].\n",
+    "Atlas repository.md": "# Atlas repository\n\nRepository: /Users/farieds/Project/atlas-vtt\nAssigned implementation worktree: /Users/farieds/Project/atlas-recorded-agent-scene\nRepresentative: atlas-representative@atlas-integration\nStable OpenRig seat: 01M569M8QKR9085ZDEG6CFHVVN\n\nOwns the fit with existing scene objects, asset-versus-placement identity, linked notes, selection, view lifecycle, persistence and undo. The coordinator owns shared code, scene mediation, native verification and delivery. See [[Start here]].\n",
+    "Start here.md": "# Atlas OpenRig integration workspace\n\nThis editable scene represents the project building the Atlas/OpenRig integration. It is authored spatial context, not a live operational console.\n\n- [[Atlas repository]]: objects, editing, persistence and undo.\n- [[OpenRig repository]]: seats, sessions and owned work.\n- Two plain tokens refer to the persistent repository representatives. Duplicating a token creates another representation of the same seat.\n- Select a referenced token or text card to inspect recorded identity, work and evidence. Checkpoints change only the inspector.\n- Move objects, edit text and add annotations with normal Atlas tools. Save/reopen preserves spatial state; undo affects supported local edits only.\n\nDefinitions and orientation: /Users/farieds/Project/atlas-openrig-integration-workspace/workspace/ENTRY.md\nJoint obligation: atlas-integration-mapping-20261018\nAgent-authored proposal and review: /Users/farieds/Project/atlas-openrig-integration-workspace/artifacts/\n\nAgents receive an explicit, timestamped snapshot exported by the coordinator. They do not subscribe to this scene. Placement and relationships may become useful context later, but have no execution or authorization effect in this milestone.\n"
+  },
+  "jointObligation": "atlas-integration-mapping-20261018",
+  "authority": {
+    "spatial": "Atlas objects, placement, annotations, selection, persistence, undo",
+    "operational": "OpenRig actual seats/sessions/generations/queue",
+    "proposed": "Future context/coordination meanings of placement and relationships remain undecided"
+  }
+}

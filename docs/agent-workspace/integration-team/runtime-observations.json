@@ -1,0 +1,86 @@
+{
+  "capturedAt": "2026-10-18T01:45:34.513121+00:00",
+  "models": {
+    "atlas": {
+      "path": "/Users/farieds/.codex/sessions/2026/10/17/rollout-2026-10-17T20-22-14-01a14c9a-2d0d-7cf0-a94f-6a0f5359e0ff.jsonl",
+      "field": "turn_context.payload.model",
+      "models": [
+        "gpt-6.1-sol"
+      ],
+      "recordCount": 6,
+      "firstAt": "2026-10-18T01:22:22.336Z",
+      "lastAt": "2026-10-18T01:43:59.119Z"
+    },
+    "openrig": {
+      "path": "/Users/farieds/.claude/projects/-Users-farieds-Project-atlas-openrig-integration-workspace/c4128f1e-1dc6-4d6d-a2a7-8790fcc15d17.jsonl",
+      "field": "assistant.message.model",
+      "models": [
+        "claude-opus-5-5"
+      ],
+      "recordCount": 96,
+      "firstAt": "2026-10-18T01:22:36.752Z",
+      "lastAt": "2026-10-18T01:45:03.774Z"
+    }
+  },
+  "sessions": [
+    {
+      "id": "01M569M8SE0RM5TBTW44EW6NSX",
+      "node_id": "01M569M8QKR9085ZDEG6CFHVVN",
+      "session_name": "atlas-representative@atlas-integration",
+      "status": "running",
+      "created_at": "2026-10-18 01:22:12",
+      "resume_type": "codex_id",
+      "resume_token": "01a14c9a-2d0d-7cf0-a94f-6a0f5359e0ff",
+      "resume_last_verified": "2026-10-18 01:42:38",
+      "resume_last_probe_status": "resumable"
+    },
+    {
+      "id": "01M569MJ5H8FBXWBPKDKX8TBHJ",
+      "node_id": "01M569MJ4HHP75EEKF6AEWWM98",
+      "session_name": "openrig-representative@atlas-integration",
+      "status": "exited",
+      "created_at": "2026-10-18 01:22:22",
+      "resume_type": "claude_id",
+      "resume_token": "c4128f1e-1dc6-4d6d-a2a7-8790fcc15d17",
+      "resume_last_verified": "2026-10-18 01:30:09",
+      "resume_last_probe_status": "resumable"
+    },
+    {
+      "id": "01M56A350J860NM9D9SVNCGZBQ",
+      "node_id": "01M569MJ4HHP75EEKF6AEWWM98",
+      "session_name": "openrig-representative@atlas-integration",
+      "status": "running",
+      "created_at": "2026-10-18 01:30:20",
+      "resume_type": "claude_id",
+      "resume_token": "c4128f1e-1dc6-4d6d-a2a7-8790fcc15d17",
+      "resume_last_verified": "2026-10-18 01:42:38",
+      "resume_last_probe_status": "resumable"
+    }
+  ],
+  "tenures": [
+    {
+      "node_id": "01M569M8QKR9085ZDEG6CFHVVN",
+      "generation_ordinal": 1,
+      "generation_uuid": "1711b9dd-f487-49eb-a8f8-e462fe635f0a",
+      "kind": "initial",
+      "native_session_id_at_boot": null,
+      "boot_at": "2026-10-18 01:22:12"
+    },
+    {
+      "node_id": "01M569MJ4HHP75EEKF6AEWWM98",
+      "generation_ordinal": 1,
+      "generation_uuid": "2019ddb7-2adb-4c0c-9809-101dfba658dd",
+      "kind": "initial",
+      "native_session_id_at_boot": null,
+      "boot_at": "2026-10-18 01:22:22"
+    },
+    {
+      "node_id": "01M569MJ4HHP75EEKF6AEWWM98",
+      "generation_ordinal": 2,
+      "generation_uuid": "cddfa82d-665d-4371-9e55-c72a39b7cd04",
+      "kind": "initial",
+      "native_session_id_at_boot": null,
+      "boot_at": "2026-10-18 01:30:20"
+    }
+  ]
+}

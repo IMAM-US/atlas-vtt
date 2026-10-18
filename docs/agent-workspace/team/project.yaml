@@ -1,0 +1,8 @@
+schema: openrig.project/v0alpha1
+kind: project
+install:
+  intent: workspace/ENTRY.md
+  context: [team/CULTURE.md]
+  skills: []
+missions:
+  root: missions

@@ -1,0 +1,84 @@
+{
+  "id": "atlas-openrig-integration-m1",
+  "title": "Atlas OpenRig integration workspace",
+  "sourceRevision": "integration-milestone-1",
+  "runtimeVersion": "Published OpenRig 0.6.10 (3001cc43); manually captured evidence, no live connection",
+  "evidenceUrl": "https://github.com/fsafey/atlas-vtt/blob/codex/recorded-agent-scene/docs/agent-workspace/integration-team/evidence.md",
+  "reviewUrl": "https://github.com/fsafey/atlas-vtt/blob/codex/recorded-agent-scene/docs/agent-workspace/integration-team/mapping-review.md",
+  "coordinatorAcceptanceUrl": "https://github.com/fsafey/atlas-vtt/blob/codex/recorded-agent-scene/docs/agent-workspace/integration-team/acceptance.md",
+  "manifestUrl": "https://github.com/fsafey/atlas-vtt/blob/codex/recorded-agent-scene/docs/agent-workspace/integration-team/manifest.json",
+  "seats": [
+    {
+      "id": "01M569M8QKR9085ZDEG6CFHVVN",
+      "label": "Atlas representative",
+      "address": "atlas-representative@atlas-integration",
+      "model": "gpt-6.1-sol (verified in native provider record)"
+    },
+    {
+      "id": "01M569MJ4HHP75EEKF6AEWWM98",
+      "label": "OpenRig representative",
+      "address": "openrig-representative@atlas-integration",
+      "model": "claude-opus-5-5 (verified in native provider record)"
+    }
+  ],
+  "work": [
+    {
+      "id": "atlas-integration-mapping-20261018",
+      "title": "Joint mapping and implementation slice",
+      "assignedSeatId": "01M569M8QKR9085ZDEG6CFHVVN",
+      "artifactIds": [
+        "mapping-proposal",
+        "mapping-review"
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "mapping-proposal",
+      "title": "Mapping proposal"
+    },
+    {
+      "id": "mapping-review",
+      "title": "Mapping review"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "orientation",
+      "label": "Team launched; mapping pending",
+      "at": "2026-10-18T01:23:31.927Z",
+      "summary": "Separate integration team launched. Mapping obligation created without a nudge; spatial context is being prepared. No proposal or acceptance established.",
+      "nextAction": "Coordinator supplies the authored scene snapshot; Atlas representative claims and authors the mapping for OpenRig review.",
+      "evidenceUrl": "https://github.com/fsafey/atlas-vtt/blob/codex/recorded-agent-scene/docs/agent-workspace/integration-team/evidence.md#orientation",
+      "seats": [
+        {
+          "seatId": "01M569M8QKR9085ZDEG6CFHVVN",
+          "status": "live",
+          "nativeConversationId": "01a14c9a-2d0d-7cf0-a94f-6a0f5359e0ff",
+          "generation": "1711b9dd-f487-49eb-a8f8-e462fe635f0a",
+          "continuity": "Fresh managed conversation; no restart experiment performed.",
+          "detail": "Separate seat in atlas-integration; runtime binding verified from pane process. Model turn verification follows."
+        },
+        {
+          "seatId": "01M569MJ4HHP75EEKF6AEWWM98",
+          "status": "live",
+          "nativeConversationId": "c4128f1e-1dc6-4d6d-a2a7-8790fcc15d17",
+          "generation": "2019ddb7-2adb-4c0c-9809-101dfba658dd",
+          "continuity": "Fresh managed conversation; no restart experiment performed.",
+          "detail": "Separate seat in atlas-integration; runtime binding verified from pane process. Model turn verification follows."
+        }
+      ],
+      "work": [
+        {
+          "workId": "atlas-integration-mapping-20261018",
+          "status": "pending",
+          "claimGeneration": null,
+          "transition": 33,
+          "detail": "Created by external coordinator; no nudge sent and no claim at capture.",
+          "nextAction": "Read the explicitly supplied authored context and claim this obligation."
+        }
+      ],
+      "artifacts": []
+    }
+  ]
+}
