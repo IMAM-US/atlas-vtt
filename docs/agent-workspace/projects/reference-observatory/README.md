@@ -2,6 +2,8 @@
 
 Second project experiment, 2026-10-18 UTC. A human-led reference research space asks: **what can a project reuse without inheriting another project's configuration?** It uses an ordinary Atlas collection and scene with no game system. The integration studio remains the engineering team's workspace.
 
+Owner correction, 2026-10-18: this coordinator-authored scene preserves mechanical experiment evidence, not an approved layout or vocabulary for the owner's projects. The product must support the maps and arrangements the owner crafts. Its next design focus is [note-backed organizational context and delegated Atlas maintenance](../../vault-and-roles.md); this illustration and its labels do not establish that journey.
+
 ## Project choices
 
 | Choice | Integration studio | Reference Observatory |
@@ -56,4 +58,4 @@ The v1 bundle is the existing Atlas collection release format. Import through th
 4. Keep source revision and acceptance scope visible. Referencing a source is not accepting a new interpretation of it.
 5. Describe dependencies explicitly when exporting. A reference alone does not make its source available in another vault or plugin build.
 
-These are findings from two examples, not a universal project schema. Next owner decision: whether the next useful scenario requires portable evidence dependencies, a reusable starting configuration, or agent navigation. Choose a concrete scenario before adding a general framework.
+These are mechanical findings from two examples, not a universal project schema. The corrected next proposal uses the owner's existing map to test role/resource home notes, fresh-session orientation and one delegated workspace-maintenance request. Packaging and whole-scene composition remain separate options when that actual work needs them.

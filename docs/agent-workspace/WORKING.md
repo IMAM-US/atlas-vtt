@@ -1,12 +1,14 @@
 # Atlas agent workspace working document
 
-Updated: 2026-10-18 UTC. Status: [PR #14](https://github.com/fsafey/atlas-vtt/pull/14) merged at `3654974` on explicit owner approval of the recorded local/native evidence; remote checks were absent. The editable integration studio and a deliberately different [Reference Observatory](projects/reference-observatory/README.md) now exercise project-specific authoring and one shared resource. A live connector and Atlas execution controls remain out of scope.
+Updated: 2026-10-18 UTC. Status: [PR #14](https://github.com/fsafey/atlas-vtt/pull/14) merged at `3654974` on explicit owner approval of local/native evidence. [PR #15](https://github.com/fsafey/atlas-vtt/pull/15) preserves a reference-reuse experiment and command-scope fix. Owner correction: support the space they craft and the real organization inhabiting it. Home-note abstraction and the proposed map-governor reading/maintenance journey are not implemented. Live integration and execution controls remain out of scope.
 
 ## Confirmed direction
 
 The owner selected a **general agent workspace, with Atlas as the spatial language**. OpenRig is a core part of this direction. Domain agents coordinate with one another and with people through the LLM connector space.
 
 The supplied transcript's guiding idea is orientation before search: an arriving agent discovers what already exists, where knowledge lives, and whom to ask.
+
+Accepted owner correction, 2026-10-18: the owner crafts the map, imagery, names and arrangement. Our work supplies dependable entrances to real roles, resources, skills, knowledge and obligations within that authored space. Coordinator-generated layouts and labels are experiments, not project conventions. The vault provides shared meaning, orientation and institutional knowledge; OpenRig supplies existing operational coordination; native Codex/Claude repository harnesses remain intact. See [vault and organizational roles](vault-and-roles.md).
 
 Accepted owner correction, 2026-10-17: Atlas is an editable spatial workspace where humans shape the environment agents inhabit. “Read-only” applies to the recorded OpenRig connection and operational facts, not to Atlas authoring. Deliver a real editable scene using existing objects, persistence and undo. Movement, annotations and other authored spatial content must preserve stable references and recorded facts. Live integration, execution controls and permission changes remain excluded.
 
@@ -18,7 +20,7 @@ The intended agent card leads with purpose, harness/model, repository and actual
 
 Accepted owner clarification, 2026-10-18: each Atlas project can explore its own roster, repository harnesses, context, configuration and spatial expression. A new Codex session may help configure a project; project, scene, seat and conversation identities remain distinct. This integration studio is one concrete configuration, not a universal project template. Explicit reuse across projects should preserve provenance and distinguish a shared reference from a copied representation, artifact or configuration. Versioned files and small experiments are the intended development approach; a project manifest, composition/import mechanism and compatibility rules remain proposals. No such framework or live integration is added in this milestone.
 
-Accepted next experiment, 2026-10-18: build a second deliberately different project that reuses one studio artifact/resource before defining broader configuration rules. The Reference Observatory is a human-led research project with its own collection, landscape, notes and annotations. It reuses the completed repository-review resource through an ordinary copied representation; it creates no new seat or owned task.
+The owner authorized a second reference-reuse experiment. The coordinator-authored Reference Observatory tests cross-scene references, editing and independent configuration; it creates no new seat or obligation. Its useful mechanical evidence does not establish the intended organizational experience. The latest correction puts the owner's crafted space and note-backed organizational reading journey ahead of further map generation or packaging work.
 
 ## What exists
 
@@ -51,39 +53,25 @@ Second-project evidence: native cross-collection copy/paste retained the exact p
 
 ## What we are proposing
 
-**One shared model, read two ways:** people navigate Atlas; agents read the same identities and relationships as structured context and addresses.
+**A human-authored organizational workspace:** selected Atlas objects lead into vault home notes for roles, agents, projects and resources. Notes provide shared definitions and reading routes to canonical repositories, actual OpenRig work and native sessions. Native session records and concise authored continuity notes serve different purposes. Multiple representations may share a note/resource without creating another colleague. Each project chooses its vocabulary and composition.
 
-| Element | Proposed meaning |
-| --- | --- |
-| Map or scene | A view into a workspace, project, or knowledge area |
-| Place | A named domain with responsibilities, entry context, and routes outward |
-| Participant and resident token | A human or persistent agent seat, with its current session and activity shown separately |
-| Landmark | An addressed source, decision, example, or lesson with provenance and maturity |
-| Route | A named relationship such as ask here, depends on, or hand work here |
-| Work marker | An owned question or task, with status and artifact links |
-| History | Events and decisions with their rationale |
-
-Prefer stable homes for specialists and travelling work markers. Rigs, maps, pods, and domains need not map one-to-one.
-
-Atlas owns spatial authoring and navigation; OpenRig owns seats, execution and work status; repository/workspace files hold authoritative instructions and knowledge. A future connector could resolve references and deliver explicit context without adding a second governance system. Develop that capability through real scenarios and the smallest demonstrated missing feature.
-
-Ask, Assign, and Handoff have distinct effects; owned work uses OpenRig's durable queue. Board movement and undo do not imply execution or reversal of external work. Knowledge maturity reflects attributed, revisable judgments.
+The proposed **Atlas map governor** is a delegated native Atlas caretaker. Agents can address final reports with bounded workspace implications through OpenRig. The caretaker clarifies requests, maintains references/definitions and applies changes within its delegated remit while preserving the owner's craft and ordinary human editing. It supplies no new task or approval system. No governor seat, assignment, automatic report routing or scene changes were created by this clarification. Role authority and the first actual request remain to be agreed.
 
 ## Open decisions
 
 | Decision | Current leaning |
 | --- | --- |
-| What defines a domain, and where are places, responsibilities, and routes authored? | Vault-owned structured records referenced by both Atlas and OpenRig |
-| Does a gesture arrange the view, change focus, propose work, or assign it? | Explicit action meanings first; spatial gestures can adopt them later |
-| Who can act, see each source, and promote knowledge to accepted status? | Domain-specific policy, enforced outside rendering and recorded with attribution |
-| How does the connector fit the Atlas fork and existing LLM tooling? | Reuse Atlas's view/store and OpenRig's HTTP/events; packaging remains open |
-| How are different project configurations versioned and composed? | Two concrete configurations now exist. Native collection releases package local scene/settings/notes; a copied representation keeps a pinned shared resource. Decide which source dependencies must travel before building broader composition. |
+| Which authored map and objects anchor the next scenario? | Use the owner's existing craft; attach meaning and references with minimal changes |
+| What belongs in role/resource home notes and session notes? | Small project-specific records with canonical-source links; verify discovery before standardizing properties |
+| Who occupies the map-governor role, and what may they change? | Consider the existing Atlas representative for one explicitly delegated maintenance request |
+| How do objects open a home note and the actual native agent? | Pins already open notes; plain-token note entrance and supported Open agent navigation are separate gaps |
+| How are project pieces reused? | Preserve mechanical findings; defer broad composition until a real organizational reading or maintenance scenario needs it |
 
 ## Next discussion
 
-Review the editable scene and its evidence inspector. Assess whether authors can shape useful spatial context while understanding the recorded operational facts. A live read-only feed, broader domains, agent consumption of spatial meaning and execution semantics remain separate decisions.
+Proposed next scenario: on the owner's chosen map, connect the two real repository representatives and shared project entry through existing objects/pins and a few home notes. Can a fresh session discover responsibility, canonical source, relevant skills, latest accepted decision, counterpart and its actual obligation? Then test one final-report request to a delegated Atlas caretaker and one bounded, attributed workspace adjustment. This is proposed, not launched. See [scenario and current gaps](vault-and-roles.md).
 
-Next recommended scenario: a bounded **Open agent** navigation bridge that resolves a stable seat against current OpenRig state and opens its existing native conversation, or routes to supported recovery without implicitly starting it. Installed 0.6.10 supports opening the team's live terminal view; no verified per-seat Atlas URI exists. See [opening assessment](integration-team/operations.md#open-agent-boundary). Do not build a general agent manager first.
+Supported native-agent opening remains useful: installed 0.6.10 can open the team's live terminal view, but Atlas has no verified per-seat opening adapter. See [opening assessment](integration-team/operations.md#open-agent-boundary). Placement, note editing and undo do not assign work, change permission or reverse external operations.
 
 ## Delivery boundary
 
