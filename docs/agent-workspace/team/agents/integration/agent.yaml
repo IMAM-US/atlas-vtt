@@ -1,0 +1,19 @@
+name: integration-representative
+version: "1.0"
+description: Repository representatives with bounded ownership in the Atlas integration team.
+profiles:
+  atlas:
+    uses: {skills: [], guidance: [], subagents: [], plugins: [], runtime_resources: []}
+    startup:
+      files:
+        - {path: guidance/atlas.md, delivery_hint: send_text, required: true}
+  openrig:
+    uses: {skills: [], guidance: [], subagents: [], plugins: [], runtime_resources: []}
+    startup:
+      files:
+        - {path: guidance/openrig.md, delivery_hint: send_text, required: true}
+resources: {}
+startup:
+  files:
+    - {path: startup/context.md, delivery_hint: send_text, required: true}
+  actions: []

@@ -1,0 +1,60 @@
+{
+  "capturedAt": "2026-10-18T02:44:39.564141+00:00",
+  "scope": "Unmodified authored artifacts and curated public observations. Raw provider records and databases excluded.",
+  "files": [
+    {
+      "path": "acceptance.md",
+      "bytes": 3540,
+      "originalSha256": "d37583dd03d952e9b12c94dfe7c8b277c4fa08c4f64c30351c7baf0ebbafa137",
+      "publishedSha256": "d37583dd03d952e9b12c94dfe7c8b277c4fa08c4f64c30351c7baf0ebbafa137"
+    },
+    {
+      "path": "atlas-repository-orientation.md",
+      "bytes": 15180,
+      "originalSha256": "5016b65082d8d5d3f699aa002b87b4e7541fc71e59f1918f8c089759a55a7f67",
+      "publishedSha256": "5016b65082d8d5d3f699aa002b87b4e7541fc71e59f1918f8c089759a55a7f67"
+    },
+    {
+      "path": "openrig-repository-orientation.md",
+      "bytes": 4327,
+      "originalSha256": "844cebf7b8d4b8a903e4429fbccc9e22439453a1977ad93b49e8337bdd2aa78b",
+      "publishedSha256": "844cebf7b8d4b8a903e4429fbccc9e22439453a1977ad93b49e8337bdd2aa78b"
+    },
+    {
+      "path": "queue-history.json",
+      "bytes": 25881,
+      "originalSha256": "17e09c47580286e68cdc8b142d6f48301733e844e67f4f850083ad63fb70fa35",
+      "publishedSha256": "17e09c47580286e68cdc8b142d6f48301733e844e67f4f850083ad63fb70fa35"
+    },
+    {
+      "path": "repository-atlas-handoff.md",
+      "bytes": 4642,
+      "originalSha256": "f57d42ec6002e84896c763e24228ead18f713fa83d20b5f61bb4beaf504abf53",
+      "publishedSha256": "f57d42ec6002e84896c763e24228ead18f713fa83d20b5f61bb4beaf504abf53"
+    },
+    {
+      "path": "repository-mapping-requalification.md",
+      "bytes": 15865,
+      "originalSha256": "da819b230fdf9d1e9f3716b701e6805f0aadfeb337cbec623e47771219c5382e",
+      "publishedSha256": "da819b230fdf9d1e9f3716b701e6805f0aadfeb337cbec623e47771219c5382e"
+    },
+    {
+      "path": "repository-mapping-review.md",
+      "bytes": 9282,
+      "originalSha256": "1bef1e3b8473e5edeb47e8a0d00f36f2533d8050bf8a425aa579925c0b0eec61",
+      "publishedSha256": "1bef1e3b8473e5edeb47e8a0d00f36f2533d8050bf8a425aa579925c0b0eec61"
+    },
+    {
+      "path": "repository-openrig-handoff.md",
+      "bytes": 2437,
+      "originalSha256": "dbc69623af7c0cb9b2fdd4fb1985058262f8e90d20a84d57c349dbaabe34dff8",
+      "publishedSha256": "dbc69623af7c0cb9b2fdd4fb1985058262f8e90d20a84d57c349dbaabe34dff8"
+    },
+    {
+      "path": "runtime-observations.json",
+      "bytes": 2621,
+      "originalSha256": "a63b00d8a84e487fb1b83524801ae82b31318ca8bba65d58cf8dbca5ee2da962",
+      "publishedSha256": "a63b00d8a84e487fb1b83524801ae82b31318ca8bba65d58cf8dbca5ee2da962"
+    }
+  ]
+}

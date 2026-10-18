@@ -80,6 +80,8 @@ export type EncounterDifficulty = 'easy' | 'medium' | 'hard' | 'deadly';
 // everywhere because metadata written by older versions may lack it.
 
 export interface SceneAssetData {
+  /** Identifies the starter workspace and its seed evidence edition across native scene renames and folder moves. */
+  recording?: { recordingId: string; sourceRevision: string };
   /** Vault path of the scene's .atlasmap file. */
   mapPath?: string;
 }

@@ -1,0 +1,224 @@
+{
+  "id": "atlas-openrig-integration-m1",
+  "title": "Atlas OpenRig integration workspace",
+  "sourceRevision": "27a4e72ec492cd989e57f86d5f44623b0819169f",
+  "runtimeVersion": "Published OpenRig 0.6.10 (3001cc43); manually captured evidence, no live connection",
+  "evidenceUrl": "https://github.com/fsafey/atlas-vtt/blob/27a4e72ec492cd989e57f86d5f44623b0819169f/docs/agent-workspace/integration-team/evidence.md",
+  "reviewUrl": "https://github.com/fsafey/atlas-vtt/blob/27a4e72ec492cd989e57f86d5f44623b0819169f/docs/agent-workspace/integration-team/artifacts/mapping-review.md",
+  "coordinatorAcceptanceUrl": "https://github.com/fsafey/atlas-vtt/blob/27a4e72ec492cd989e57f86d5f44623b0819169f/docs/agent-workspace/integration-team/acceptance.md",
+  "manifestUrl": "https://github.com/fsafey/atlas-vtt/blob/27a4e72ec492cd989e57f86d5f44623b0819169f/docs/agent-workspace/integration-team/manifest.json",
+  "seats": [
+    {
+      "id": "01M569M8QKR9085ZDEG6CFHVVN",
+      "label": "Atlas representative",
+      "address": "atlas-representative@atlas-integration",
+      "model": "gpt-6.1-sol (configured; native observation recorded in evidence)"
+    },
+    {
+      "id": "01M569MJ4HHP75EEKF6AEWWM98",
+      "label": "OpenRig representative",
+      "address": "openrig-representative@atlas-integration",
+      "model": "claude-opus-5-5 (configured; native observation recorded in evidence)"
+    }
+  ],
+  "work": [
+    {
+      "id": "atlas-integration-mapping-20261018",
+      "title": "Joint mapping and implementation slice",
+      "assignedSeatId": "01M569M8QKR9085ZDEG6CFHVVN",
+      "artifactIds": [
+        "mapping-proposal"
+      ]
+    },
+    {
+      "id": "qitem-20261018013108-c98ecda5",
+      "title": "Independent mapping review",
+      "assignedSeatId": "01M569MJ4HHP75EEKF6AEWWM98",
+      "predecessorId": "atlas-integration-mapping-20261018",
+      "artifactIds": [
+        "mapping-proposal",
+        "mapping-review"
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "mapping-proposal",
+      "title": "Mapping proposal",
+      "originalSha256": "26cc57dd08586c80bf2e0d9b16da7be19b25b00c04438ee1463ae1dc81aef349",
+      "publishedSha256": "26cc57dd08586c80bf2e0d9b16da7be19b25b00c04438ee1463ae1dc81aef349",
+      "publishedUrl": "https://github.com/fsafey/atlas-vtt/blob/27a4e72ec492cd989e57f86d5f44623b0819169f/docs/agent-workspace/integration-team/artifacts/mapping-proposal.md"
+    },
+    {
+      "id": "mapping-review",
+      "title": "Mapping review",
+      "originalSha256": "2ef05cdc3a6a04f28ec58c4afba8a37374af61e2ab327369e6b1cb4d22880abc",
+      "publishedSha256": "2ef05cdc3a6a04f28ec58c4afba8a37374af61e2ab327369e6b1cb4d22880abc",
+      "publishedUrl": "https://github.com/fsafey/atlas-vtt/blob/27a4e72ec492cd989e57f86d5f44623b0819169f/docs/agent-workspace/integration-team/artifacts/mapping-review.md"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "orientation",
+      "label": "Team launched; mapping pending",
+      "at": "2026-10-18T01:23:31.927Z",
+      "summary": "Separate integration team launched. Mapping obligation created without a nudge; spatial context is being prepared. No proposal or acceptance established.",
+      "nextAction": "Coordinator supplies the authored scene snapshot; Atlas representative claims and authors the mapping for OpenRig review.",
+      "evidenceUrl": "https://github.com/fsafey/atlas-vtt/blob/27a4e72ec492cd989e57f86d5f44623b0819169f/docs/agent-workspace/integration-team/evidence.md#orientation",
+      "seats": [
+        {
+          "seatId": "01M569M8QKR9085ZDEG6CFHVVN",
+          "status": "live",
+          "nativeConversationId": "01a14c9a-2d0d-7cf0-a94f-6a0f5359e0ff",
+          "generation": "1711b9dd-f487-49eb-a8f8-e462fe635f0a",
+          "continuity": "Fresh managed conversation; no restart experiment performed.",
+          "detail": "Separate seat in atlas-integration; runtime binding verified from pane process. Model turn verification follows."
+        },
+        {
+          "seatId": "01M569MJ4HHP75EEKF6AEWWM98",
+          "status": "live",
+          "nativeConversationId": "c4128f1e-1dc6-4d6d-a2a7-8790fcc15d17",
+          "generation": "2019ddb7-2adb-4c0c-9809-101dfba658dd",
+          "continuity": "Fresh managed conversation; no restart experiment performed.",
+          "detail": "Separate seat in atlas-integration; runtime binding verified from pane process. Model turn verification follows."
+        }
+      ],
+      "work": [
+        {
+          "workId": "atlas-integration-mapping-20261018",
+          "status": "pending",
+          "claimGeneration": null,
+          "transition": 33,
+          "detail": "Created by external coordinator; no nudge sent and no claim at capture.",
+          "nextAction": "Read the explicitly supplied authored context and claim this obligation."
+        }
+      ],
+      "artifacts": []
+    },
+    {
+      "id": "handoff",
+      "label": "Author delivered; review claimed",
+      "at": "2026-10-18T01:32:42.115Z",
+      "summary": "Atlas completed the author obligation. The original wake was refused; OpenRig discovered the successor by queue read and claimed it. Acceptance was still pending.",
+      "nextAction": "OpenRig independently reviews the exact proposal and supplied v1 context.",
+      "evidenceUrl": "https://github.com/fsafey/atlas-vtt/blob/27a4e72ec492cd989e57f86d5f44623b0819169f/docs/agent-workspace/integration-team/evidence.md#owned-work-review-and-acceptance",
+      "seats": [
+        {
+          "seatId": "01M569M8QKR9085ZDEG6CFHVVN",
+          "status": "live",
+          "nativeConversationId": "01a14c9a-2d0d-7cf0-a94f-6a0f5359e0ff",
+          "generation": "1711b9dd-f487-49eb-a8f8-e462fe635f0a",
+          "continuity": "Initial managed conversation retained through this collaboration.",
+          "detail": "Stable Atlas seat; native provider turn-context records independently observed gpt-6.1-sol through 01:43:59 UTC. Source and runtime identities are recorded separately.",
+          "sessionId": "01M569M8SE0RM5TBTW44EW6NSX"
+        },
+        {
+          "seatId": "01M569MJ4HHP75EEKF6AEWWM98",
+          "status": "live",
+          "nativeConversationId": "c4128f1e-1dc6-4d6d-a2a7-8790fcc15d17",
+          "generation": "cddfa82d-665d-4371-9e55-c72a39b7cd04",
+          "continuity": "Resumed from explicit snapshot 01M56A2TD7BFT28R1STGFNE066. Same seat and native conversation; new OpenRig session and occupant generation.",
+          "detail": "Reviewer resumed at 01:30:20 UTC after native approval-mode drift. Subsequent provider turns observed claude-opus-5-5; ordinary accept-edits prompts were observed. Launch policy alone did not prove effective mode.",
+          "sessionId": "01M56A350J860NM9D9SVNCGZBQ"
+        }
+      ],
+      "work": [
+        {
+          "workId": "atlas-integration-mapping-20261018",
+          "status": "done",
+          "claimGeneration": "1711b9dd-f487-49eb-a8f8-e462fe635f0a",
+          "transition": 39,
+          "detail": "Author delivered the exact proposal and atomically created the review successor. Author completion did not establish reviewer acceptance.",
+          "nextAction": "Inspect the separately attributed review and coordinator decision."
+        },
+        {
+          "workId": "qitem-20261018013108-c98ecda5",
+          "status": "in-progress",
+          "claimGeneration": "cddfa82d-665d-4371-9e55-c72a39b7cd04",
+          "transition": 42,
+          "detail": "Managed reviewer claim, transport:v1. The original successor nudge was not delivered. A separate daemon recovery notice is not an author handoff.",
+          "nextAction": "Review the proposal hash and record concrete corrections."
+        }
+      ],
+      "artifacts": [
+        {
+          "artifactId": "mapping-proposal",
+          "status": "delivered",
+          "acceptedBy": [],
+          "detail": "Frozen author candidate 26cc57dd08586c80bf2e0d9b16da7be19b25b00c04438ee1463ae1dc81aef349. No verdict at this checkpoint."
+        }
+      ]
+    },
+    {
+      "id": "accepted",
+      "label": "Mapping accepted; local integration qualified separately",
+      "at": "2026-10-18T01:57:28.743646+00:00",
+      "summary": "Both real mapping obligations are closed. The reviewer accepted the exact proposal with C1-C6; the coordinator separately accepted the mapping and correction dispositions. Native UI verification has its own evidence.",
+      "nextAction": "Owner reviews the authored studio and chooses the next spatial-context experiment. No further agent work is assigned.",
+      "evidenceUrl": "https://github.com/fsafey/atlas-vtt/blob/27a4e72ec492cd989e57f86d5f44623b0819169f/docs/agent-workspace/integration-team/evidence.md#owned-work-review-and-acceptance",
+      "seats": [
+        {
+          "seatId": "01M569M8QKR9085ZDEG6CFHVVN",
+          "status": "live",
+          "nativeConversationId": "01a14c9a-2d0d-7cf0-a94f-6a0f5359e0ff",
+          "generation": "1711b9dd-f487-49eb-a8f8-e462fe635f0a",
+          "continuity": "Initial managed conversation retained through this collaboration.",
+          "detail": "Stable Atlas seat; native provider turn-context records independently observed gpt-6.1-sol through 01:43:59 UTC. Source and runtime identities are recorded separately.",
+          "sessionId": "01M569M8SE0RM5TBTW44EW6NSX"
+        },
+        {
+          "seatId": "01M569MJ4HHP75EEKF6AEWWM98",
+          "status": "live",
+          "nativeConversationId": "c4128f1e-1dc6-4d6d-a2a7-8790fcc15d17",
+          "generation": "cddfa82d-665d-4371-9e55-c72a39b7cd04",
+          "continuity": "Resumed from explicit snapshot 01M56A2TD7BFT28R1STGFNE066. Same seat and native conversation; new OpenRig session and occupant generation.",
+          "detail": "Reviewer resumed at 01:30:20 UTC after native approval-mode drift. Subsequent provider turns observed claude-opus-5-5; ordinary accept-edits prompts were observed. Launch policy alone did not prove effective mode.",
+          "sessionId": "01M56A350J860NM9D9SVNCGZBQ"
+        }
+      ],
+      "work": [
+        {
+          "workId": "atlas-integration-mapping-20261018",
+          "status": "done",
+          "claimGeneration": "1711b9dd-f487-49eb-a8f8-e462fe635f0a",
+          "transition": 39,
+          "detail": "Author delivered the exact proposal and atomically created the review successor. Author completion did not establish reviewer acceptance.",
+          "nextAction": "Inspect the separately attributed review and coordinator decision."
+        },
+        {
+          "workId": "qitem-20261018013108-c98ecda5",
+          "status": "done",
+          "claimGeneration": "cddfa82d-665d-4371-9e55-c72a39b7cd04",
+          "transition": 54,
+          "detail": "Reviewer closed no-follow-on at 01:45:45.847 UTC after a hash-bound accepted verdict with required coordinator corrections. This closure is distinct from coordinator acceptance.",
+          "nextAction": "Review the separate coordinator decision and native verification record."
+        }
+      ],
+      "artifacts": [
+        {
+          "artifactId": "mapping-proposal",
+          "status": "accepted",
+          "acceptedBy": [
+            "OpenRig representative",
+            "Coordinator"
+          ],
+          "detail": "Accepted as the smallest mapping with required C1-C6 corrections. Verdict is scoped to the exact original bytes; the publication is verbatim. This is not a live connector or UI acceptance."
+        },
+        {
+          "artifactId": "mapping-review",
+          "status": "accepted",
+          "acceptedBy": [
+            "Coordinator"
+          ],
+          "detail": "Coordinator accepted the attributed review and its concrete correction dispositions. The reviewer did not verify the native Atlas journey."
+        }
+      ]
+    }
+  ],
+  "openRigScope": {
+    "rigId": "01M569M8QH0BXDNXECRE3KJZMG",
+    "rigName": "atlas-integration",
+    "instanceLocator": "127.0.0.1:18764 (recorded locator only)",
+    "stateHome": "~/.openrig-foundation"
+  }
+}

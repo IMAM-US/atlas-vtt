@@ -1,0 +1,67 @@
+{
+  "scope": "Published authored artifacts and explicitly supplied context; raw provider records and databases remain private. Acceptance scopes are in acceptance.md and artifacts/mapping-review.md.",
+  "files": [
+    {
+      "path": "artifacts/atlas-handoff.md",
+      "originalSha256": "024b3d56739b712de6b0db1d1556cd75530f39035cbd57078183ce91e2606061",
+      "publishedSha256": "024b3d56739b712de6b0db1d1556cd75530f39035cbd57078183ce91e2606061",
+      "bytes": 6814,
+      "publication": "verbatim authored artifact"
+    },
+    {
+      "path": "artifacts/atlas-orientation.md",
+      "originalSha256": "30d1cdca207ad48754b899180190da9036c67d58e236bf23992b93a504b39f74",
+      "publishedSha256": "30d1cdca207ad48754b899180190da9036c67d58e236bf23992b93a504b39f74",
+      "bytes": 14267,
+      "publication": "verbatim authored artifact"
+    },
+    {
+      "path": "artifacts/mapping-proposal.md",
+      "originalSha256": "26cc57dd08586c80bf2e0d9b16da7be19b25b00c04438ee1463ae1dc81aef349",
+      "publishedSha256": "26cc57dd08586c80bf2e0d9b16da7be19b25b00c04438ee1463ae1dc81aef349",
+      "bytes": 13059,
+      "publication": "verbatim authored artifact"
+    },
+    {
+      "path": "artifacts/mapping-review.md",
+      "originalSha256": "2ef05cdc3a6a04f28ec58c4afba8a37374af61e2ab327369e6b1cb4d22880abc",
+      "publishedSha256": "2ef05cdc3a6a04f28ec58c4afba8a37374af61e2ab327369e6b1cb4d22880abc",
+      "bytes": 11018,
+      "publication": "verbatim authored artifact"
+    },
+    {
+      "path": "artifacts/openrig-handoff.md",
+      "originalSha256": "402ce5c9c8a539c3d4bb8d7c566bdbdef77020ec940d21ee885e9d272be01f22",
+      "publishedSha256": "402ce5c9c8a539c3d4bb8d7c566bdbdef77020ec940d21ee885e9d272be01f22",
+      "bytes": 2384,
+      "publication": "verbatim authored artifact"
+    },
+    {
+      "path": "artifacts/openrig-orientation.md",
+      "originalSha256": "a0fb18b42ae1710ebe0c5815ff565d35f6af8ee70c835ab6cd615e47c798730e",
+      "publishedSha256": "a0fb18b42ae1710ebe0c5815ff565d35f6af8ee70c835ab6cd615e47c798730e",
+      "bytes": 17696,
+      "publication": "verbatim authored artifact"
+    },
+    {
+      "path": "workspace/ENTRY.md",
+      "publishedSha256": "5f1ff11b2e5f56d21ebf056614511734e8b5c67c69b3b188583e843618c9d110",
+      "bytes": 2385
+    },
+    {
+      "path": "workspace/integration-orientation-supplied.json",
+      "publishedSha256": "89772119e7e6180d830a5712dc7965ecac74b0186b04cb03d4e52cbdcc16ab9f",
+      "bytes": 3715
+    },
+    {
+      "path": "workspace/scene-context-v1.json",
+      "publishedSha256": "980750829642bd0dd6ebb818b61d1d03278787074d4e7b5284feddf3c80ac8fe",
+      "bytes": 9576
+    },
+    {
+      "path": "workspace/scene-context-v2.json",
+      "publishedSha256": "4a829750bbbf0b43e353adc9f25e45cf86c109cfec4d915b5d16581f0a8db88a",
+      "bytes": 11511
+    }
+  ]
+}

@@ -1,0 +1,364 @@
+{
+  "schema": "atlas.explicit-context/v1",
+  "capturedAt": "2026-10-18T02:55:48.265558+00:00",
+  "supplier": "External Codex coordinator",
+  "mediation": "Coordinator applied repository identity replacement through the explicit Atlas command, arranged work cards with native drag, verified undo/redo and close/reopen, and exported this bounded context. No automatic subscription.",
+  "scene": {
+    "assetId": "scene-1792286764203-ykkw4w",
+    "vaultRoot": "/Users/farieds/Project/atlas-agent-workspace-review",
+    "path": "atlas-vtt/collections/Default/scenes/Atlas OpenRig integration workspace.atlasmap",
+    "sha256": "d34a95a45565e4d4c7b42a8fd8c9e6a9b895c803e49cc0535e3e5300bb7f00bf",
+    "seedRecordingMarker": {
+      "recordingId": "atlas-openrig-integration-m1",
+      "sourceRevision": "integration-milestone-1"
+    }
+  },
+  "background": {
+    "assetId": "map-1792288529229-ab8gxv",
+    "vaultPath": "atlas-vtt/assets/Atlas_OpenRig_integration_studio_v1_1792288529227_bovzw4.webp",
+    "sha256": "d7ee685beea1e3cb205ddbce96f2af4714f495f4f8eb23acdf84c2c9750dfad5",
+    "width": 1400,
+    "height": 1400,
+    "meaning": "Illustrated Atlas cartography bench, OpenRig repository bench, shared review table and evidence library. Painted regions carry no operational references or permissions."
+  },
+  "recording": {
+    "id": "atlas-openrig-repository-team-m1",
+    "sourceRevision": "28e9fb5f504205e7135a5db4e2f0ced6b768b051",
+    "sourcePath": "/Users/farieds/Project/atlas-recorded-agent-scene/src/app/agent-workspace/repositoryTeamRecording.json",
+    "sha256": "a3164a25b5a1298864288b40b649e78deca42495e147935ac253c73fb5be57f6",
+    "openRigScope": {
+      "rigId": "01M56CGCH5VW2XDPN1P1KBNANR",
+      "rigName": "atlas-integration-repos",
+      "instanceLocator": "127.0.0.1:18764",
+      "stateHome": "~/.openrig-foundation"
+    }
+  },
+  "objects": {
+    "tokens": {
+      "tok_recording_0": {
+        "id": "tok_recording_0",
+        "kind": "token",
+        "x": 525,
+        "y": 315,
+        "imagePath": "",
+        "showRing": true,
+        "ringColor": "#60a5fa",
+        "size": 1.5,
+        "hasVision": false,
+        "recordingReference": {
+          "recordingId": "atlas-openrig-repository-team-m1",
+          "sourceRevision": "28e9fb5f504205e7135a5db4e2f0ced6b768b051",
+          "kind": "seat",
+          "id": "01M56CGCH9NACF766XDX1TF92N"
+        }
+      },
+      "tok_recording_1": {
+        "id": "tok_recording_1",
+        "kind": "token",
+        "x": 1155,
+        "y": 385,
+        "imagePath": "",
+        "showRing": true,
+        "ringColor": "#c084fc",
+        "size": 1.5,
+        "hasVision": false,
+        "recordingReference": {
+          "recordingId": "atlas-openrig-repository-team-m1",
+          "sourceRevision": "28e9fb5f504205e7135a5db4e2f0ced6b768b051",
+          "kind": "seat",
+          "id": "01M56CGNJD6YPXS5STC2QHWVVB"
+        }
+      }
+    },
+    "texts": {
+      "text_recording_seat_0": {
+        "id": "text_recording_seat_0",
+        "kind": "text",
+        "text": "Atlas representative",
+        "x": 350,
+        "y": 390,
+        "width": 540,
+        "fontSize": 21,
+        "fontFamily": "sans-serif",
+        "color": "#e8edf6",
+        "backgroundColor": "#202b40",
+        "padding": 20,
+        "borderRadius": 12,
+        "recordingReference": {
+          "recordingId": "atlas-openrig-repository-team-m1",
+          "sourceRevision": "28e9fb5f504205e7135a5db4e2f0ced6b768b051",
+          "kind": "seat",
+          "id": "01M56CGCH9NACF766XDX1TF92N"
+        }
+      },
+      "text_recording_seat_1": {
+        "id": "text_recording_seat_1",
+        "kind": "text",
+        "text": "OpenRig representative",
+        "x": 1050,
+        "y": 390,
+        "width": 540,
+        "fontSize": 21,
+        "fontFamily": "sans-serif",
+        "color": "#e8edf6",
+        "backgroundColor": "#202b40",
+        "padding": 20,
+        "borderRadius": 12,
+        "recordingReference": {
+          "recordingId": "atlas-openrig-repository-team-m1",
+          "sourceRevision": "28e9fb5f504205e7135a5db4e2f0ced6b768b051",
+          "kind": "seat",
+          "id": "01M56CGNJD6YPXS5STC2QHWVVB"
+        }
+      },
+      "text_recording_work_0": {
+        "id": "text_recording_work_0",
+        "kind": "text",
+        "text": "Joint mapping and implementation slice",
+        "x": 350,
+        "y": 490,
+        "width": 540,
+        "fontSize": 21,
+        "fontFamily": "sans-serif",
+        "color": "#e8edf6",
+        "backgroundColor": "#202b40",
+        "padding": 20,
+        "borderRadius": 12,
+        "recordingReference": {
+          "recordingId": "atlas-openrig-integration-m1",
+          "sourceRevision": "27a4e72ec492cd989e57f86d5f44623b0819169f",
+          "kind": "work",
+          "id": "atlas-integration-mapping-20261018"
+        }
+      },
+      "text_recording_artifact_0": {
+        "id": "text_recording_artifact_0",
+        "kind": "text",
+        "text": "Mapping proposal",
+        "x": 350,
+        "y": 980,
+        "width": 540,
+        "fontSize": 21,
+        "fontFamily": "sans-serif",
+        "color": "#e8edf6",
+        "backgroundColor": "#202b40",
+        "padding": 20,
+        "borderRadius": 12,
+        "recordingReference": {
+          "recordingId": "atlas-openrig-integration-m1",
+          "sourceRevision": "27a4e72ec492cd989e57f86d5f44623b0819169f",
+          "kind": "artifact",
+          "id": "mapping-proposal"
+        }
+      },
+      "text_recording_artifact_1": {
+        "id": "text_recording_artifact_1",
+        "kind": "text",
+        "text": "Mapping review",
+        "x": 1050,
+        "y": 980,
+        "width": 540,
+        "fontSize": 21,
+        "fontFamily": "sans-serif",
+        "color": "#e8edf6",
+        "backgroundColor": "#202b40",
+        "padding": 20,
+        "borderRadius": 12,
+        "recordingReference": {
+          "recordingId": "atlas-openrig-integration-m1",
+          "sourceRevision": "27a4e72ec492cd989e57f86d5f44623b0819169f",
+          "kind": "artifact",
+          "id": "mapping-review"
+        }
+      },
+      "text_recording_intro": {
+        "id": "text_recording_intro",
+        "kind": "text",
+        "text": "Atlas OpenRig integration workspace\nArrange tokens and cards, edit labels, or add your own annotations.\nSelect a referenced object to inspect the historical evidence.",
+        "x": 700,
+        "y": 100,
+        "width": 1160,
+        "fontSize": 21,
+        "fontFamily": "sans-serif",
+        "color": "#e8edf6",
+        "backgroundColor": "#202b40",
+        "padding": 20,
+        "borderRadius": 12
+      },
+      "text_integration_context_0": {
+        "id": "text_integration_context_0",
+        "kind": "text",
+        "text": "Atlas repository\nScene objects, editing and history",
+        "x": 350,
+        "y": 720,
+        "width": 540,
+        "fontSize": 21,
+        "fontFamily": "sans-serif",
+        "color": "#e8edf6",
+        "backgroundColor": "#202b40",
+        "padding": 20,
+        "borderRadius": 12
+      },
+      "text_integration_context_1": {
+        "id": "text_integration_context_1",
+        "kind": "text",
+        "text": "OpenRig repository\nSeats, owned work and continuity",
+        "x": 1050,
+        "y": 720,
+        "width": 540,
+        "fontSize": 21,
+        "fontFamily": "sans-serif",
+        "color": "#e8edf6",
+        "backgroundColor": "#202b40",
+        "padding": 20,
+        "borderRadius": 12
+      },
+      "text_1792287071598_1zr4pfdh3": {
+        "id": "text_1792287071598_1zr4pfdh3",
+        "kind": "text",
+        "x": 665.0793650793648,
+        "y": 604.7619047619046,
+        "text": "Integration desk\nPlacement is authored context.\nOwned work changes through OpenRig.",
+        "fontSize": 24,
+        "fontFamily": "Arial",
+        "color": "#FFFFFF",
+        "backgroundColor": "#000000",
+        "padding": 8,
+        "borderRadius": 4,
+        "opacity": 0.7,
+        "align": "center",
+        "bold": false,
+        "italic": false,
+        "rotation": 0,
+        "scale": 1
+      },
+      "text_1792288711158_bw2kut0eh": {
+        "id": "text_1792288711158_bw2kut0eh",
+        "kind": "text",
+        "text": "Independent mapping review",
+        "x": 1050,
+        "y": 490,
+        "width": 540,
+        "fontSize": 21,
+        "fontFamily": "sans-serif",
+        "color": "#e8edf6",
+        "backgroundColor": "#202b40",
+        "padding": 20,
+        "borderRadius": 12,
+        "recordingReference": {
+          "recordingId": "atlas-openrig-integration-m1",
+          "sourceRevision": "27a4e72ec492cd989e57f86d5f44623b0819169f",
+          "kind": "work",
+          "id": "qitem-20261018013108-c98ecda5"
+        }
+      },
+      "text_1792291563001_e0i728c47": {
+        "id": "text_1792291563001_e0i728c47",
+        "kind": "text",
+        "text": "Repository mapping requalification",
+        "x": 350,
+        "y": 1100.968096809681,
+        "width": 540,
+        "fontSize": 21,
+        "fontFamily": "sans-serif",
+        "color": "#e8edf6",
+        "backgroundColor": "#202b40",
+        "padding": 20,
+        "borderRadius": 12,
+        "recordingReference": {
+          "recordingId": "atlas-openrig-repository-team-m1",
+          "sourceRevision": "28e9fb5f504205e7135a5db4e2f0ced6b768b051",
+          "kind": "work",
+          "id": "atlas-repository-requalification-20261018"
+        }
+      },
+      "text_1792291563001_v1udjtwcl": {
+        "id": "text_1792291563001_v1udjtwcl",
+        "kind": "text",
+        "text": "Repository-grounded independent review",
+        "x": 1050,
+        "y": 1100.968096809681,
+        "width": 540,
+        "fontSize": 21,
+        "fontFamily": "sans-serif",
+        "color": "#e8edf6",
+        "backgroundColor": "#202b40",
+        "padding": 20,
+        "borderRadius": 12,
+        "recordingReference": {
+          "recordingId": "atlas-openrig-repository-team-m1",
+          "sourceRevision": "28e9fb5f504205e7135a5db4e2f0ced6b768b051",
+          "kind": "work",
+          "id": "qitem-20261018022035-997c3976"
+        }
+      }
+    },
+    "fog": {},
+    "pins": {
+      "pin_integration_entry": {
+        "id": "pin_integration_entry",
+        "kind": "pin",
+        "x": 700,
+        "y": 1200,
+        "notePath": "Integration workspace/Start here.md",
+        "icon": "book-open"
+      },
+      "pin_integration_atlas": {
+        "id": "pin_integration_atlas",
+        "kind": "pin",
+        "x": 350,
+        "y": 830,
+        "notePath": "Integration workspace/Atlas repository.md",
+        "icon": "file-text"
+      },
+      "pin_integration_openrig": {
+        "id": "pin_integration_openrig",
+        "kind": "pin",
+        "x": 1050,
+        "y": 830,
+        "notePath": "Integration workspace/OpenRig repository.md",
+        "icon": "file-text"
+      }
+    },
+    "drawings": {},
+    "walls": {},
+    "lights": {}
+  },
+  "notes": [
+    {
+      "path": "Integration workspace/Atlas repository.md",
+      "sha256": "119d4da6e36797b12b2dbe3b11f27b67996ff9e531d0bde2d81fa9e33b3acc82",
+      "content": "# Atlas repository\n\nRepository: /Users/farieds/Project/atlas-vtt\nAssigned implementation worktree: /Users/farieds/Project/atlas-recorded-agent-scene\nRepresentative: atlas-representative@atlas-integration-repos\nStable OpenRig seat: 01M56CGCH9NACF766XDX1TF92N\n\nOwns the fit with existing scene objects, asset-versus-placement identity, linked notes, selection, view lifecycle, persistence and undo. The coordinator owns shared code, scene mediation, native verification and delivery. See [[Start here]].\n\n\n## Repository-harness correction\n\nCurrent team: atlas-integration-repos, launched in each assigned repository. Original atlas-integration seats are stopped and preserved as historical evidence. Current requalification: atlas-repository-requalification-20261018. Existing scene representations require the explicit Attach repository team evidence command; reopening never silently changes their references. Earlier work and artifact cards keep their historical provenance.\n"
+    },
+    {
+      "path": "Integration workspace/OpenRig repository.md",
+      "sha256": "91faf735f2d3e311cfa6f65b7fe95b79826e6277d7d229445075a63596b92e5d",
+      "content": "# OpenRig repository\n\nRepository: /Users/farieds/Project/openrig\nRepresentative: openrig-representative@atlas-integration-repos\nStable OpenRig seat: 01M56CGNJD6YPXS5STC2QHWVVB\n\nOwns accurate seat, native conversation, session, generation, queue, handoff and acceptance semantics. The source checkout and installed 0.6.10 runtime are distinct. Topology and placement do not grant permission. See [[Start here]].\n\n\n## Repository-harness correction\n\nCurrent team: atlas-integration-repos, launched in each assigned repository. Original atlas-integration seats are stopped and preserved as historical evidence. Current requalification: atlas-repository-requalification-20261018. Existing scene representations require the explicit Attach repository team evidence command; reopening never silently changes their references. Earlier work and artifact cards keep their historical provenance.\n"
+    },
+    {
+      "path": "Integration workspace/Start here.md",
+      "sha256": "1b1dc75c9c2307fa3ee7835c757475a61c95971e9757c9df8ebd66443004ba8a",
+      "content": "# Atlas OpenRig integration workspace\n\nThis editable scene represents the project building the Atlas/OpenRig integration. It is authored spatial context, not a live operational console.\n\n- [[Atlas repository]]: objects, editing, persistence and undo.\n- [[OpenRig repository]]: seats, sessions and owned work.\n- Two plain tokens refer to the persistent repository representatives. Duplicating a token creates another representation of the same seat.\n- Select a referenced token or text card to inspect recorded identity, work and evidence. Checkpoints change only the inspector.\n- Move objects, edit text and add annotations with normal Atlas tools. Save/reopen preserves spatial state; undo affects supported local edits only.\n\nDefinitions and orientation: /Users/farieds/Project/atlas-openrig-integration-workspace/workspace/ENTRY.md\nJoint obligation: atlas-integration-mapping-20261018\nAgent-authored proposal and review: /Users/farieds/Project/atlas-openrig-integration-workspace/artifacts/\n\nAgents receive an explicit, timestamped snapshot exported by the coordinator. They do not subscribe to this scene. Placement and relationships may become useful context later, but have no execution or authorization effect in this milestone.\n\n\n## Studio places\n\n- Atlas cartography bench: the Atlas repository work area. The nearby seat token refers to atlas-representative@atlas-integration-repos, not to the painted furniture.\n- OpenRig repository bench: the OpenRig repository work area, not a live systems-status display. Its nearby token refers to openrig-representative@atlas-integration-repos.\n- Shared review table: a place to arrange proposed work and evidence. Each OpenRig work item still has one owner; placement does not assign, submit or accept it.\n- Evidence library: a place for linked knowledge and decisions. Putting an artifact here does not verify or accept it.\n\nThe image is one reusable map asset. Native scene objects have independent identities; notes and editable labels define places. The completed mapping review is qitem-20261018013108-c98ecda5. Recorded evidence is explicitly attached, with no live feed or automatic dispatch.\n\n\n## Repository-harness correction\n\nCurrent team: atlas-integration-repos, launched in each assigned repository. Original atlas-integration seats are stopped and preserved as historical evidence. Current requalification: atlas-repository-requalification-20261018. Existing scene representations require the explicit Attach repository team evidence command; reopening never silently changes their references. Earlier work and artifact cards keep their historical provenance.\n"
+    }
+  ],
+  "authority": {
+    "Atlas": "Authored project space, local representations, navigation, persistence and undo",
+    "OpenRig": "Actual persistent seats, native bindings and owned work; only explicitly captured evidence is bundled in Atlas",
+    "Native harnesses": "Codex and Claude Code working in their repository roots",
+    "Files": "Authoritative repository instructions, shared context, attributed artifacts and decisions"
+  },
+  "jointObligation": "atlas-repository-requalification-20261018",
+  "reviewObligation": "qitem-20261018022035-997c3976",
+  "limits": "No permission changes, execution controls, automatic navigation, live feed or automatic scene subscription.",
+  "historicalRecording": {
+    "id": "atlas-openrig-integration-m1",
+    "sourceRevision": "27a4e72ec492cd989e57f86d5f44623b0819169f",
+    "sha256": "fc56fcd199e3b6fc9296fc3139cdacfac7f323bacd07007b48c72a1992623dae",
+    "meaning": "Preserved predecessor work/artifact references. Seat representations were explicitly replaced; no continuity of seat identity is claimed."
+  },
+  "productDirection": {
+    "path": "/Users/farieds/Project/atlas-openrig-integration-workspace/workspace/PRODUCT-DIRECTION.md",
+    "sha256": "177899c8f7a3bc8721944bd566c64ae6e42ea481c8eb2a2324b5a5c50524e332",
+    "meaning": "Accepted owner direction, including project-specific experimentation and explicit reuse across projects. Future composition and Open agent navigation are not implemented."
+  }
+}
