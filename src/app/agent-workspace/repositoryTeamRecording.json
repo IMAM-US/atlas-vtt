@@ -1,0 +1,294 @@
+{
+  "id": "atlas-openrig-repository-team-m1",
+  "title": "Repository-grounded integration team",
+  "sourceRevision": "28e9fb5f504205e7135a5db4e2f0ced6b768b051",
+  "runtimeVersion": "OpenRig 0.6.10; explicit replacement roster after launch-cwd correction",
+  "openRigScope": {
+    "rigId": "01M56CGCH5VW2XDPN1P1KBNANR",
+    "rigName": "atlas-integration-repos",
+    "instanceLocator": "127.0.0.1:18764",
+    "stateHome": "~/.openrig-foundation"
+  },
+  "evidenceUrl": "https://github.com/fsafey/atlas-vtt/blob/28e9fb5f504205e7135a5db4e2f0ced6b768b051/docs/agent-workspace/integration-team/harness-correction.md",
+  "reviewUrl": "https://github.com/fsafey/atlas-vtt/blob/28e9fb5f504205e7135a5db4e2f0ced6b768b051/docs/agent-workspace/integration-team/requalification/repository-mapping-review.md",
+  "coordinatorAcceptanceUrl": "https://github.com/fsafey/atlas-vtt/blob/28e9fb5f504205e7135a5db4e2f0ced6b768b051/docs/agent-workspace/integration-team/requalification/acceptance.md",
+  "manifestUrl": "https://github.com/fsafey/atlas-vtt/blob/28e9fb5f504205e7135a5db4e2f0ced6b768b051/docs/agent-workspace/integration-team/requalification/manifest.json",
+  "seats": [
+    {
+      "id": "01M56CGCH9NACF766XDX1TF92N",
+      "label": "Atlas representative",
+      "address": "atlas-representative@atlas-integration-repos",
+      "model": "gpt-6.1-sol",
+      "purpose": "Fits the integration into Atlas scenes, objects, editing, persistence and undo.",
+      "nativeHarness": "Codex",
+      "repositoryPath": "/Users/farieds/Project/atlas-vtt",
+      "workingDirectory": "/Users/farieds/Project/atlas-recorded-agent-scene",
+      "repositoryUrl": "https://github.com/fsafey/atlas-vtt",
+      "projectBriefUrl": "https://github.com/fsafey/atlas-vtt/blob/main/docs/agent-workspace/WORKING.md",
+      "openAgentInstructionsUrl": "https://github.com/fsafey/atlas-vtt/blob/28e9fb5f504205e7135a5db4e2f0ced6b768b051/docs/agent-workspace/integration-team/operations.md#open-agent-boundary"
+    },
+    {
+      "id": "01M56CGNJD6YPXS5STC2QHWVVB",
+      "label": "OpenRig representative",
+      "address": "openrig-representative@atlas-integration-repos",
+      "model": "claude-opus-5-5",
+      "purpose": "Keeps agent identity, coordination, continuity and evidence faithful to OpenRig.",
+      "nativeHarness": "Claude Code",
+      "repositoryPath": "/Users/farieds/Project/openrig",
+      "workingDirectory": "/Users/farieds/Project/openrig",
+      "repositoryUrl": "https://github.com/fsafey/openrig",
+      "projectBriefUrl": "https://github.com/fsafey/atlas-vtt/blob/main/docs/agent-workspace/WORKING.md",
+      "openAgentInstructionsUrl": "https://github.com/fsafey/atlas-vtt/blob/28e9fb5f504205e7135a5db4e2f0ced6b768b051/docs/agent-workspace/integration-team/operations.md#open-agent-boundary"
+    }
+  ],
+  "work": [
+    {
+      "id": "atlas-repository-requalification-20261018",
+      "title": "Repository mapping requalification",
+      "assignedSeatId": "01M56CGCH9NACF766XDX1TF92N",
+      "artifactIds": [
+        "repository-mapping-requalification"
+      ]
+    },
+    {
+      "id": "qitem-20261018022035-997c3976",
+      "title": "Repository-grounded independent review",
+      "assignedSeatId": "01M56CGNJD6YPXS5STC2QHWVVB",
+      "predecessorId": "atlas-repository-requalification-20261018",
+      "artifactIds": [
+        "repository-mapping-requalification",
+        "repository-mapping-review"
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "repository-mapping-requalification",
+      "title": "Repository mapping requalification",
+      "originalSha256": "da819b230fdf9d1e9f3716b701e6805f0aadfeb337cbec623e47771219c5382e",
+      "publishedSha256": "da819b230fdf9d1e9f3716b701e6805f0aadfeb337cbec623e47771219c5382e",
+      "publishedUrl": "https://github.com/fsafey/atlas-vtt/blob/28e9fb5f504205e7135a5db4e2f0ced6b768b051/docs/agent-workspace/integration-team/requalification/repository-mapping-requalification.md"
+    },
+    {
+      "id": "repository-mapping-review",
+      "title": "Repository mapping review",
+      "originalSha256": "1bef1e3b8473e5edeb47e8a0d00f36f2533d8050bf8a425aa579925c0b0eec61",
+      "publishedSha256": "1bef1e3b8473e5edeb47e8a0d00f36f2533d8050bf8a425aa579925c0b0eec61",
+      "publishedUrl": "https://github.com/fsafey/atlas-vtt/blob/28e9fb5f504205e7135a5db4e2f0ced6b768b051/docs/agent-workspace/integration-team/requalification/repository-mapping-review.md"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "repository-launch",
+      "label": "Repository launch verified; requalification claimed",
+      "at": "2026-10-18T02:17:08.820955Z",
+      "summary": "Fresh replacement seats started in their actual repository roots. Native models and cwd were independently checked; Atlas claimed the new requalification obligation. Original shared-directory work is historical.",
+      "nextAction": "Complete the repository-grounded mapping assessment and hand it to the OpenRig reviewer.",
+      "evidenceUrl": "https://github.com/fsafey/atlas-vtt/blob/28e9fb5f504205e7135a5db4e2f0ced6b768b051/docs/agent-workspace/integration-team/requalification/queue-history.json",
+      "seats": [
+        {
+          "seatId": "01M56CGCH9NACF766XDX1TF92N",
+          "status": "live",
+          "nativeConversationId": "01a14cc8-3c67-7e71-9328-47ff75568a7c",
+          "sessionId": "01M56CGCJNTQ3VX336VQM1ZHWV",
+          "generation": "0f8f3068-2dc5-432b-bcb0-18896f16a834",
+          "continuity": "Fresh replacement seat launched in its assigned repository; predecessor roster remains stopped and recoverable.",
+          "detail": "Repository cwd and effective model independently verified. Generation recorded from resolved node agentActivity.generation, separately from work claim stamps; it is a captured observation, not a live status."
+        },
+        {
+          "seatId": "01M56CGNJD6YPXS5STC2QHWVVB",
+          "status": "live",
+          "nativeConversationId": "c252b956-929e-477f-bb09-636c5fe3d758",
+          "sessionId": "01M56CGNKM2Z4XY4CMP3ETZY62",
+          "generation": "af902801-91e8-42cb-a802-0464a4d76099",
+          "continuity": "Fresh replacement seat launched in its assigned repository; predecessor roster remains stopped and recoverable.",
+          "detail": "Repository cwd and effective model independently verified. Generation recorded from seat status lastLaunchArguments.generationUuid, separately from work claim stamps; it is a captured observation, not a live status."
+        }
+      ],
+      "work": [
+        {
+          "workId": "atlas-repository-requalification-20261018",
+          "status": "in-progress",
+          "claimGeneration": "0f8f3068-2dc5-432b-bcb0-18896f16a834",
+          "transition": 56,
+          "detail": "Managed Atlas claim follows explicit correction context and repository-native orientation.",
+          "nextAction": "Requalify original mapping and current implementation, then hand off."
+        }
+      ],
+      "artifacts": []
+    },
+    {
+      "id": "repository-author-delivery",
+      "label": "Repository assessment handed to reviewer",
+      "at": "2026-10-18T02:20:35.408Z",
+      "summary": "Atlas completed its repository-grounded source assessment and atomically created the independent review successor. Reviewer approval is not established by author completion.",
+      "nextAction": "OpenRig discovers and claims the review successor after ordinary startup approvals.",
+      "evidenceUrl": "https://github.com/fsafey/atlas-vtt/blob/28e9fb5f504205e7135a5db4e2f0ced6b768b051/docs/agent-workspace/integration-team/requalification/queue-history.json",
+      "seats": [
+        {
+          "seatId": "01M56CGCH9NACF766XDX1TF92N",
+          "status": "live",
+          "nativeConversationId": "01a14cc8-3c67-7e71-9328-47ff75568a7c",
+          "sessionId": "01M56CGCJNTQ3VX336VQM1ZHWV",
+          "generation": "0f8f3068-2dc5-432b-bcb0-18896f16a834",
+          "continuity": "Fresh replacement seat launched in its assigned repository; predecessor roster remains stopped and recoverable.",
+          "detail": "Repository cwd and effective model independently verified. Generation recorded from resolved node agentActivity.generation, separately from work claim stamps; it is a captured observation, not a live status."
+        },
+        {
+          "seatId": "01M56CGNJD6YPXS5STC2QHWVVB",
+          "status": "live",
+          "nativeConversationId": "c252b956-929e-477f-bb09-636c5fe3d758",
+          "sessionId": "01M56CGNKM2Z4XY4CMP3ETZY62",
+          "generation": "af902801-91e8-42cb-a802-0464a4d76099",
+          "continuity": "Fresh replacement seat launched in its assigned repository; predecessor roster remains stopped and recoverable.",
+          "detail": "Repository cwd and effective model independently verified. Generation recorded from seat status lastLaunchArguments.generationUuid, separately from work claim stamps; it is a captured observation, not a live status."
+        }
+      ],
+      "work": [
+        {
+          "workId": "atlas-repository-requalification-20261018",
+          "status": "done",
+          "claimGeneration": "0f8f3068-2dc5-432b-bcb0-18896f16a834",
+          "transition": 57,
+          "detail": "Managed author completion names exact artifact digest; predecessor launch was not retroactively qualified.",
+          "nextAction": "Wait for independent review."
+        },
+        {
+          "workId": "qitem-20261018022035-997c3976",
+          "status": "pending",
+          "claimGeneration": null,
+          "transition": 58,
+          "detail": "Successor created atomically; initial wake refused at an ordinary approval prompt.",
+          "nextAction": "Reviewer discovers and claims durable work."
+        }
+      ],
+      "artifacts": [
+        {
+          "artifactId": "repository-mapping-requalification",
+          "status": "delivered",
+          "acceptedBy": [],
+          "detail": "Exact author bytes delivered for review; no reviewer or coordinator acceptance at this checkpoint."
+        }
+      ]
+    },
+    {
+      "id": "repository-review-claimed",
+      "label": "Independent repository review claimed",
+      "at": "2026-10-18T02:23:02.509Z",
+      "summary": "The OpenRig representative discovered and claimed the durable review successor in its repository-native harness.",
+      "nextAction": "Complete independent review against the frozen assessment and supplied v3 spatial context.",
+      "evidenceUrl": "https://github.com/fsafey/atlas-vtt/blob/28e9fb5f504205e7135a5db4e2f0ced6b768b051/docs/agent-workspace/integration-team/requalification/queue-history.json",
+      "seats": [
+        {
+          "seatId": "01M56CGCH9NACF766XDX1TF92N",
+          "status": "live",
+          "nativeConversationId": "01a14cc8-3c67-7e71-9328-47ff75568a7c",
+          "sessionId": "01M56CGCJNTQ3VX336VQM1ZHWV",
+          "generation": "0f8f3068-2dc5-432b-bcb0-18896f16a834",
+          "continuity": "Fresh replacement seat launched in its assigned repository; predecessor roster remains stopped and recoverable.",
+          "detail": "Repository cwd and effective model independently verified. Generation recorded from resolved node agentActivity.generation, separately from work claim stamps; it is a captured observation, not a live status."
+        },
+        {
+          "seatId": "01M56CGNJD6YPXS5STC2QHWVVB",
+          "status": "live",
+          "nativeConversationId": "c252b956-929e-477f-bb09-636c5fe3d758",
+          "sessionId": "01M56CGNKM2Z4XY4CMP3ETZY62",
+          "generation": "af902801-91e8-42cb-a802-0464a4d76099",
+          "continuity": "Fresh replacement seat launched in its assigned repository; predecessor roster remains stopped and recoverable.",
+          "detail": "Repository cwd and effective model independently verified. Generation recorded from seat status lastLaunchArguments.generationUuid, separately from work claim stamps; it is a captured observation, not a live status."
+        }
+      ],
+      "work": [
+        {
+          "workId": "atlas-repository-requalification-20261018",
+          "status": "done",
+          "claimGeneration": "0f8f3068-2dc5-432b-bcb0-18896f16a834",
+          "transition": 57,
+          "detail": "Managed author completion names exact artifact digest; predecessor launch was not retroactively qualified.",
+          "nextAction": "Wait for independent review."
+        },
+        {
+          "workId": "qitem-20261018022035-997c3976",
+          "status": "in-progress",
+          "claimGeneration": "af902801-91e8-42cb-a802-0464a4d76099",
+          "transition": 60,
+          "detail": "Managed reviewer claim establishes owned work; initial delivery was refused at an ordinary prompt.",
+          "nextAction": "Review the repository-grounded assessment."
+        }
+      ],
+      "artifacts": [
+        {
+          "artifactId": "repository-mapping-requalification",
+          "status": "delivered",
+          "acceptedBy": [],
+          "detail": "Exact author bytes delivered for review; no reviewer or coordinator acceptance at this checkpoint."
+        }
+      ]
+    },
+    {
+      "id": "repository-mapping-accepted",
+      "label": "Repository mapping reviewed and accepted",
+      "at": "2026-10-18T02:45:20.262843+00:00",
+      "summary": "The repository-rooted Atlas author and OpenRig reviewer completed attributed work. The coordinator accepted their exact artifacts and recorded C1-C5 dispositions. Native scene verification and direct agent opening are separate.",
+      "nextAction": "Complete the coordinator-mediated native scene receipt and explicitly supply v4; choose the next bounded navigation scenario.",
+      "evidenceUrl": "https://github.com/fsafey/atlas-vtt/blob/28e9fb5f504205e7135a5db4e2f0ced6b768b051/docs/agent-workspace/integration-team/requalification/queue-history.json",
+      "seats": [
+        {
+          "seatId": "01M56CGCH9NACF766XDX1TF92N",
+          "status": "live",
+          "nativeConversationId": "01a14cc8-3c67-7e71-9328-47ff75568a7c",
+          "sessionId": "01M56CGCJNTQ3VX336VQM1ZHWV",
+          "generation": "0f8f3068-2dc5-432b-bcb0-18896f16a834",
+          "continuity": "Fresh replacement seat launched in its assigned repository; predecessor roster remains stopped and recoverable.",
+          "detail": "Repository cwd and effective model independently verified. Generation recorded from resolved node agentActivity.generation, separately from work claim stamps; it is a captured observation, not a live status."
+        },
+        {
+          "seatId": "01M56CGNJD6YPXS5STC2QHWVVB",
+          "status": "live",
+          "nativeConversationId": "c252b956-929e-477f-bb09-636c5fe3d758",
+          "sessionId": "01M56CGNKM2Z4XY4CMP3ETZY62",
+          "generation": "af902801-91e8-42cb-a802-0464a4d76099",
+          "continuity": "Fresh replacement seat launched in its assigned repository; predecessor roster remains stopped and recoverable.",
+          "detail": "Repository cwd and effective model independently verified. Generation recorded from seat status lastLaunchArguments.generationUuid, separately from work claim stamps; it is a captured observation, not a live status."
+        }
+      ],
+      "work": [
+        {
+          "workId": "atlas-repository-requalification-20261018",
+          "status": "done",
+          "claimGeneration": "0f8f3068-2dc5-432b-bcb0-18896f16a834",
+          "transition": 57,
+          "detail": "Author review frozen at SHA-256 da819b230fdf9d1e9f3716b701e6805f0aadfeb337cbec623e47771219c5382e; independent review and coordinator native acceptance remain separate",
+          "nextAction": "No outstanding obligation in this recorded chain. Future work requires a separately owned assignment."
+        },
+        {
+          "workId": "qitem-20261018022035-997c3976",
+          "status": "done",
+          "claimGeneration": "af902801-91e8-42cb-a802-0464a4d76099",
+          "transition": 73,
+          "detail": "OpenRig review verdict: accepted with coordinator corrections, no Atlas revision. Author assessment da819b230fdf9d1e9f3716b701e6805f0aadfeb337cbec623e47771219c5382e; review artifacts/repository-mapping-review.md 1bef1e3b8473e5edeb47e8a0d00f36f2533d8050bf8a425aa579925c0b0eec61; handoff artifacts/repository-openrig-handoff.md dbc69623af7c0cb9b2fdd4fb1985058262f8e90d20a84d57c349dbaabe34dff8; context v3 5a51fc299281c7fb77e577e590c9b0d9806d5fd624c790839319a2c276d51f99. C1/C2 owed before native attachment, C3/C4 before publication, C5 verified resolved. Not coordinator or native acceptance.",
+          "nextAction": "No outstanding obligation in this recorded chain. Future work requires a separately owned assignment."
+        }
+      ],
+      "artifacts": [
+        {
+          "artifactId": "repository-mapping-requalification",
+          "status": "accepted",
+          "acceptedBy": [
+            "Reviewer",
+            "Coordinator"
+          ],
+          "detail": "Exact authored revision accepted for repository mapping and correction disposition. Native UI verification and later card presentation are not claimed by this review."
+        },
+        {
+          "artifactId": "repository-mapping-review",
+          "status": "accepted",
+          "acceptedBy": [
+            "Coordinator"
+          ],
+          "detail": "Exact authored revision accepted for repository mapping and correction disposition. Native UI verification and later card presentation are not claimed by this review."
+        }
+      ]
+    }
+  ]
+}

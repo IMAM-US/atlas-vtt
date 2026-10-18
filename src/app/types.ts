@@ -1,6 +1,14 @@
 // types.ts
 // Shared interfaces and types for Atlas VTT
 
+/** Stable evidence reference. Authored scene geometry and labels never change the recording. */
+export interface RecordingReference {
+  recordingId: string;
+  sourceRevision: string;
+  kind: 'seat' | 'work' | 'artifact';
+  id: string;
+}
+
 /**
  * Note pin object that links to an Obsidian note
  */
@@ -25,6 +33,7 @@ export interface TokenResourceValue {
 
 /** Base interface for any token entity. */
 export interface BaseToken {
+  recordingReference?: RecordingReference;
   /** False preserves the whole artwork without an Atlas frame. Defaults to true. */
   showRing?: boolean;
   /** Per-instance resources imported from a statblock beyond HP, stress and hope. */
@@ -108,6 +117,7 @@ export type TokenStateSnapshot = Omit<TokenEntity, 'id' | 'x' | 'y' | 'instanceN
  * Text element object for map annotations
  */
 export interface TextElement {
+  recordingReference?: RecordingReference;
   id: string;
   kind: 'text';
   x: number;
@@ -167,4 +177,4 @@ export type ToolMode =
   | 'draw-circle'
   | 'audio';
 
- 
+

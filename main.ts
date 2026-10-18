@@ -6,6 +6,7 @@ import { AtlasView, ATLAS_VIEW_TYPE } from './src/app/atlas-view';
 import { LocalPlayerView, LOCAL_PLAYER_VIEW_TYPE } from './src/app/local-player-view';
 import { PlayerView, PLAYER_VIEW_TYPE } from './src/app/player-view';
 import { DashboardView, DASHBOARD_VIEW_TYPE } from './src/app/dashboard-view';
+import { registerRecordedWorkspace } from './src/app/agent-workspace/registerRecordedWorkspace';
 import { initializeAtlasStorage } from './src/app/atlasStorageInit';
 import { CreatureIndex } from './src/app/creatures/CreatureIndex';
 import { disposeImageProcessing } from './src/app/imageProcessing/imageProcessing';
@@ -78,6 +79,7 @@ export default class AtlasVTTPlugin extends Plugin {
 
     await storageReady;
     await this.settingsService.initialize();
+    registerRecordedWorkspace(this);
     const changelogService = new ChangelogService(this.app, this.settingsService, {
       installedVersion: this.manifest.version,
       existingInstallation: await existingInstallation,
