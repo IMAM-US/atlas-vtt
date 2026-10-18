@@ -1,5 +1,5 @@
 version: "0.2"
-name: atlas-integration
+name: atlas-integration-repos
 summary: Atlas and OpenRig representatives building their own editable integration workspace.
 culture_file: CULTURE.md
 pods:
@@ -11,7 +11,7 @@ pods:
         profile: atlas
         runtime: codex
         model: gpt-6.1-sol
-        cwd: "."
+        cwd: "/Users/farieds/Project/atlas-recorded-agent-scene"
     edges: []
   - id: openrig
     label: OpenRig repository
@@ -21,7 +21,7 @@ pods:
         profile: openrig
         runtime: claude-code
         model: claude-opus-5-5
-        cwd: "."
+        cwd: "/Users/farieds/Project/openrig"
     edges: []
 edges:
   - kind: collaborates_with

@@ -1,0 +1,408 @@
+{
+  "observedAt": "2026-10-18T02:43:32.628537+00:00",
+  "items": [
+    {
+      "pickup": {
+        "state": "terminal",
+        "evidence": "closed (done)"
+      },
+      "waiting": {
+        "obligation": "atlas-repository-requalification-20261018",
+        "owner": "atlas-representative@atlas-integration-repos",
+        "state": "done",
+        "actionableSince": null,
+        "blocker": null,
+        "lastMeaningfulChange": {
+          "id": 57,
+          "at": "2026-10-18T02:20:35.408Z"
+        },
+        "liveness": {
+          "subject": "atlas-representative@atlas-integration-repos",
+          "activity": "idle-at-prompt",
+          "needsInput": {
+            "count": 0,
+            "reason": null
+          },
+          "confidence": "oracle"
+        },
+        "nextBackstop": {
+          "owner": "atlas-representative@atlas-integration-repos",
+          "mechanism": "none (terminal obligation)",
+          "dueAt": null,
+          "intervalSeconds": null
+        },
+        "deadlineAt": null
+      },
+      "qitemId": "atlas-repository-requalification-20261018",
+      "tsCreated": "2026-10-18T02:15:21.600Z",
+      "tsUpdated": "2026-10-18T02:20:35.408Z",
+      "sourceSession": "atlas-integration-coordinator",
+      "destinationSession": "atlas-representative@atlas-integration-repos",
+      "state": "done",
+      "priority": "routine",
+      "tier": null,
+      "tags": [
+        "mission:atlas-integration",
+        "harness-correction"
+      ],
+      "blockedOn": null,
+      "handedOffTo": "openrig-representative@atlas-integration-repos",
+      "handedOffFrom": null,
+      "expiresAt": null,
+      "chainOfRecord": null,
+      "body": "Owner-requested repository-harness requalification. Atlas representative owns this obligation; claim it through managed queue before work. Read workspace/HARNESS-CORRECTION.md and scene-context-v3.json using absolute shared-root /Users/farieds/Project/atlas-openrig-integration-workspace. Preserve original mapping/review evidence.\n\n1. Prove current native cwd and repository root, actual managed seat identity, instruction entrypoints and relevant repo skills. Inspect the real available skills; load applicable Atlas operation/map guidance for the studio/object journey and explain the plugin-development boundary. AGENTS.md is now primary; CLAUDE.md is the Standalone Search loader. Do not confuse a manual read in another cwd with native launch.\n2. Recheck the original mapping-proposal.md, current agent-workspace implementation and shared image/place definitions against Atlas's native creation/placement/selection/inspection/duplication/deletion/history/persistence lifecycle. Focus on consequential integration defects or unsupported claims. Existing 46 focused tests, TypeScript/lint/build and native journey passed; do not replay broad CI. Current work adds explicit replacement-seat attachment preserving authored state and old evidence. Review latest helper code when available; identify any concrete correction for coordinator.\n3. Write only shared artifacts/atlas-repository-orientation.md, artifacts/repository-mapping-requalification.md and artifacts/repository-atlas-handoff.md. Cite v3 SHA, exact original proposal SHA, source files, present repository instruction hashes, loaded skill paths, role's new stable ID and predecessor distinction. State observed/source-derived/proposed separately. Bound your review to this implementation; avoid unrelated cleanup or extra agents.\n4. Freeze your requalification artifact and hand it via real atomic queue handoff-and-complete to openrig-representative@atlas-integration-repos. Review body must name exact artifact SHA, context, your owned row and reviewer acceptance criteria. OpenRig owns artifacts/repository-mapping-review.md and artifacts/repository-openrig-handoff.md; requires its repository-native orientation plus loaded developing-openrig/queue-handoff and actual managed claim. Reviewer independently checks semantics, identity replacement, provenance and operating boundaries. Any consequential correction returns a successor to Atlas; otherwise attributed verdict closes no-follow-on. Final coordinator acceptance/native verification remain separate.\n\nNo source edits, live connector, new execution controls, permission changes, installation changes or foundation operations. Wait after delivery. This is a new obligation correcting the owner-found qualification gap, not a retroactive rewrite of the original chain.\n",
+      "summary": "Requalify Atlas mapping from the repository-native harness and hand off for OpenRig review",
+      "evidenceRef": null,
+      "humanIntent": null,
+      "humanDetail": null,
+      "replyTo": null,
+      "humanQuestions": null,
+      "humanAnswers": null,
+      "closureReason": "handed_off_to",
+      "closureTarget": "openrig-representative@atlas-integration-repos",
+      "closureRequiredAt": null,
+      "claimedAt": "2026-10-18T02:16:00.092Z",
+      "lastNudgeAttempt": "2026-10-18T02:15:21.864Z",
+      "lastNudgeResult": "failed:Refused: 'atlas-representative@atlas-integration-repos' is at an interactive prompt (selection_prompt). A message must not select or approve it. To deliberately drive the prompt: rig send atlas-representative@atlas-integration-repos \"<text>\" --dangerously-interact --reason \"<why>\". No text was sent.",
+      "lastNudgeWireResult": "failed:Refused: 'atlas-representative@atlas-integration-repos' is at an interactive prompt (selection_prompt). A message must not select or approve it. To deliberately drive the prompt: rig send atlas-representative@atlas-integration-repos \"<text>\" --dangerously-interact --reason \"<why>\". No text was sent.",
+      "lastHeartbeat": null,
+      "resolution": null,
+      "targetRepo": null,
+      "deliveryOutcome": null,
+      "destinationClass": "pane-bound"
+    },
+    {
+      "pickup": {
+        "state": "terminal",
+        "evidence": "closed (done)"
+      },
+      "waiting": {
+        "obligation": "qitem-20261018022035-997c3976",
+        "owner": "openrig-representative@atlas-integration-repos",
+        "state": "done",
+        "actionableSince": null,
+        "blocker": null,
+        "lastMeaningfulChange": {
+          "id": 73,
+          "at": "2026-10-18T02:43:13.842Z"
+        },
+        "liveness": {
+          "subject": "openrig-representative@atlas-integration-repos",
+          "activity": "working",
+          "needsInput": {
+            "count": 0,
+            "reason": null
+          },
+          "confidence": "oracle"
+        },
+        "nextBackstop": {
+          "owner": "openrig-representative@atlas-integration-repos",
+          "mechanism": "none (terminal obligation)",
+          "dueAt": null,
+          "intervalSeconds": null
+        },
+        "deadlineAt": null
+      },
+      "qitemId": "qitem-20261018022035-997c3976",
+      "tsCreated": "2026-10-18T02:20:35.408Z",
+      "tsUpdated": "2026-10-18T02:43:13.842Z",
+      "sourceSession": "atlas-representative@atlas-integration-repos",
+      "destinationSession": "openrig-representative@atlas-integration-repos",
+      "state": "done",
+      "priority": "routine",
+      "tier": null,
+      "tags": [
+        "mission:atlas-integration",
+        "harness-correction"
+      ],
+      "blockedOn": null,
+      "handedOffTo": null,
+      "handedOffFrom": "atlas-repository-requalification-20261018",
+      "expiresAt": null,
+      "chainOfRecord": [
+        "atlas-repository-requalification-20261018"
+      ],
+      "body": "# Atlas repository requalification handoff\n\nFrom: atlas-representative@atlas-integration-repos, stable node 01M56CGCH9NACF766XDX1TF92N.\nTo: openrig-representative@atlas-integration-repos, stable node 01M56CGNJD6YPXS5STC2QHWVVB.\nOwned author obligation: atlas-repository-requalification-20261018, managed claim 2026-10-18T02:16:00.092Z.\n\nThis document is the frozen outgoing review payload. The actual managed atomic queue transition, its successor ID and claim state are authoritative for delivery and ownership; this payload alone does not assert reviewer consumption or acceptance.\n\nReview the frozen artifact at:\n/Users/farieds/Project/atlas-openrig-integration-workspace/artifacts/repository-mapping-requalification.md\nSHA-256: da819b230fdf9d1e9f3716b701e6805f0aadfeb337cbec623e47771219c5382e\n\nRepository orientation:\n/Users/farieds/Project/atlas-openrig-integration-workspace/artifacts/atlas-repository-orientation.md\nSHA-256: 5016b65082d8d5d3f699aa002b87b4e7541fc71e59f1918f8c089759a55a7f67\n\nRequired bounded context:\n- Shared workspace /Users/farieds/Project/atlas-openrig-integration-workspace. Read its current README.md, workspace/ENTRY.md and workspace/HARNESS-CORRECTION.md. Current team briefs are in team-repository/. The original team/ and its verdicts remain historical.\n- Explicit workspace/scene-context-v3.json, 13468 bytes, SHA-256 5a51fc299281c7fb77e577e590c9b0d9806d5fd624c790839319a2c276d51f99. It still represents predecessor seats and is not a live scene subscription.\n- Original artifacts/mapping-proposal.md, SHA-256 26cc57dd08586c80bf2e0d9b16da7be19b25b00c04438ee1463ae1dc81aef349. Preserve the original proposal and verdict.\n- Implementation /Users/farieds/Project/atlas-recorded-agent-scene. Exact source hashes and native lifecycle seams are in the frozen assessment. OpenRig source /Users/farieds/Project/openrig remains distinct from installed 0.6.10.\n\nAuthor finding: the native scene/token/text/pin/reference mapping remains appropriate. No blocking source defect was found. Explicit seat replacement preserves authored local objects and old work/artifact evidence in one undo step. The corrected first-use path now seeds the new roster but reopens predecessor scenes unchanged through explicit accepted recording IDs. The coordinator reports focused first-use checks, two files and 14 passing tests, typecheck and touched lint; author inspected the assertions but did not rerun the suite.\n\nCoordinator completion remains separate: update existing linked notes explicitly, freeze the actual new evidence edition from this real chain and independent runtime observations, bind concrete evidence links/hashes, then perform native replacement/undo/redo/save-reopen and supply a new exact snapshot. New work cards may initially fall below the 1400-high studio image; native presentation should deliberately place them without shifting existing authored objects. Pending repositoryTeamRecording.json is construction state, not accepted evidence.\n\nReviewer acceptance criteria:\n1. Claim the actual successor via managed identity. Prove your native OpenRig repository cwd/root, instruction entrypoints and relevant installed/local guidance, including developing-openrig and queue-handoff. An external coordinator wrapper or manual source read from the artifacts directory is insufficient.\n2. Independently verify corrected stable IDs versus historical nodes, native conversation/session/generation distinctions, exact original and current artifact hashes, and supplied context. Do not infer native continuity from replacement role labels.\n3. Check the scoped source slice for edition/reference immutability, local duplication/deletion/history/persistence behavior, first-use versus predecessor reopen, and preservation of historical work/evidence. No spatial gesture, note or image grants access or executes OpenRig work.\n4. Write only your assigned artifacts/repository-mapping-review.md and artifacts/repository-openrig-handoff.md, plus your repository orientation. Bind an attributed verdict to the exact assessment digest above and distinguish source findings from coordinator-reported tests and native observations.\n5. For consequential corrections, create a real review successor back to atlas-representative@atlas-integration-repos. Otherwise close the review with an attributed no-follow-on verdict. Do not claim coordinator acceptance, final publication or native replacement acceptance. Wait after delivery.\n\nNo source edits, new agents, live connector, execution controls, installation/provider/permission changes or foundation operations. Coordinator owns integration, native Atlas edits and delivery.\n",
+      "summary": "Review repository-grounded Atlas mapping and explicit roster replacement against the frozen artifact",
+      "evidenceRef": "/Users/farieds/Project/atlas-openrig-integration-workspace/artifacts/repository-mapping-requalification.md",
+      "humanIntent": null,
+      "humanDetail": null,
+      "replyTo": null,
+      "humanQuestions": null,
+      "humanAnswers": null,
+      "closureReason": "no-follow-on",
+      "closureTarget": null,
+      "closureRequiredAt": null,
+      "claimedAt": "2026-10-18T02:23:02.509Z",
+      "lastNudgeAttempt": "2026-10-18T02:20:35.436Z",
+      "lastNudgeResult": "failed:Refused: 'openrig-representative@atlas-integration-repos' is at an interactive prompt (selection_prompt). A message must not select or approve it. To deliberately drive the prompt: rig send openrig-representative@atlas-integration-repos \"<text>\" --dangerously-interact --reason \"<why>\". No text was sent.",
+      "lastNudgeWireResult": "failed:Refused: 'openrig-representative@atlas-integration-repos' is at an interactive prompt (selection_prompt). A message must not select or approve it. To deliberately drive the prompt: rig send openrig-representative@atlas-integration-repos \"<text>\" --dangerously-interact --reason \"<why>\". No text was sent.",
+      "lastHeartbeat": null,
+      "resolution": null,
+      "targetRepo": null,
+      "deliveryOutcome": null,
+      "destinationClass": "pane-bound"
+    },
+    {
+      "pickup": {
+        "state": "terminal",
+        "evidence": "closed (done)"
+      },
+      "waiting": {
+        "obligation": "qitem-recovery-4916a334a60f2a5a",
+        "owner": "openrig-representative@atlas-integration-repos",
+        "state": "done",
+        "actionableSince": null,
+        "blocker": null,
+        "lastMeaningfulChange": {
+          "id": 72,
+          "at": "2026-10-18T02:37:38.615Z"
+        },
+        "liveness": {
+          "subject": "openrig-representative@atlas-integration-repos",
+          "activity": "working",
+          "needsInput": {
+            "count": 0,
+            "reason": null
+          },
+          "confidence": "oracle"
+        },
+        "nextBackstop": {
+          "owner": "openrig-representative@atlas-integration-repos",
+          "mechanism": "none (terminal obligation)",
+          "dueAt": null,
+          "intervalSeconds": null
+        },
+        "deadlineAt": null
+      },
+      "qitemId": "qitem-recovery-4916a334a60f2a5a",
+      "tsCreated": "2026-10-18T02:22:38.620Z",
+      "tsUpdated": "2026-10-18T02:37:38.614Z",
+      "sourceSession": "atlas-representative@atlas-integration-repos",
+      "destinationSession": "openrig-representative@atlas-integration-repos",
+      "state": "done",
+      "priority": "routine",
+      "tier": null,
+      "tags": [
+        "stuck-sweep-finding",
+        "stuck-sweep:undelivered-wake:qitem-20261018022035-997c3976",
+        "recovery-for:qitem-20261018022035-997c3976"
+      ],
+      "blockedOn": null,
+      "handedOffTo": null,
+      "handedOffFrom": null,
+      "expiresAt": null,
+      "chainOfRecord": null,
+      "body": "STUCK SWEEP FINDING (undelivered-wake)\nrow: qitem-20261018022035-997c3976\ndestination: openrig-representative@atlas-integration-repos (source atlas-representative@atlas-integration-repos, state pending)\nage: 2 min\nlast transition: handoff-and-complete from atlas-repository-requalification-20261018 at 2026-10-18T02:20:35.408Z\nwhy: wake failed (failed:Refused: 'openrig-representative@atlas-integration-repos' is at an interactive prompt (selection_prompt). A message must not select or approve it. To deliberately drive the prompt: rig send openrig-representative@atlas-integration-repos \"<text>\" --dangerously-interact --reason \"<why>\". No text was sent.) and nothing retried it\nResolve the underlying row; the sweep closes this finding itself once the row is no longer stuck.",
+      "summary": "Stuck sweep: undelivered-wake on qitem-20261018022035-997c3976 (2 min)",
+      "evidenceRef": "rig queue show qitem-20261018022035-997c3976",
+      "humanIntent": null,
+      "humanDetail": null,
+      "replyTo": null,
+      "humanQuestions": null,
+      "humanAnswers": null,
+      "closureReason": "no-follow-on",
+      "closureTarget": null,
+      "closureRequiredAt": null,
+      "claimedAt": null,
+      "lastNudgeAttempt": "2026-10-18T02:22:38.653Z",
+      "lastNudgeResult": "failed:Refused: 'openrig-representative@atlas-integration-repos' is at an interactive prompt (selection_prompt). A message must not select or approve it. To deliberately drive the prompt: rig send openrig-representative@atlas-integration-repos \"<text>\" --dangerously-interact --reason \"<why>\". No text was sent.",
+      "lastNudgeWireResult": "failed:Refused: 'openrig-representative@atlas-integration-repos' is at an interactive prompt (selection_prompt). A message must not select or approve it. To deliberately drive the prompt: rig send openrig-representative@atlas-integration-repos \"<text>\" --dangerously-interact --reason \"<why>\". No text was sent.",
+      "lastHeartbeat": null,
+      "resolution": null,
+      "targetRepo": null,
+      "deliveryOutcome": null,
+      "destinationClass": "pane-bound"
+    }
+  ],
+  "transitions": [
+    {
+      "transitionId": 55,
+      "qitemId": "atlas-repository-requalification-20261018",
+      "ts": "2026-10-18T02:15:21.604Z",
+      "state": "pending",
+      "transitionNote": "created",
+      "actorSession": "atlas-integration-coordinator",
+      "closureReason": null,
+      "closureTarget": null,
+      "identityProvenance": "claimed:v1",
+      "ownerNotificationKind": null,
+      "ownerNotificationLevel": "RECORD"
+    },
+    {
+      "transitionId": 56,
+      "qitemId": "atlas-repository-requalification-20261018",
+      "ts": "2026-10-18T02:16:00.092Z",
+      "state": "in-progress",
+      "transitionNote": "claimed",
+      "actorSession": "atlas-representative@atlas-integration-repos",
+      "closureReason": null,
+      "closureTarget": null,
+      "identityProvenance": "transport:v1",
+      "ownerNotificationKind": null,
+      "ownerNotificationLevel": "RECORD"
+    },
+    {
+      "transitionId": 57,
+      "qitemId": "atlas-repository-requalification-20261018",
+      "ts": "2026-10-18T02:20:35.408Z",
+      "state": "done",
+      "transitionNote": "Author review frozen at SHA-256 da819b230fdf9d1e9f3716b701e6805f0aadfeb337cbec623e47771219c5382e; independent review and coordinator native acceptance remain separate",
+      "actorSession": "atlas-representative@atlas-integration-repos",
+      "closureReason": "handed_off_to",
+      "closureTarget": "openrig-representative@atlas-integration-repos",
+      "identityProvenance": "transport:v1",
+      "ownerNotificationKind": null,
+      "ownerNotificationLevel": "RECORD"
+    },
+    {
+      "transitionId": 58,
+      "qitemId": "qitem-20261018022035-997c3976",
+      "ts": "2026-10-18T02:20:35.408Z",
+      "state": "pending",
+      "transitionNote": "handoff-and-complete from atlas-repository-requalification-20261018",
+      "actorSession": "atlas-representative@atlas-integration-repos",
+      "closureReason": null,
+      "closureTarget": null,
+      "identityProvenance": null,
+      "ownerNotificationKind": null,
+      "ownerNotificationLevel": "RECORD"
+    },
+    {
+      "transitionId": 60,
+      "qitemId": "qitem-20261018022035-997c3976",
+      "ts": "2026-10-18T02:23:02.509Z",
+      "state": "in-progress",
+      "transitionNote": "claimed",
+      "actorSession": "openrig-representative@atlas-integration-repos",
+      "closureReason": null,
+      "closureTarget": null,
+      "identityProvenance": "transport:v1",
+      "ownerNotificationKind": null,
+      "ownerNotificationLevel": "RECORD"
+    },
+    {
+      "transitionId": 73,
+      "qitemId": "qitem-20261018022035-997c3976",
+      "ts": "2026-10-18T02:43:13.842Z",
+      "state": "done",
+      "transitionNote": "OpenRig review verdict: accepted with coordinator corrections, no Atlas revision. Author assessment da819b230fdf9d1e9f3716b701e6805f0aadfeb337cbec623e47771219c5382e; review artifacts/repository-mapping-review.md 1bef1e3b8473e5edeb47e8a0d00f36f2533d8050bf8a425aa579925c0b0eec61; handoff artifacts/repository-openrig-handoff.md dbc69623af7c0cb9b2fdd4fb1985058262f8e90d20a84d57c349dbaabe34dff8; context v3 5a51fc299281c7fb77e577e590c9b0d9806d5fd624c790839319a2c276d51f99. C1/C2 owed before native attachment, C3/C4 before publication, C5 verified resolved. Not coordinator or native acceptance.",
+      "actorSession": "openrig-representative@atlas-integration-repos",
+      "closureReason": "no-follow-on",
+      "closureTarget": null,
+      "identityProvenance": "transport:v1",
+      "ownerNotificationKind": null,
+      "ownerNotificationLevel": "RECORD"
+    },
+    {
+      "transitionId": 59,
+      "qitemId": "qitem-recovery-4916a334a60f2a5a",
+      "ts": "2026-10-18T02:22:38.620Z",
+      "state": "pending",
+      "transitionNote": "created",
+      "actorSession": "atlas-representative@atlas-integration-repos",
+      "closureReason": null,
+      "closureTarget": null,
+      "identityProvenance": null,
+      "ownerNotificationKind": null,
+      "ownerNotificationLevel": "RECORD"
+    },
+    {
+      "transitionId": 61,
+      "qitemId": "qitem-recovery-4916a334a60f2a5a",
+      "ts": "2026-10-18T02:24:32.434Z",
+      "state": "pending",
+      "transitionNote": "parked-owner wake reserved: openrig-representative@atlas-integration-repos|df17c9f0b4eecf0d#1; obligations qitem-recovery-4916a334a60f2a5a",
+      "actorSession": "watchdog@system",
+      "closureReason": null,
+      "closureTarget": null,
+      "identityProvenance": null,
+      "ownerNotificationKind": null,
+      "ownerNotificationLevel": "RECORD"
+    },
+    {
+      "transitionId": 62,
+      "qitemId": "qitem-recovery-4916a334a60f2a5a",
+      "ts": "2026-10-18T02:26:32.576Z",
+      "state": "pending",
+      "transitionNote": "parked-owner wake delivery refused: openrig-representative@atlas-integration-repos|df17c9f0b4eecf0d#1; Refused: 'openrig-representative@atlas-integration-repos' is at an interactive prompt (selection_prompt). A message must not select or approve it. To deliberately drive the prompt: rig send openrig-representative@atlas-integration-repos \"<text>\" --dangerously-interact --reason \"<why>\". No text was sent.",
+      "actorSession": "watchdog@system",
+      "closureReason": null,
+      "closureTarget": null,
+      "identityProvenance": null,
+      "ownerNotificationKind": null,
+      "ownerNotificationLevel": "RECORD"
+    },
+    {
+      "transitionId": 63,
+      "qitemId": "qitem-recovery-4916a334a60f2a5a",
+      "ts": "2026-10-18T02:26:32.579Z",
+      "state": "pending",
+      "transitionNote": "parked-owner episode closed: openrig-representative@atlas-integration-repos|df17c9f0b4eecf0d#1 (seat resumed)",
+      "actorSession": "watchdog@system",
+      "closureReason": null,
+      "closureTarget": null,
+      "identityProvenance": null,
+      "ownerNotificationKind": null,
+      "ownerNotificationLevel": "RECORD"
+    },
+    {
+      "transitionId": 64,
+      "qitemId": "qitem-recovery-4916a334a60f2a5a",
+      "ts": "2026-10-18T02:28:32.723Z",
+      "state": "pending",
+      "transitionNote": "parked-owner wake reserved: openrig-representative@atlas-integration-repos|df17c9f0b4eecf0d#2; obligations qitem-recovery-4916a334a60f2a5a",
+      "actorSession": "watchdog@system",
+      "closureReason": null,
+      "closureTarget": null,
+      "identityProvenance": null,
+      "ownerNotificationKind": null,
+      "ownerNotificationLevel": "RECORD"
+    },
+    {
+      "transitionId": 65,
+      "qitemId": "qitem-recovery-4916a334a60f2a5a",
+      "ts": "2026-10-18T02:30:32.893Z",
+      "state": "pending",
+      "transitionNote": "parked-owner wake delivery refused: openrig-representative@atlas-integration-repos|df17c9f0b4eecf0d#2; Refused: 'openrig-representative@atlas-integration-repos' is at an interactive prompt (selection_prompt). A message must not select or approve it. To deliberately drive the prompt: rig send openrig-representative@atlas-integration-repos \"<text>\" --dangerously-interact --reason \"<why>\". No text was sent.",
+      "actorSession": "watchdog@system",
+      "closureReason": null,
+      "closureTarget": null,
+      "identityProvenance": null,
+      "ownerNotificationKind": null,
+      "ownerNotificationLevel": "RECORD"
+    },
+    {
+      "transitionId": 72,
+      "qitemId": "qitem-recovery-4916a334a60f2a5a",
+      "ts": "2026-10-18T02:37:38.615Z",
+      "state": "done",
+      "transitionNote": "stuck-sweep resolved: undelivered-wake on qitem-20261018022035-997c3976 no longer detected",
+      "actorSession": "atlas-representative@atlas-integration-repos",
+      "closureReason": "no-follow-on",
+      "closureTarget": null,
+      "identityProvenance": null,
+      "ownerNotificationKind": null,
+      "ownerNotificationLevel": "RECORD"
+    }
+  ],
+  "claimStamps": [
+    {
+      "qitem_id": "atlas-repository-requalification-20261018",
+      "claimed_at": "2026-10-18T02:16:00.092Z",
+      "claimed_by_generation_uuid": "0f8f3068-2dc5-432b-bcb0-18896f16a834"
+    },
+    {
+      "qitem_id": "qitem-20261018022035-997c3976",
+      "claimed_at": "2026-10-18T02:23:02.509Z",
+      "claimed_by_generation_uuid": "af902801-91e8-42cb-a802-0464a4d76099"
+    },
+    {
+      "qitem_id": "qitem-recovery-4916a334a60f2a5a",
+      "claimed_at": null,
+      "claimed_by_generation_uuid": null
+    }
+  ],
+  "claimStampSource": "Read-only queue_items query, separate from seat generation observations.",
+  "attribution": "Coordinator create is claimed:v1. Recovery row is daemon-generated, despite its Atlas source/mint fields. Managed author and reviewer claims and closures are transport:v1."
+}
