@@ -1,4 +1,5 @@
 import { ensureIntegrationStudioArtwork } from './integrationStudioArtwork';
+import { AssetService } from '../services/AssetService';
 import { AtlasView } from '../atlas-view';
 import { attachIntegrationEvidence, attachRepositoryTeamEvidence } from './attachIntegrationEvidence';
 import { ensureIntegrationNotes } from './integrationNotes';
@@ -15,6 +16,9 @@ function activeIntegrationScene(plugin: Plugin, editions: readonly WorkspaceReco
   const store = view.getStore();
   const state = store.getState();
   if (state.isPlayerView || state.isMapLoading || !state.mapPath) return null;
+  const seed = AssetService.getInstance(plugin.app).findSceneAssetByMapPath(state.mapPath)?.data?.recording;
+  const knownSeeds = [integrationOrientationRecording, integrationRecording, repositoryTeamRecording];
+  if (!seed || !knownSeeds.some(edition => seed.recordingId === edition.id && seed.sourceRevision === edition.sourceRevision)) return null;
   const belongs = [...Object.values(state.objects.tokens), ...Object.values(state.objects.texts)].some(object => {
     const reference = object.recordingReference;
     if (!reference) return false;

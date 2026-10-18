@@ -3,7 +3,8 @@ import { App, type Plugin } from 'obsidian';
 import { registerRecordedWorkspace } from '../../src/app/agent-workspace/registerRecordedWorkspace';
 import { integrationRecording, integrationOrientationRecording, repositoryTeamRecording, integrationSceneName } from '../../src/app/agent-workspace/integrationRecording';
 
-const { open, ensureNotes, attach, attachRepository, artwork, openExisting } = vi.hoisted(() => ({ openExisting: vi.fn().mockResolvedValue(false), attachRepository: vi.fn().mockReturnValue({ updatedReferences: 4, addedWorkCards: 1 }), artwork: vi.fn().mockResolvedValue('studio.webp'), attach: vi.fn().mockReturnValue({ updatedReferences: 2, addedWorkCards: 1 }), open: vi.fn().mockResolvedValue(undefined), ensureNotes: vi.fn().mockResolvedValue(undefined) }));
+const { open, ensureNotes, attach, attachRepository, artwork, openExisting, findScene } = vi.hoisted(() => ({ findScene: vi.fn(), openExisting: vi.fn().mockResolvedValue(false), attachRepository: vi.fn().mockReturnValue({ updatedReferences: 4, addedWorkCards: 1 }), artwork: vi.fn().mockResolvedValue('studio.webp'), attach: vi.fn().mockReturnValue({ updatedReferences: 2, addedWorkCards: 1 }), open: vi.fn().mockResolvedValue(undefined), ensureNotes: vi.fn().mockResolvedValue(undefined) }));
+vi.mock('../../src/app/services/AssetService', () => ({ AssetService: { getInstance: () => ({ findSceneAssetByMapPath: findScene }) } }));
 vi.mock('../../src/app/agent-workspace/createRecordedScene', () => ({ createOrOpenRecordedScene: open, openExistingRecordedScene: openExisting }));
 vi.mock('../../src/app/agent-workspace/integrationNotes', () => ({ ensureIntegrationNotes: ensureNotes }));
 vi.mock('../../src/app/atlas-view', () => ({ AtlasView: class AtlasView {} }));
@@ -11,12 +12,14 @@ vi.mock('../../src/app/agent-workspace/attachIntegrationEvidence', () => ({ atta
 vi.mock('../../src/app/agent-workspace/integrationStudioArtwork', () => ({ ensureIntegrationStudioArtwork: artwork }));
 beforeEach(() => {
   vi.clearAllMocks();
+  findScene.mockReset();
   openExisting.mockReset().mockResolvedValue(false);
   artwork.mockReset().mockResolvedValue('studio.webp');
 });
 
 it('does not add predecessor work to a scene containing only the current repository roster', () => {
   const registered = commands();
+  findScene.mockReturnValue({ data: { recording: { recordingId: integrationOrientationRecording.id, sourceRevision: integrationOrientationRecording.sourceRevision } } });
   const state = { isPlayerView: false, isMapLoading: false, mapPath: 'Current.atlasmap', objects: {
     tokens: { seat: { recordingReference: { recordingId: repositoryTeamRecording.id, sourceRevision: repositoryTeamRecording.sourceRevision,
       kind: 'seat', id: repositoryTeamRecording.seats[0]!.id } } }, texts: {},
@@ -86,6 +89,8 @@ it('attaches only to the active loaded GM integration scene and never mutates du
   const store = { getState: () => state };
   const active = vi.fn((): { getStore: () => typeof store } | null => null);
   Object.assign(registered.app, { workspace: { getActiveViewOfType: active } });
+  const knownSeed = { data: { recording: { recordingId: integrationOrientationRecording.id, sourceRevision: integrationOrientationRecording.sourceRevision } } };
+  findScene.mockReturnValue(knownSeed);
   expect(command.checkCallback(false)).toBe(false);
   active.mockReturnValue({ getStore: () => store });
   for (const patch of [{ isPlayerView: true }, { isMapLoading: true }, { mapPath: '' }]) {
@@ -94,6 +99,15 @@ it('attaches only to the active loaded GM integration scene and never mutates du
     expect(command.checkCallback(false)).toBe(false);
     Object.assign(state, before);
   }
+  for (const seed of [undefined, { data: {} }, { data: { recording: { recordingId: 'unrelated', sourceRevision: integrationOrientationRecording.sourceRevision } } },
+    { data: { recording: { recordingId: integrationOrientationRecording.id, sourceRevision: 'unknown-edition' } } }]) {
+    findScene.mockReturnValue(seed);
+    expect(command.checkCallback(false)).toBe(false);
+  }
+  findScene.mockReturnValue(knownSeed);
+  state.mapPath = 'atlas-vtt/collections/moved/scenes/Renamed studio.atlasmap';
+  expect(command.checkCallback(true)).toBe(true);
+  expect(findScene).toHaveBeenLastCalledWith(state.mapPath);
   const original = { ...reference };
   reference.recordingId = 'unrelated-recording';
   expect(command.checkCallback(false)).toBe(false);
@@ -120,6 +134,7 @@ it('applies studio art only while the original loaded integration view and map r
   const view = { getStore: () => store };
   const active = vi.fn(() => view);
   Object.assign(registered.app, { workspace: { getActiveViewOfType: active } });
+  findScene.mockReturnValue({ data: { recording: { recordingId: integrationRecording.id, sourceRevision: integrationRecording.sourceRevision } } });
   let finish!: (path: string) => void;
   artwork.mockImplementationOnce(() => new Promise<string>(resolve => { finish = resolve; }));
   expect(command.checkCallback(true)).toBe(true);
@@ -130,6 +145,14 @@ it('applies studio art only while the original loaded integration view and map r
   await vi.waitFor(() => expect(artwork).toHaveResolved());
   expect(setBackground).not.toHaveBeenCalled();
   state.mapPath = 'Integration.atlasmap';
+  let finishAfterOwnershipLoss!: (path: string) => void;
+  artwork.mockImplementationOnce(() => new Promise<string>(resolve => { finishAfterOwnershipLoss = resolve; }));
+  command.checkCallback(false);
+  findScene.mockReturnValue(null);
+  finishAfterOwnershipLoss('studio.webp');
+  await vi.waitFor(() => expect(artwork).toHaveResolved());
+  expect(setBackground).not.toHaveBeenCalled();
+  findScene.mockReturnValue({ data: { recording: { recordingId: integrationRecording.id, sourceRevision: integrationRecording.sourceRevision } } });
   command.checkCallback(false);
   await vi.waitFor(() => expect(setBackground).toHaveBeenCalledExactlyOnceWith('studio.webp'));
   expect(open).not.toHaveBeenCalled();
@@ -145,6 +168,7 @@ it('replaces the repository roster only on explicit invocation with the exact se
   } };
   const store = { getState: () => state };
   Object.assign(registered.app, { workspace: { getActiveViewOfType: () => ({ getStore: () => store }) } });
+  findScene.mockReturnValue({ data: { recording: { recordingId: integrationRecording.id, sourceRevision: integrationRecording.sourceRevision } } });
   expect(command.checkCallback(true)).toBe(true);
   expect(attachRepository).not.toHaveBeenCalled();
   command.checkCallback(false);
@@ -170,3 +194,46 @@ it('reopens an existing authored workspace before unavailable starter artwork ca
     expect(log).not.toHaveBeenCalled();
   } finally { log.mockRestore(); }
 });
+
+for (const recording of [integrationOrientationRecording, integrationRecording, repositoryTeamRecording]) {
+  for (const work of recording.work) {
+    it(`rejects copied ${recording.id}/${work.id} references in an ordinary scene`, () => {
+      const registered = commands();
+      const state = { isPlayerView: false, isMapLoading: false, mapPath: 'Observatory.atlasmap', objects: {
+        tokens: {}, texts: { copied: { recordingReference: { recordingId: recording.id, sourceRevision: recording.sourceRevision,
+          kind: 'work', id: work.id } } },
+      } };
+      Object.assign(registered.app, { workspace: { getActiveViewOfType: () => ({ getStore: () => ({ getState: () => state }) }) } });
+      for (const id of ['add-integration-studio-artwork', 'attach-completed-integration-evidence', 'attach-repository-team-evidence']) {
+        const command = registered.commands.find(command => command.id === id);
+        expect(command.checkCallback(true)).toBe(false);
+        expect(command.checkCallback(false)).toBe(false);
+      }
+      expect(artwork).not.toHaveBeenCalled();
+      expect(attach).not.toHaveBeenCalled();
+      expect(attachRepository).not.toHaveBeenCalled();
+    });
+  }
+}
+
+for (const seed of [integrationOrientationRecording, integrationRecording]) {
+  it(`keeps studio artwork eligible with ${seed.sourceRevision} seed and the current repository roster`, () => {
+    const registered = commands();
+    findScene.mockReturnValue({ data: { recording: { recordingId: seed.id, sourceRevision: seed.sourceRevision } } });
+    const state = { isPlayerView: false, isMapLoading: false, mapPath: 'Renamed studio.atlasmap', objects: {
+      tokens: { seat: { recordingReference: { recordingId: repositoryTeamRecording.id, sourceRevision: repositoryTeamRecording.sourceRevision,
+        kind: 'seat', id: repositoryTeamRecording.seats[0]!.id } } },
+      texts: { review: { recordingReference: { recordingId: repositoryTeamRecording.id, sourceRevision: repositoryTeamRecording.sourceRevision,
+        kind: 'work', id: repositoryTeamRecording.work[1]!.id } } },
+    } };
+    expect(repositoryTeamRecording.work[1]!.id).toBe('qitem-20261018022035-997c3976');
+    Object.assign(registered.app, { workspace: { getActiveViewOfType: () => ({ getStore: () => ({ getState: () => state }) }) } });
+    expect(registered.commands.find(command => command.id === 'add-integration-studio-artwork').checkCallback(true)).toBe(true);
+    for (const id of ['attach-completed-integration-evidence', 'attach-repository-team-evidence']) {
+      expect(registered.commands.find(command => command.id === id).checkCallback(true)).toBe(false);
+    }
+    expect(artwork).not.toHaveBeenCalled();
+    expect(attach).not.toHaveBeenCalled();
+    expect(attachRepository).not.toHaveBeenCalled();
+  });
+}

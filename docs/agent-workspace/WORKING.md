@@ -1,12 +1,16 @@
 # Atlas agent workspace working document
 
-Updated: 2026-10-18 UTC. Status: editable illustrated milestone implemented and natively verified in the isolated review vault. Repository-native representatives completed attributed requalification and review. [PR #14](https://github.com/fsafey/atlas-vtt/pull/14) is open; remote qualification is unavailable, so it is not merged. A live connector and Atlas execution controls remain out of scope.
+Updated: 2026-10-18 UTC. Status: [PR #14](https://github.com/fsafey/atlas-vtt/pull/14) merged at `3654974` on explicit owner approval of local/native evidence. [PR #15](https://github.com/fsafey/atlas-vtt/pull/15) preserves the reference-reuse experiment and command-scope fix, and adds the completed vault role-home trial. Fresh-session discovery and one bounded governor request passed through real OpenRig work. The map/layout are unchanged. Live integration and execution controls remain out of scope.
 
 ## Confirmed direction
 
 The owner selected a **general agent workspace, with Atlas as the spatial language**. OpenRig is a core part of this direction. Domain agents coordinate with one another and with people through the LLM connector space.
 
 The supplied transcript's guiding idea is orientation before search: an arriving agent discovers what already exists, where knowledge lives, and whom to ask.
+
+Accepted owner correction, 2026-10-18: the owner crafts the map, imagery, names and arrangement. Our work supplies dependable entrances to real roles, resources, skills, knowledge and obligations within that authored space. Coordinator-generated layouts and labels are experiments, not project conventions. The vault provides shared meaning, orientation and institutional knowledge; OpenRig supplies existing operational coordination; native Codex/Claude repository harnesses remain intact. See [vault and organizational roles](vault-and-roles.md).
+
+Accepted execution, 2026-10-18: add vault home notes and role references in the existing workspace without changing its map or layout. Use the existing Atlas representative for one bounded governor request and verify discovery in a fresh OpenRig conversation. The trial uses existing note pins and supported Obsidian note operations; it does not add a token-link API, another seat, automatic routing or live integration.
 
 Accepted owner correction, 2026-10-17: Atlas is an editable spatial workspace where humans shape the environment agents inhabit. “Read-only” applies to the recorded OpenRig connection and operational facts, not to Atlas authoring. Deliver a real editable scene using existing objects, persistence and undo. Movement, annotations and other authored spatial content must preserve stable references and recorded facts. Live integration, execution controls and permission changes remain excluded.
 
@@ -17,6 +21,8 @@ Accepted product direction, 2026-10-18: Atlas is an editable spatial dashboard f
 The intended agent card leads with purpose, harness/model, repository and actual working directory. Its primary future action is **Open agent**, resolving the stable identity to its current native conversation through supported mechanisms, with stopped/recovery states explicit. Technical IDs and provenance are secondary. The recorded milestone can present verified metadata and opening instructions; direct native-agent opening from Atlas is not implemented. Agent creation/import, live status and automatic context delivery remain future decisions.
 
 Accepted owner clarification, 2026-10-18: each Atlas project can explore its own roster, repository harnesses, context, configuration and spatial expression. A new Codex session may help configure a project; project, scene, seat and conversation identities remain distinct. This integration studio is one concrete configuration, not a universal project template. Explicit reuse across projects should preserve provenance and distinguish a shared reference from a copied representation, artifact or configuration. Versioned files and small experiments are the intended development approach; a project manifest, composition/import mechanism and compatibility rules remain proposals. No such framework or live integration is added in this milestone.
+
+The owner authorized a second reference-reuse experiment. The coordinator-authored Reference Observatory tests cross-scene references, editing and independent configuration; it creates no new seat or obligation. Its useful mechanical evidence does not establish the intended organizational experience. The latest correction puts the owner's crafted space and note-backed organizational reading journey ahead of further map generation or packaging work.
 
 ## What exists
 
@@ -45,47 +51,36 @@ Accepted owner clarification, 2026-10-17: start from Atlas's spatial grammar. A 
 
 Accepted owner addition, 2026-10-17: actual images represent sections of the work. The [illustrated studio](integration-team/studio.md) has an Atlas cartography bench, OpenRig systems bench, shared review table and evidence library. One map image supplies visual places; editable labels and notes supply definitions. The image creates no seats, work or authorization. Native application and explicit agent context consumption are recorded separately from mapping review.
 
+Second-project evidence: native cross-collection copy/paste retained the exact pinned review reference with a new local object ID. Independent label/placement edits, undo/redo, linked-note navigation, checkpoint isolation and reopen were observed; the studio's background/objects stayed byte-equivalent under canonical comparison. Its native v1 collection export contains the scene, artwork and two notes, preserving the reference. A demonstrated coupling bug was fixed: a reference alone no longer enables studio-specific commands; the native scene asset must carry its recognized seed marker. That marker identifies studio ancestry and survives whole-scene copying; project identity and scene-fork semantics remain distinct. See [experiment and verification](projects/reference-observatory/verification.md). Cross-vault evidence availability remains untested and depends on the plugin's bundled recording registry.
+
+Completed note-backed trial, 2026-10-18: existing pins now lead through their original repository/project notes to two role homes, accepted direction and two attributed session records. A deliberately fresh Opus 5.5 conversation retained the OpenRig seat, discovered and claimed its obligation, followed the notes and handed its report to the real Atlas representative. Repository-rooted Sol independently checked the report/binding and appended exactly one verified continuity receipt through Obsidian. Both tasks are closed; coordinator acceptance binds exact hashes. Native navigation, all 32 note links and exact pre-trial scene/recording preservation passed. Ordinary approvals were required. See [opening, snapshots and evidence](vault-homes/README.md). Plain-token note actions and direct Open agent remain unimplemented.
+
 ## What we are proposing
 
-**One shared model, read two ways:** people navigate Atlas; agents read the same identities and relationships as structured context and addresses.
+**A human-authored organizational workspace:** selected Atlas objects lead into vault home notes for roles, agents, projects and resources. Notes provide shared definitions and reading routes to canonical repositories, actual OpenRig work and native sessions. Native session records and concise authored continuity notes serve different purposes. Multiple representations may share a note/resource without creating another colleague. Each project chooses its vocabulary and composition.
 
-| Element | Proposed meaning |
-| --- | --- |
-| Map or scene | A view into a workspace, project, or knowledge area |
-| Place | A named domain with responsibilities, entry context, and routes outward |
-| Participant and resident token | A human or persistent agent seat, with its current session and activity shown separately |
-| Landmark | An addressed source, decision, example, or lesson with provenance and maturity |
-| Route | A named relationship such as ask here, depends on, or hand work here |
-| Work marker | An owned question or task, with status and artifact links |
-| History | Events and decisions with their rationale |
-
-Prefer stable homes for specialists and travelling work markers. Rigs, maps, pods, and domains need not map one-to-one.
-
-Atlas owns spatial authoring and navigation; OpenRig owns seats, execution and work status; repository/workspace files hold authoritative instructions and knowledge. A future connector could resolve references and deliver explicit context without adding a second governance system. Develop that capability through real scenarios and the smallest demonstrated missing feature.
-
-Ask, Assign, and Handoff have distinct effects; owned work uses OpenRig's durable queue. Board movement and undo do not imply execution or reversal of external work. Knowledge maturity reflects attributed, revisable judgments.
+The broader **Atlas map governor** remains a delegated native Atlas caretaker, using existing OpenRig work. The owner has now authorized the first bounded request to the existing Atlas representative. Recurring authority, automatic report routing and structural map changes remain undecided. Ordinary human editing continues directly; this adds no task or approval system.
 
 ## Open decisions
 
 | Decision | Current leaning |
 | --- | --- |
-| What defines a domain, and where are places, responsibilities, and routes authored? | Vault-owned structured records referenced by both Atlas and OpenRig |
-| Does a gesture arrange the view, change focus, propose work, or assign it? | Explicit action meanings first; spatial gestures can adopt them later |
-| Who can act, see each source, and promote knowledge to accepted status? | Domain-specific policy, enforced outside rendering and recorded with attribution |
-| How does the connector fit the Atlas fork and existing LLM tooling? | Reuse Atlas's view/store and OpenRig's HTTP/events; packaging remains open |
-| How are different project configurations versioned and composed? | Explore a second concrete project, then define the smallest explicit sharing/copying contract. Do not generalize this studio into a mandatory template. |
+| What belongs in role/resource home notes and session notes? | Keep the trial's small project-specific records; broader properties and packaging remain unstandardized |
+| Does the map-governor role become recurring? | The existing Atlas representative has one bounded note-reference request; standing authority is not delegated |
+| How do objects open a home note and the actual native agent? | Pins already open notes; plain-token note entrance and supported Open agent navigation are separate gaps |
+| How are project pieces reused? | Preserve mechanical findings; defer broad composition until a real organizational reading or maintenance scenario needs it |
 
 ## Next discussion
 
-Review the editable scene and its evidence inspector. Assess whether authors can shape useful spatial context while understanding the recorded operational facts. A live read-only feed, broader domains, agent consumption of spatial meaning and execution semantics remain separate decisions.
+The completed owner-authorized trial connects the representatives and project entry through existing pins and vault home notes. It verified fresh-session discovery and one attributed note-reference adjustment while preserving all scene state. See [trial and evidence](vault-homes/README.md). The next product choice is whether ordinary pins and linked notes are enough for the next useful scenario, or a plain token needs a narrow home-note entrance. It does not require a comprehensive role framework.
 
-Next recommended scenario: a bounded **Open agent** navigation bridge that resolves a stable seat against current OpenRig state and opens its existing native conversation, or routes to supported recovery without implicitly starting it. Installed 0.6.10 supports opening the team's live terminal view; no verified per-seat Atlas URI exists. See [opening assessment](integration-team/operations.md#open-agent-boundary). Do not build a general agent manager first.
+Supported native-agent opening remains useful: installed 0.6.10 can open the team's live terminal view, but Atlas has no verified per-seat opening adapter. See [opening assessment](integration-team/operations.md#open-agent-boundary). Placement, note editing and undo do not assign work, change permission or reverse external operations.
 
 ## Delivery boundary
 
-Source implementation `9679d2e114ef4342a639856efbc1cef4c78ee208` passed 59 focused tests, TypeScript, touched-source lint, changelog validation and an isolated-vault production build. Native editing/inspection/reopen and both agents' explicit context consumption are recorded above. Both corrected seats are running idle with no outstanding owned work; their repository roots remain intact.
+Source implementation `9679d2e114ef4342a639856efbc1cef4c78ee208` passed 59 focused tests, TypeScript, touched-source lint, changelog validation and an isolated-vault production build. Native editing/inspection/reopen and explicit context consumption are recorded above. The current note-only slice adds real-work, native-navigation and preservation checks without replaying those suites. Both seats remain available with no open owned work; their repository roots are clean. Startup still names older output files and a launch can regenerate managed CLAUDE guidance; the current trial safely superseded/preserved those, without changing installation or runtime policy.
 
-At PR creation the fork reported no rulesets, no branch protection, no check runs and no Actions runs. Its existing CI provider operator reports **inventory-only**, qualification pending. The PR remains open: auto-merge would bypass the intended missing gate. No CI/provider settings, releases or canonical-vault installation changed. Remote qualification or an explicit owner merge decision remains outstanding.
+The owner explicitly authorized merging PR #14 on that local/native evidence. It merged on 2026-10-18 at `365497432578551da121284643542f9314c0d496`; required-check result: none configured, no remote runs. No CI/provider settings or canonical-vault installation changed. The second-project slice has its own focused/native qualification; it does not inherit the original review as approval of new conclusions.
 
 ## References and upkeep
 

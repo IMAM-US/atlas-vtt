@@ -1,0 +1,157 @@
+{
+  "capturedAt": "2026-10-18T18:07:19.388399+00:00",
+  "canonicalNoteRoot": "/Users/farieds/Project/atlas-agent-workspace-review/Integration workspace",
+  "publication": "Evidence snapshots only; original vault notes remain editable canonical authored material",
+  "notes": [
+    {
+      "source": "/Users/farieds/Project/atlas-agent-workspace-review/Integration workspace/Atlas repository.md",
+      "snapshot": "notes/Integration workspace/Atlas repository.md",
+      "bytes": 1257,
+      "sha256": "f7ccc150ef7269cf2e89dd8a28d4b4f57c1263b0257831c6108cf17ef88203a5"
+    },
+    {
+      "source": "/Users/farieds/Project/atlas-agent-workspace-review/Integration workspace/Atlas representative.md",
+      "snapshot": "notes/Integration workspace/Atlas representative.md",
+      "bytes": 4259,
+      "sha256": "8db68e09fd5f05b1818e0118b79dff5d6ecd54ab925ad829dcdd5255dd82a28b"
+    },
+    {
+      "source": "/Users/farieds/Project/atlas-agent-workspace-review/Integration workspace/Decisions/Owner-authored workspace.md",
+      "snapshot": "notes/Integration workspace/Decisions/Owner-authored workspace.md",
+      "bytes": 2703,
+      "sha256": "d2874ac536ddc7a4fc14e365b112f6e3c44300c22580d344aca2024fbe2064b7"
+    },
+    {
+      "source": "/Users/farieds/Project/atlas-agent-workspace-review/Integration workspace/OpenRig repository.md",
+      "snapshot": "notes/Integration workspace/OpenRig repository.md",
+      "bytes": 1172,
+      "sha256": "97245735d2403cf983dcd07d342cfe7db46e650bfe650907aab188333c00b949"
+    },
+    {
+      "source": "/Users/farieds/Project/atlas-agent-workspace-review/Integration workspace/OpenRig representative.md",
+      "snapshot": "notes/Integration workspace/OpenRig representative.md",
+      "bytes": 5681,
+      "sha256": "3eae4bca97c55ae980867832bdcc8299eb194db647455894afeb981529340cda"
+    },
+    {
+      "source": "/Users/farieds/Project/atlas-agent-workspace-review/Integration workspace/Sessions/Atlas governor 2026-10-18.md",
+      "snapshot": "notes/Integration workspace/Sessions/Atlas governor 2026-10-18.md",
+      "bytes": 8288,
+      "sha256": "b0cf84bd809d59e03025eb72dc328a9dd2fd37a0fb1c07b93aa49d8f1ed6e836"
+    },
+    {
+      "source": "/Users/farieds/Project/atlas-agent-workspace-review/Integration workspace/Sessions/OpenRig discovery 2026-10-18.md",
+      "snapshot": "notes/Integration workspace/Sessions/OpenRig discovery 2026-10-18.md",
+      "bytes": 7737,
+      "sha256": "835d10a2f01821c035ccd42e7747b3d2190aa429c289703622c4e427ea0615da"
+    },
+    {
+      "source": "/Users/farieds/Project/atlas-agent-workspace-review/Integration workspace/Start here.md",
+      "snapshot": "notes/Integration workspace/Start here.md",
+      "bytes": 4808,
+      "sha256": "02993de0b048ad3e463463210f2011b8325d854f866f3e0e8b8cfbf8b0eddf4c"
+    }
+  ],
+  "originalNotePrefixes": {
+    "Start here.md": {
+      "originalSha256": "cdfada0a85df6d7fe3f5fa67cd1b5f8ec6b797a06dccb8d4666f81c01b499cfb",
+      "originalBytes": 3212,
+      "prefixPreserved": true
+    },
+    "Atlas repository.md": {
+      "originalSha256": "119d4da6e36797b12b2dbe3b11f27b67996ff9e531d0bde2d81fa9e33b3acc82",
+      "originalBytes": 976,
+      "prefixPreserved": true
+    },
+    "OpenRig repository.md": {
+      "originalSha256": "91faf735f2d3e311cfa6f65b7fe95b79826e6277d7d229445075a63596b92e5d",
+      "originalBytes": 885,
+      "prefixPreserved": true
+    }
+  },
+  "governor": {
+    "homeBeforeSha256": "0b751c8695b9ae13421d997446f9f6d8e0bee535097c663304f100b135480341",
+    "homeAfterSha256": "3eae4bca97c55ae980867832bdcc8299eb194db647455894afeb981529340cda",
+    "receiptSha256": "68b7ef281a7523079894f4f4e01b8d34cf5162d75d786332f06056585c675d50",
+    "receiptCount": 1,
+    "originalBytesPreserved": 4326,
+    "protectedFilesUnchanged": 9
+  },
+  "scene": {
+    "path": "/Users/farieds/Project/atlas-agent-workspace-review/atlas-vtt/collections/Default/scenes/Atlas OpenRig integration workspace.atlasmap",
+    "fileSha256": "d34a95a45565e4d4c7b42a8fd8c9e6a9b895c803e49cc0535e3e5300bb7f00bf",
+    "backgroundObjectsSha256": "3f381b8012000aad76b990874c699149d0b69b0a36ac8298315c48879b5f94e9",
+    "exactPreTrialBytesPreserved": true,
+    "backgroundPath": "atlas-vtt/assets/Atlas_OpenRig_integration_studio_v1_1792288529227_bovzw4.webp",
+    "backgroundSha256": "d7ee685beea1e3cb205ddbce96f2af4714f495f4f8eb23acdf84c2c9750dfad5"
+  },
+  "recordingsUnchanged": {
+    "repositoryTeamRecording.json": "a3164a25b5a1298864288b40b649e78deca42495e147935ac253c73fb5be57f6",
+    "integrationOrientationRecording.json": "c82ff8243b57d48198da9bd65aaf22b67fd573372439eee36284041ea7066c85",
+    "integrationRecording.json": "fc56fcd199e3b6fc9296fc3139cdacfac7f323bacd07007b48c72a1992623dae"
+  },
+  "sessionBindingSource": "Coordinator GET /api/rigs/01M56CGCH5VW2XDPN1P1KBNANR/sessions at loopback existing daemon, independent of author CLI report",
+  "sessions": [
+    {
+      "id": "01M56CGCJNTQ3VX336VQM1ZHWV",
+      "nodeId": "01M56CGCH9NACF766XDX1TF92N",
+      "sessionName": "atlas-representative@atlas-integration-repos",
+      "status": "running",
+      "resumeToken": "01a14cc8-3c67-7e71-9328-47ff75568a7c"
+    },
+    {
+      "id": "01M56CGNKM2Z4XY4CMP3ETZY62",
+      "nodeId": "01M56CGNJD6YPXS5STC2QHWVVB",
+      "sessionName": "openrig-representative@atlas-integration-repos",
+      "status": "superseded",
+      "resumeToken": "c252b956-929e-477f-bb09-636c5fe3d758"
+    },
+    {
+      "id": "01M582307F6T36QWTJS4GTJXBX",
+      "nodeId": "01M56CGNJD6YPXS5STC2QHWVVB",
+      "sessionName": "openrig-representative@atlas-integration-repos",
+      "status": "running",
+      "resumeToken": "4d56e238-74ec-4351-8872-46f96f05ea0b"
+    }
+  ],
+  "linkCheck": {
+    "resolved": 32,
+    "headingTargets": 1
+  },
+  "sourceArtifactsPreserved": [
+    "artifacts/openrig-repository-orientation.md",
+    "artifacts/repository-mapping-review.md",
+    "team-repository/agents/integration/startup/context.md"
+  ],
+  "supportingSnapshots": [
+    {
+      "snapshot": "discovery-obligation.md",
+      "source": "OpenRig owned queue body atlas-vault-discovery-20261018",
+      "bytes": 2016,
+      "sha256": "50935e3f9bf3abee215d5254c414c512ef586a6ce5690eb655f138922c17617c"
+    },
+    {
+      "snapshot": "governor-request.md",
+      "source": "OpenRig owned queue body qitem-20261018180049-13b99f1d",
+      "bytes": 3135,
+      "sha256": "c3bc2b7f671373f92efe6d44629564015d50ba43c4723527bfe522ee184f1beb"
+    },
+    {
+      "snapshot": "shared-entry.md",
+      "source": "/Users/farieds/Project/atlas-openrig-integration-workspace/workspace/ENTRY.md",
+      "bytes": 3688,
+      "sha256": "d11da46f27af0cf795dc140d74241cf5727be45bea9a2398ca36fac3b5f503e3"
+    }
+  ],
+  "coordinatorAcceptance": {
+    "at": "2026-10-18T18:08:53.113625+00:00",
+    "author": "External Codex coordinator",
+    "verdict": "Accepted for bounded note-home discovery and one append-only caretaker request",
+    "authorReportSha256": "835d10a2f01821c035ccd42e7747b3d2190aa429c289703622c4e427ea0615da",
+    "governorRecordSha256": "b0cf84bd809d59e03025eb72dc328a9dd2fd37a0fb1c07b93aa49d8f1ed6e836",
+    "updatedHomeSha256": "3eae4bca97c55ae980867832bdcc8299eb194db647455894afeb981529340cda",
+    "openTeamWorkCount": 0,
+    "generatedClaudeOverlayRemoved": true,
+    "canonicalClaudeLoaderSha256": "56a49df6f2ae9ff928df4b52a490473076902d36c4591458cd30ca973ac1d3f0"
+  }
+}

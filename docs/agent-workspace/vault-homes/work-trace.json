@@ -1,0 +1,176 @@
+[
+  {
+    "item": {
+      "qitemId": "atlas-vault-discovery-20261018",
+      "tsCreated": "2026-10-18T17:48:54.967Z",
+      "tsUpdated": "2026-10-18T18:00:49.026Z",
+      "sourceSession": "atlas-integration-coordinator",
+      "destinationSession": "openrig-representative@atlas-integration-repos",
+      "state": "done",
+      "handedOffFrom": null,
+      "handedOffTo": "atlas-representative@atlas-integration-repos",
+      "chainOfRecord": null,
+      "closureReason": "handed_off_to",
+      "closureTarget": "atlas-representative@atlas-integration-repos",
+      "claimedAt": "2026-10-18T17:53:45.583Z",
+      "lastNudgeAttempt": null,
+      "lastNudgeResult": null,
+      "lastNudgeWireResult": null
+    },
+    "transitions": [
+      {
+        "transitionId": 75,
+        "qitemId": "atlas-vault-discovery-20261018",
+        "ts": "2026-10-18T17:48:54.970Z",
+        "state": "pending",
+        "transitionNote": "created",
+        "actorSession": "atlas-integration-coordinator",
+        "closureReason": null,
+        "closureTarget": null,
+        "identityProvenance": "claimed:v1",
+        "ownerNotificationKind": null,
+        "ownerNotificationLevel": "RECORD"
+      },
+      {
+        "transitionId": 76,
+        "qitemId": "atlas-vault-discovery-20261018",
+        "ts": "2026-10-18T17:49:35.134Z",
+        "state": "pending",
+        "transitionNote": "parked-owner wake reserved: openrig-representative@atlas-integration-repos|5a643dc79607abf7#1; obligations atlas-vault-discovery-20261018",
+        "actorSession": "watchdog@system",
+        "closureReason": null,
+        "closureTarget": null,
+        "identityProvenance": null,
+        "ownerNotificationKind": null,
+        "ownerNotificationLevel": "RECORD"
+      },
+      {
+        "transitionId": 77,
+        "qitemId": "atlas-vault-discovery-20261018",
+        "ts": "2026-10-18T17:51:35.269Z",
+        "state": "pending",
+        "transitionNote": "parked-owner wake delivery refused: openrig-representative@atlas-integration-repos|5a643dc79607abf7#1; Refused: 'openrig-representative@atlas-integration-repos' is at an interactive prompt (selection_prompt). A message must not select or approve it. To deliberately drive the prompt: rig send openrig-representative@atlas-integration-repos \"<text>\" --dangerously-interact --reason \"<why>\". No text was sent.",
+        "actorSession": "watchdog@system",
+        "closureReason": null,
+        "closureTarget": null,
+        "identityProvenance": null,
+        "ownerNotificationKind": null,
+        "ownerNotificationLevel": "RECORD"
+      },
+      {
+        "transitionId": 78,
+        "qitemId": "atlas-vault-discovery-20261018",
+        "ts": "2026-10-18T17:53:35.399Z",
+        "state": "pending",
+        "transitionNote": "parked-owner episode closed: openrig-representative@atlas-integration-repos|5a643dc79607abf7#1 (seat resumed)",
+        "actorSession": "watchdog@system",
+        "closureReason": null,
+        "closureTarget": null,
+        "identityProvenance": null,
+        "ownerNotificationKind": null,
+        "ownerNotificationLevel": "RECORD"
+      },
+      {
+        "transitionId": 79,
+        "qitemId": "atlas-vault-discovery-20261018",
+        "ts": "2026-10-18T17:53:45.584Z",
+        "state": "in-progress",
+        "transitionNote": "claimed",
+        "actorSession": "openrig-representative@atlas-integration-repos",
+        "closureReason": null,
+        "closureTarget": null,
+        "identityProvenance": "transport:v1",
+        "ownerNotificationKind": null,
+        "ownerNotificationLevel": "RECORD"
+      },
+      {
+        "transitionId": 80,
+        "qitemId": "atlas-vault-discovery-20261018",
+        "ts": "2026-10-18T17:59:35.799Z",
+        "state": "in-progress",
+        "transitionNote": "parked-owner wake reserved: openrig-representative@atlas-integration-repos|5a643dc79607abf7#2; obligations atlas-vault-discovery-20261018",
+        "actorSession": "watchdog@system",
+        "closureReason": null,
+        "closureTarget": null,
+        "identityProvenance": null,
+        "ownerNotificationKind": null,
+        "ownerNotificationLevel": "RECORD"
+      },
+      {
+        "transitionId": 81,
+        "qitemId": "atlas-vault-discovery-20261018",
+        "ts": "2026-10-18T18:00:49.026Z",
+        "state": "done",
+        "transitionNote": "Discovery report: Integration workspace/Sessions/OpenRig discovery 2026-10-18.md sha256 835d10a2f01821c035ccd42e7747b3d2190aa429c289703622c4e427ea0615da. Author completion only; governor verdict and coordinator acceptance are separate.",
+        "actorSession": "openrig-representative@atlas-integration-repos",
+        "closureReason": "handed_off_to",
+        "closureTarget": "atlas-representative@atlas-integration-repos",
+        "identityProvenance": "transport:v1",
+        "ownerNotificationKind": null,
+        "ownerNotificationLevel": "RECORD"
+      }
+    ]
+  },
+  {
+    "item": {
+      "qitemId": "qitem-20261018180049-13b99f1d",
+      "tsCreated": "2026-10-18T18:00:49.026Z",
+      "tsUpdated": "2026-10-18T18:06:27.552Z",
+      "sourceSession": "openrig-representative@atlas-integration-repos",
+      "destinationSession": "atlas-representative@atlas-integration-repos",
+      "state": "done",
+      "handedOffFrom": "atlas-vault-discovery-20261018",
+      "handedOffTo": null,
+      "chainOfRecord": [
+        "atlas-vault-discovery-20261018"
+      ],
+      "closureReason": "no-follow-on",
+      "closureTarget": null,
+      "claimedAt": "2026-10-18T18:01:28.287Z",
+      "lastNudgeAttempt": "2026-10-18T18:00:49.968Z",
+      "lastNudgeResult": "verified",
+      "lastNudgeWireResult": "verified"
+    },
+    "transitions": [
+      {
+        "transitionId": 82,
+        "qitemId": "qitem-20261018180049-13b99f1d",
+        "ts": "2026-10-18T18:00:49.026Z",
+        "state": "pending",
+        "transitionNote": "handoff-and-complete from atlas-vault-discovery-20261018",
+        "actorSession": "openrig-representative@atlas-integration-repos",
+        "closureReason": null,
+        "closureTarget": null,
+        "identityProvenance": null,
+        "ownerNotificationKind": null,
+        "ownerNotificationLevel": "RECORD"
+      },
+      {
+        "transitionId": 83,
+        "qitemId": "qitem-20261018180049-13b99f1d",
+        "ts": "2026-10-18T18:01:28.287Z",
+        "state": "in-progress",
+        "transitionNote": "claimed",
+        "actorSession": "atlas-representative@atlas-integration-repos",
+        "closureReason": null,
+        "closureTarget": null,
+        "identityProvenance": "transport:v1",
+        "ownerNotificationKind": null,
+        "ownerNotificationLevel": "RECORD"
+      },
+      {
+        "transitionId": 84,
+        "qitemId": "qitem-20261018180049-13b99f1d",
+        "ts": "2026-10-18T18:06:27.553Z",
+        "state": "done",
+        "transitionNote": "Governor verdict: pass for the bounded append. Applied exactly one discovery receipt via scripts/obsidian-cli.js --vault atlas-agent-workspace-review; preserved the entire 4326-byte original home prefix. Home after is 5681 bytes, SHA-256 3eae4bca97c55ae980867832bdcc8299eb194db647455894afeb981529340cda. Discovery report remains SHA-256 835d10a2f01821c035ccd42e7747b3d2190aa429c289703622c4e427ea0615da. Created Integration workspace/Sessions/Atlas governor 2026-10-18.md through Obsidian without overwrite; exact prepared bytes verified, SHA-256 b0cf84bd809d59e03025eb72dc328a9dd2fd37a0fb1c07b93aa49d8f1ed6e836. Nine protected files including other existing workspace notes, the scene, background and asset index retained their baseline hashes. Live counterpart native conversation and both generation fields were rechecked immediately before mutation. No OpenRig session-record ID inferred. This closes the bounded governor effect only; coordinator acceptance remains separate.",
+        "actorSession": "atlas-representative@atlas-integration-repos",
+        "closureReason": "no-follow-on",
+        "closureTarget": null,
+        "identityProvenance": "transport:v1",
+        "ownerNotificationKind": null,
+        "ownerNotificationLevel": "RECORD"
+      }
+    ]
+  }
+]
