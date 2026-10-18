@@ -1,6 +1,6 @@
 # Atlas agent workspace working document
 
-Updated: 2026-10-18 UTC. Status: [PR #14](https://github.com/fsafey/atlas-vtt/pull/14) merged at `3654974` on explicit owner approval of local/native evidence. [PR #15](https://github.com/fsafey/atlas-vtt/pull/15) preserves a reference-reuse experiment and command-scope fix. Owner correction: support the space they craft and the real organization inhabiting it. Home-note abstraction and the proposed map-governor reading/maintenance journey are not implemented. Live integration and execution controls remain out of scope.
+Updated: 2026-10-18 UTC. Status: [PR #14](https://github.com/fsafey/atlas-vtt/pull/14) merged at `3654974` on explicit owner approval of local/native evidence. [PR #15](https://github.com/fsafey/atlas-vtt/pull/15) preserves the reference-reuse experiment and command-scope fix, and adds the completed vault role-home trial. Fresh-session discovery and one bounded governor request passed through real OpenRig work. The map/layout are unchanged. Live integration and execution controls remain out of scope.
 
 ## Confirmed direction
 
@@ -9,6 +9,8 @@ The owner selected a **general agent workspace, with Atlas as the spatial langua
 The supplied transcript's guiding idea is orientation before search: an arriving agent discovers what already exists, where knowledge lives, and whom to ask.
 
 Accepted owner correction, 2026-10-18: the owner crafts the map, imagery, names and arrangement. Our work supplies dependable entrances to real roles, resources, skills, knowledge and obligations within that authored space. Coordinator-generated layouts and labels are experiments, not project conventions. The vault provides shared meaning, orientation and institutional knowledge; OpenRig supplies existing operational coordination; native Codex/Claude repository harnesses remain intact. See [vault and organizational roles](vault-and-roles.md).
+
+Accepted execution, 2026-10-18: add vault home notes and role references in the existing workspace without changing its map or layout. Use the existing Atlas representative for one bounded governor request and verify discovery in a fresh OpenRig conversation. The trial uses existing note pins and supported Obsidian note operations; it does not add a token-link API, another seat, automatic routing or live integration.
 
 Accepted owner correction, 2026-10-17: Atlas is an editable spatial workspace where humans shape the environment agents inhabit. “Read-only” applies to the recorded OpenRig connection and operational facts, not to Atlas authoring. Deliver a real editable scene using existing objects, persistence and undo. Movement, annotations and other authored spatial content must preserve stable references and recorded facts. Live integration, execution controls and permission changes remain excluded.
 
@@ -51,31 +53,32 @@ Accepted owner addition, 2026-10-17: actual images represent sections of the wor
 
 Second-project evidence: native cross-collection copy/paste retained the exact pinned review reference with a new local object ID. Independent label/placement edits, undo/redo, linked-note navigation, checkpoint isolation and reopen were observed; the studio's background/objects stayed byte-equivalent under canonical comparison. Its native v1 collection export contains the scene, artwork and two notes, preserving the reference. A demonstrated coupling bug was fixed: a reference alone no longer enables studio-specific commands; the native scene asset must carry its recognized seed marker. That marker identifies studio ancestry and survives whole-scene copying; project identity and scene-fork semantics remain distinct. See [experiment and verification](projects/reference-observatory/verification.md). Cross-vault evidence availability remains untested and depends on the plugin's bundled recording registry.
 
+Completed note-backed trial, 2026-10-18: existing pins now lead through their original repository/project notes to two role homes, accepted direction and two attributed session records. A deliberately fresh Opus 5.5 conversation retained the OpenRig seat, discovered and claimed its obligation, followed the notes and handed its report to the real Atlas representative. Repository-rooted Sol independently checked the report/binding and appended exactly one verified continuity receipt through Obsidian. Both tasks are closed; coordinator acceptance binds exact hashes. Native navigation, all 32 note links and exact pre-trial scene/recording preservation passed. Ordinary approvals were required. See [opening, snapshots and evidence](vault-homes/README.md). Plain-token note actions and direct Open agent remain unimplemented.
+
 ## What we are proposing
 
 **A human-authored organizational workspace:** selected Atlas objects lead into vault home notes for roles, agents, projects and resources. Notes provide shared definitions and reading routes to canonical repositories, actual OpenRig work and native sessions. Native session records and concise authored continuity notes serve different purposes. Multiple representations may share a note/resource without creating another colleague. Each project chooses its vocabulary and composition.
 
-The proposed **Atlas map governor** is a delegated native Atlas caretaker. Agents can address final reports with bounded workspace implications through OpenRig. The caretaker clarifies requests, maintains references/definitions and applies changes within its delegated remit while preserving the owner's craft and ordinary human editing. It supplies no new task or approval system. No governor seat, assignment, automatic report routing or scene changes were created by this clarification. Role authority and the first actual request remain to be agreed.
+The broader **Atlas map governor** remains a delegated native Atlas caretaker, using existing OpenRig work. The owner has now authorized the first bounded request to the existing Atlas representative. Recurring authority, automatic report routing and structural map changes remain undecided. Ordinary human editing continues directly; this adds no task or approval system.
 
 ## Open decisions
 
 | Decision | Current leaning |
 | --- | --- |
-| Which authored map and objects anchor the next scenario? | Use the owner's existing craft; attach meaning and references with minimal changes |
-| What belongs in role/resource home notes and session notes? | Small project-specific records with canonical-source links; verify discovery before standardizing properties |
-| Who occupies the map-governor role, and what may they change? | Consider the existing Atlas representative for one explicitly delegated maintenance request |
+| What belongs in role/resource home notes and session notes? | Keep the trial's small project-specific records; broader properties and packaging remain unstandardized |
+| Does the map-governor role become recurring? | The existing Atlas representative has one bounded note-reference request; standing authority is not delegated |
 | How do objects open a home note and the actual native agent? | Pins already open notes; plain-token note entrance and supported Open agent navigation are separate gaps |
 | How are project pieces reused? | Preserve mechanical findings; defer broad composition until a real organizational reading or maintenance scenario needs it |
 
 ## Next discussion
 
-Proposed next scenario: on the owner's chosen map, connect the two real repository representatives and shared project entry through existing objects/pins and a few home notes. Can a fresh session discover responsibility, canonical source, relevant skills, latest accepted decision, counterpart and its actual obligation? Then test one final-report request to a delegated Atlas caretaker and one bounded, attributed workspace adjustment. This is proposed, not launched. See [scenario and current gaps](vault-and-roles.md).
+The completed owner-authorized trial connects the representatives and project entry through existing pins and vault home notes. It verified fresh-session discovery and one attributed note-reference adjustment while preserving all scene state. See [trial and evidence](vault-homes/README.md). The next product choice is whether ordinary pins and linked notes are enough for the next useful scenario, or a plain token needs a narrow home-note entrance. It does not require a comprehensive role framework.
 
 Supported native-agent opening remains useful: installed 0.6.10 can open the team's live terminal view, but Atlas has no verified per-seat opening adapter. See [opening assessment](integration-team/operations.md#open-agent-boundary). Placement, note editing and undo do not assign work, change permission or reverse external operations.
 
 ## Delivery boundary
 
-Source implementation `9679d2e114ef4342a639856efbc1cef4c78ee208` passed 59 focused tests, TypeScript, touched-source lint, changelog validation and an isolated-vault production build. Native editing/inspection/reopen and both agents' explicit context consumption are recorded above. Both corrected seats are running idle with no outstanding owned work; their repository roots remain intact.
+Source implementation `9679d2e114ef4342a639856efbc1cef4c78ee208` passed 59 focused tests, TypeScript, touched-source lint, changelog validation and an isolated-vault production build. Native editing/inspection/reopen and explicit context consumption are recorded above. The current note-only slice adds real-work, native-navigation and preservation checks without replaying those suites. Both seats remain available with no open owned work; their repository roots are clean. Startup still names older output files and a launch can regenerate managed CLAUDE guidance; the current trial safely superseded/preserved those, without changing installation or runtime policy.
 
 The owner explicitly authorized merging PR #14 on that local/native evidence. It merged on 2026-10-18 at `365497432578551da121284643542f9314c0d496`; required-check result: none configured, no remote runs. No CI/provider settings or canonical-vault installation changed. The second-project slice has its own focused/native qualification; it does not inherit the original review as approval of new conclusions.
 
