@@ -1,6 +1,6 @@
 # Atlas agent workspace working document
 
-Updated: 2026-10-18 UTC. Status: editable illustrated milestone implemented and natively verified in the isolated review vault. Repository-native representatives completed attributed requalification and review; delivery checks are in progress. A live connector and Atlas execution controls remain out of scope.
+Updated: 2026-10-18 UTC. Status: editable illustrated milestone implemented and natively verified in the isolated review vault. Repository-native representatives completed attributed requalification and review. [PR #14](https://github.com/fsafey/atlas-vtt/pull/14) is open; remote qualification is unavailable, so it is not merged. A live connector and Atlas execution controls remain out of scope.
 
 ## Confirmed direction
 
@@ -73,12 +73,19 @@ Ask, Assign, and Handoff have distinct effects; owned work uses OpenRig's durabl
 | Does a gesture arrange the view, change focus, propose work, or assign it? | Explicit action meanings first; spatial gestures can adopt them later |
 | Who can act, see each source, and promote knowledge to accepted status? | Domain-specific policy, enforced outside rendering and recorded with attribution |
 | How does the connector fit the Atlas fork and existing LLM tooling? | Reuse Atlas's view/store and OpenRig's HTTP/events; packaging remains open |
+| How are different project configurations versioned and composed? | Explore a second concrete project, then define the smallest explicit sharing/copying contract. Do not generalize this studio into a mandatory template. |
 
 ## Next discussion
 
 Review the editable scene and its evidence inspector. Assess whether authors can shape useful spatial context while understanding the recorded operational facts. A live read-only feed, broader domains, agent consumption of spatial meaning and execution semantics remain separate decisions.
 
 Next recommended scenario: a bounded **Open agent** navigation bridge that resolves a stable seat against current OpenRig state and opens its existing native conversation, or routes to supported recovery without implicitly starting it. Installed 0.6.10 supports opening the team's live terminal view; no verified per-seat Atlas URI exists. See [opening assessment](integration-team/operations.md#open-agent-boundary). Do not build a general agent manager first.
+
+## Delivery boundary
+
+Source implementation `9679d2e114ef4342a639856efbc1cef4c78ee208` passed 59 focused tests, TypeScript, touched-source lint, changelog validation and an isolated-vault production build. Native editing/inspection/reopen and both agents' explicit context consumption are recorded above. Both corrected seats are running idle with no outstanding owned work; their repository roots remain intact.
+
+At PR creation the fork reported no rulesets, no branch protection, no check runs and no Actions runs. Its existing CI provider operator reports **inventory-only**, qualification pending. The PR remains open: auto-merge would bypass the intended missing gate. No CI/provider settings, releases or canonical-vault installation changed. Remote qualification or an explicit owner merge decision remains outstanding.
 
 ## References and upkeep
 
