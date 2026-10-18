@@ -1,0 +1,30 @@
+{
+  "capturedAt": "2026-10-18T03:43:29.399747+00:00",
+  "baseCommit": "365497432578551da121284643542f9314c0d496",
+  "vault": "atlas-agent-workspace-review",
+  "collection": "Reference Observatory",
+  "collectionUid": "c4920059-c08b-4c52-a575-be006f67c7f1",
+  "sceneAssetId": "scene-1792294457006-5vv76g",
+  "sourcePlacementId": "text_1792291563001_v1udjtwcl",
+  "destinationPlacementId": "text_1792294476224_r22zs3n0z",
+  "reference": {
+    "recordingId": "atlas-openrig-repository-team-m1",
+    "sourceRevision": "28e9fb5f504205e7135a5db4e2f0ced6b768b051",
+    "kind": "work",
+    "id": "qitem-20261018022035-997c3976"
+  },
+  "studioBackgroundObjectsSha256": "3f381b8012000aad76b990874c699149d0b69b0a36ac8298315c48879b5f94e9",
+  "observatoryBackgroundObjectsSha256": "c916399580eee088825a94696da2e4f6c0858a4f2abf9bc18c58a4cc011af654",
+  "files": {
+    "Reference-Observatory.atlasmap": "ee87931ac05741676449348e51dc6a6b410b4c79ece3c87382347284c2342629",
+    "Reference Observatory v1.atlas-collection.zip": "d368e7f06a5f00fcce481920f2550104698c4b95a9f6fdeae8ec7dd34afb9d03",
+    "Start here.md": "9ac7d552f798b3fa362352d292cbbd6ad903f5904d1742ef56d86d1c0784698c",
+    "Reuse experiment.md": "6f698485a2878a3dd5fa24eb039b6dadff39f9879ab7b7799be7d3b83c53be2e",
+    "artwork/reference-observatory-v1.png": "57dea675a6aa486423bb9b606f144cf5eeafa8de73825a891efa49bcb26ed0db",
+    "src/app/agent-workspace/repositoryTeamRecording.json": "a3164a25b5a1298864288b40b649e78deca42495e147935ac253c73fb5be57f6",
+    "src/app/agent-workspace/integrationRecording.json": "fc56fcd199e3b6fc9296fc3139cdacfac7f323bacd07007b48c72a1992623dae",
+    "dist/main.js": "f066812c558f49352322054385c461e4cb44c66438a626b328e163338835070e",
+    "dist/styles.css": "c29b3cac209ec14e9e2ed4948ec28b28c6a32eebd51512665883f7be4bc3d48a"
+  },
+  "bundleManifestHashesVerified": true
+}

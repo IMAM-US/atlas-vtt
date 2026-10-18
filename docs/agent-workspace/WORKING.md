@@ -1,6 +1,6 @@
 # Atlas agent workspace working document
 
-Updated: 2026-10-18 UTC. Status: editable illustrated milestone implemented and natively verified in the isolated review vault. Repository-native representatives completed attributed requalification and review. [PR #14](https://github.com/fsafey/atlas-vtt/pull/14) is open; remote qualification is unavailable, so it is not merged. A live connector and Atlas execution controls remain out of scope.
+Updated: 2026-10-18 UTC. Status: [PR #14](https://github.com/fsafey/atlas-vtt/pull/14) merged at `3654974` on explicit owner approval of the recorded local/native evidence; remote checks were absent. The editable integration studio and a deliberately different [Reference Observatory](projects/reference-observatory/README.md) now exercise project-specific authoring and one shared resource. A live connector and Atlas execution controls remain out of scope.
 
 ## Confirmed direction
 
@@ -17,6 +17,8 @@ Accepted product direction, 2026-10-18: Atlas is an editable spatial dashboard f
 The intended agent card leads with purpose, harness/model, repository and actual working directory. Its primary future action is **Open agent**, resolving the stable identity to its current native conversation through supported mechanisms, with stopped/recovery states explicit. Technical IDs and provenance are secondary. The recorded milestone can present verified metadata and opening instructions; direct native-agent opening from Atlas is not implemented. Agent creation/import, live status and automatic context delivery remain future decisions.
 
 Accepted owner clarification, 2026-10-18: each Atlas project can explore its own roster, repository harnesses, context, configuration and spatial expression. A new Codex session may help configure a project; project, scene, seat and conversation identities remain distinct. This integration studio is one concrete configuration, not a universal project template. Explicit reuse across projects should preserve provenance and distinguish a shared reference from a copied representation, artifact or configuration. Versioned files and small experiments are the intended development approach; a project manifest, composition/import mechanism and compatibility rules remain proposals. No such framework or live integration is added in this milestone.
+
+Accepted next experiment, 2026-10-18: build a second deliberately different project that reuses one studio artifact/resource before defining broader configuration rules. The Reference Observatory is a human-led research project with its own collection, landscape, notes and annotations. It reuses the completed repository-review resource through an ordinary copied representation; it creates no new seat or owned task.
 
 ## What exists
 
@@ -44,6 +46,8 @@ Observed in the isolated review vault: both representations moved, annotation ad
 Accepted owner clarification, 2026-10-17: start from Atlas's spatial grammar. A token, scene object or image asset has its own identity, separate from what it refers to. Multiple representations may refer to one agent or resource. Candidate meanings include agents, artifacts, knowledge collections and databases; this milestone does not invent a general domain schema.
 
 Accepted owner addition, 2026-10-17: actual images represent sections of the work. The [illustrated studio](integration-team/studio.md) has an Atlas cartography bench, OpenRig systems bench, shared review table and evidence library. One map image supplies visual places; editable labels and notes supply definitions. The image creates no seats, work or authorization. Native application and explicit agent context consumption are recorded separately from mapping review.
+
+Second-project evidence: native cross-collection copy/paste retained the exact pinned review reference with a new local object ID. Independent label/placement edits, undo/redo, linked-note navigation, checkpoint isolation and reopen were observed; the studio's background/objects stayed byte-equivalent under canonical comparison. Its native v1 collection export contains the scene, artwork and two notes, preserving the reference. A demonstrated coupling bug was fixed: a reference alone no longer enables studio-specific commands; the native scene asset must carry its recognized seed marker. That marker identifies studio ancestry and survives whole-scene copying; project identity and scene-fork semantics remain distinct. See [experiment and verification](projects/reference-observatory/verification.md). Cross-vault evidence availability remains untested and depends on the plugin's bundled recording registry.
 
 ## What we are proposing
 
@@ -73,7 +77,7 @@ Ask, Assign, and Handoff have distinct effects; owned work uses OpenRig's durabl
 | Does a gesture arrange the view, change focus, propose work, or assign it? | Explicit action meanings first; spatial gestures can adopt them later |
 | Who can act, see each source, and promote knowledge to accepted status? | Domain-specific policy, enforced outside rendering and recorded with attribution |
 | How does the connector fit the Atlas fork and existing LLM tooling? | Reuse Atlas's view/store and OpenRig's HTTP/events; packaging remains open |
-| How are different project configurations versioned and composed? | Explore a second concrete project, then define the smallest explicit sharing/copying contract. Do not generalize this studio into a mandatory template. |
+| How are different project configurations versioned and composed? | Two concrete configurations now exist. Native collection releases package local scene/settings/notes; a copied representation keeps a pinned shared resource. Decide which source dependencies must travel before building broader composition. |
 
 ## Next discussion
 
@@ -85,7 +89,7 @@ Next recommended scenario: a bounded **Open agent** navigation bridge that resol
 
 Source implementation `9679d2e114ef4342a639856efbc1cef4c78ee208` passed 59 focused tests, TypeScript, touched-source lint, changelog validation and an isolated-vault production build. Native editing/inspection/reopen and both agents' explicit context consumption are recorded above. Both corrected seats are running idle with no outstanding owned work; their repository roots remain intact.
 
-At PR creation the fork reported no rulesets, no branch protection, no check runs and no Actions runs. Its existing CI provider operator reports **inventory-only**, qualification pending. The PR remains open: auto-merge would bypass the intended missing gate. No CI/provider settings, releases or canonical-vault installation changed. Remote qualification or an explicit owner merge decision remains outstanding.
+The owner explicitly authorized merging PR #14 on that local/native evidence. It merged on 2026-10-18 at `365497432578551da121284643542f9314c0d496`; required-check result: none configured, no remote runs. No CI/provider settings or canonical-vault installation changed. The second-project slice has its own focused/native qualification; it does not inherit the original review as approval of new conclusions.
 
 ## References and upkeep
 

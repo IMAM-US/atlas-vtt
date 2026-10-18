@@ -1489,6 +1489,14 @@ export class AssetService {
     return collection?.settings ?? { conditions: [] };
   }
 
+  /** A scene's native asset record, read only from the already loaded index. */
+  findSceneAssetByMapPath(mapPath: string): SceneAsset | null {
+    if (!this.metadata) return null;
+    return Object.values(this.metadata.assets).find(
+      (asset): asset is SceneAsset => asset.type === 'scene' && asset.data?.mapPath === mapPath,
+    ) ?? null;
+  }
+
   /** The library token drawn with this artwork, read from the loaded index. */
   findTokenAssetByImagePath(imagePath: string): TokenAsset | null {
     if (!this.metadata) return null;
