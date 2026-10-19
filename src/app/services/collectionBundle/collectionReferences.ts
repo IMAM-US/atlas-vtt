@@ -5,6 +5,8 @@ import { SceneSnapshotService } from '../../snapshots/SceneSnapshotService';
 import { isRecord } from '../assetMetadataGuards';
 import { imageReference, localImage } from '../statblockImportCandidates';
 import { linkedFilePath } from '../sceneLinks';
+import { accountPathOf } from '../../agent-links/account/references';
+import { ownedPaths } from '../vault-sync/assetFiles';
 import type { BundleFile, BundleFileRole, StatblockImageKey } from './bundleFormat';
 
 /** The scene thumbnail lives next to its map file. */
@@ -32,7 +34,8 @@ const OPTIONAL_ROLES = new Set<BundleFileRole>(['thumbnail', 'scene-thumbnail'])
  * with the backgrounds and artwork of tokens placed on them, the notes their
  * pins and characters open, and the statblock notes tokens link to together
  * with their artwork. Every file lists the
- * assets that use it; the first role claimed for a path wins. Referenced
+ * assets that use it; the first role claimed for a path wins, except that an
+ * opaque source account cannot share a role with another file. Referenced
  * files that are gone are reported instead of packed.
  */
 export class CollectionReferenceCollector {
@@ -40,10 +43,12 @@ export class CollectionReferenceCollector {
   private readonly statblockNotes = new Set<string>();
   private readonly missing = new Map<string, MissingReference>();
   private owner: Asset | null = null;
+  private ownedFiles: ReadonlySet<string> = new Set();
 
   constructor(private readonly app: App, private readonly assets: AssetService) {}
 
   async collect(assets: readonly Asset[]): Promise<CollectedFiles> {
+    this.ownedFiles = new Set((await this.assets.getAssets()).flatMap(ownedPaths));
     for (const asset of assets) {
       this.owner = asset;
       await this.collectAsset(asset);
@@ -123,10 +128,12 @@ export class CollectionReferenceCollector {
     this.add(state.background ?? undefined, 'background');
     for (const token of Object.values(state.objects?.tokens ?? {})) {
       this.add(token.imagePath, 'token-image');
+      this.add(accountPathOf(token) ?? undefined, 'source-account');
       if (token.kind !== 'character') continue;
       this.addStatblockNote(token.statblockPath);
       this.addLinkedNote(token.notePath);
     }
+    for (const text of Object.values(state.objects?.texts ?? {})) this.add(accountPathOf(text) ?? undefined, 'source-account');
     for (const pin of Object.values(state.objects?.pins ?? {})) this.addLinkedNote(pin.notePath);
   }
 
@@ -162,8 +169,14 @@ export class CollectionReferenceCollector {
   /** Records `path` for the current asset (or `owners`); returns whether it was newly added. */
   private add(path: string | undefined, role: BundleFileRole, owners: readonly string[] = this.owner ? [this.owner.id] : []): boolean {
     if (!path) return false;
+    if (role === 'source-account' && this.ownedFiles.has(path)) {
+      throw new Error(`Source account conflicts with an existing asset file: ${path}`);
+    }
     const existing = this.files.get(path);
     if (existing) {
+      if (existing.role !== role && (role === 'source-account' || existing.role === 'source-account')) {
+        throw new Error(`Source account conflicts with another file reference: ${path}`);
+      }
       existing.owners = [...new Set([...(existing.owners ?? []), ...owners])];
       return false;
     }

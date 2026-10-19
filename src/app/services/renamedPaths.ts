@@ -1,4 +1,5 @@
 import { normalizeImagePath } from '../utils/pathUtils';
+import { followSourceAccount } from '../agent-links/account/references';
 
 /** A file that now lives at `to` instead of `from`. */
 export interface PathMove {
@@ -18,14 +19,14 @@ export function movedPathOf(moves: readonly PathMove[]): MovedPath {
   return (candidate) => (candidate ? targets.get(normalizeImagePath(candidate)) ?? null : null);
 }
 
-/** A pin target (`path` or `path#heading`) after the moves, or null when its file did not move. */
-function movedPinTarget(target: string, moved: MovedPath): string | null {
+/** A linked note or scene (`path` or `path#heading`) after the moves, or null when its file did not move. */
+function movedNoteTarget(target: string, moved: MovedPath): string | null {
   const hash = target.indexOf('#');
   const path = moved(hash === -1 ? target : target.slice(0, hash));
   return path === null ? null : path + (hash === -1 ? '' : target.slice(hash));
 }
 
-interface TokenPaths {
+interface TokenPaths extends PinPaths {
   imagePath?: string | undefined;
   statblockPath?: string | null | undefined;
 }
@@ -50,6 +51,7 @@ export interface MapReferences {
   objects?: {
     tokens?: Collection<TokenPaths>;
     pins?: Collection<PinPaths>;
+    texts?: Collection<unknown>;
   } | null | undefined;
   initiative?: { entries?: Collection<TokenPaths> } | null | undefined;
   diceLog?: Collection<{ source?: DiceSourcePaths | null | undefined }>;
@@ -65,9 +67,9 @@ function follow<K extends string>(record: Partial<Record<K, string | null | unde
 
 /**
  * Points everything a map refers to at the new places of moved files, in
- * place: its own path, its background, token art and statblocks, pin
- * targets, and the portraits and statblocks of initiative entries and dice
- * rolls. Returns whether anything changed.
+ * place: its own path, background, token art, statblocks and notes, pin targets,
+ * token/text accounts, and the portraits and statblocks of initiative entries
+ * and dice rolls. Returns whether anything changed.
  */
 export function rewriteMapReferences(map: MapReferences | null | undefined, moved: MovedPath): boolean {
   if (!map) return false;
@@ -78,8 +80,11 @@ export function rewriteMapReferences(map: MapReferences | null | undefined, move
     changed = follow(token, 'imagePath', moved) || changed;
     changed = follow(token, 'statblockPath', moved) || changed;
   }
-  for (const pin of Object.values(map.objects?.pins ?? {})) {
-    const target = pin.notePath ? movedPinTarget(pin.notePath, moved) : null;
+  for (const appearance of [...Object.values(map.objects?.tokens ?? {}), ...Object.values(map.objects?.texts ?? {})]) {
+    changed = followSourceAccount(appearance, moved) || changed;
+  }
+  for (const pin of [...Object.values(map.objects?.pins ?? {}), ...Object.values(map.objects?.tokens ?? {})]) {
+    const target = pin.notePath ? movedNoteTarget(pin.notePath, moved) : null;
     if (target !== null) {
       pin.notePath = target;
       changed = true;

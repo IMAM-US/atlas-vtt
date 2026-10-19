@@ -177,7 +177,7 @@ async function applyImport(
       const target = targets.targetOf(bundlePath);
       if (!target) continue;
       const file = filesByPath.get(bundlePath)!;
-      await journal.write(target, rewriteContent(file, await zip.file(zipPathFor(bundlePath))!.async('arraybuffer'), targets.rewrites));
+      await journal.write(target, rewriteContent(file, await zip.file(zipPathFor(bundlePath))!.async('arraybuffer'), targets.paths, targets.assetIds));
       written += 1;
     }
     // Removals come last, checked against the vault as the writes left it.

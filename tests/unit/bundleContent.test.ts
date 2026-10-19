@@ -35,4 +35,28 @@ describe('JSON files', () => {
     const raw = encode('{"mapPath":"a/b.atlasmap"}');
     expect(rewriteContent(scene, raw, new Map([['elsewhere', 'x']]))).toBe(raw);
   });
+
+  it('moves only the account path inside a source reference, even when native identities collide with rewrite keys', () => {
+    const path = 'accounts/colleagues.json';
+    const reference = { accountPath: path, subjectId: path, native: { nodeId: 'asset-1', accountPath: path } };
+    const recordingReference = { recordingId: 'asset-1', sourceRevision: path, kind: 'seat', id: path };
+    const raw = encode(JSON.stringify({ sourceReference: reference, recordingReference, imagePath: path }));
+    const result = JSON.parse(decode(rewriteContent(scene, raw, new Map([[path, 'copied/account.json']]), new Map([['asset-1', 'asset-2']]))));
+    expect(result.sourceReference).toEqual({ ...reference, accountPath: 'copied/account.json' });
+    expect(result.recordingReference).toEqual(recordingReference);
+    expect(result.imagePath).toBe('copied/account.json');
+  });
+
+  it('does not turn an unchanged account path into a new asset ID with the same spelling', () => {
+    const sourceReference = { accountPath: 'account.json', subjectId: 'account.json', native: { nodeId: 'account.json' } };
+    const raw = encode(JSON.stringify({ tokenId: 'account.json', sourceReference }));
+    const result = JSON.parse(decode(rewriteContent(scene, raw, new Map(), new Map([['account.json', 'copied-asset']]))));
+    expect(result).toEqual({ tokenId: 'copied-asset', sourceReference });
+  });
+});
+
+it('carries account documents byte for byte without traversing native metadata or unqualified internal paths', () => {
+  const file: BundleFile = { vaultPath: 'accounts/team.json', role: 'source-account' };
+  const raw = encode('{ "version": 1, "nodeId": "asset-1", "path": "accounts/team.json", "native": {"file": "/private/example/native.json"} }\n');
+  expect(rewriteContent(file, raw, new Map([['accounts/team.json', 'copied/team.json']]), new Map([['asset-1', 'asset-2']]))).toBe(raw);
 });

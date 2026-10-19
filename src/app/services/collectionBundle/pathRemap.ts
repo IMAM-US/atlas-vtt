@@ -3,7 +3,7 @@ import { REUSABLE_FILE_ROLES, type BundleFile } from './bundleFormat';
 import { sceneThumbnailPath } from './collectionReferences';
 import { baseName, parentPath } from '../../utils/pathUtils';
 import { snapshotFolderFor } from '../../snapshots/snapshotPaths';
-import { mapStrings } from '../../utils/mapStrings';
+import { remapSourceReference } from '../../agent-links/account/references';
 
 const GLOBAL_ASSETS_PREFIX = `${GLOBAL_ASSETS_DIR}/`;
 
@@ -17,17 +17,31 @@ function remapLink(text: string, map: PathMap): string {
 }
 
 /**
- * Returns `value` with every string that exactly equals a known vault path
- * replaced by its new path, and every note link into such a path following it.
+ * Returns `value` with known vault paths and asset IDs rewritten from their
+ * separate namespaces, and every note link into a moved vault path following it.
  * Works on asset records, scene JSON and whole `.atlasmap` files alike, since
- * all of them store paths as plain strings.
+ * all of them store paths as plain strings. Native identity references are
+ * opaque, except for a source reference's explicit vault account path.
  */
-export function remapPaths<T>(value: T, map: PathMap): T {
-  return mapStrings(value, (text) => map.get(text) ?? remapLink(text, map));
+export function remapPaths<T>(value: T, paths: PathMap, assetIds: PathMap = new Map()): T {
+  const visit = (entry: unknown): unknown => {
+    if (typeof entry === 'string') return assetIds.get(entry) ?? paths.get(entry) ?? remapLink(entry, paths);
+    if (Array.isArray(entry)) return entry.map(visit);
+    if (entry && typeof entry === 'object') {
+      return Object.fromEntries(Object.entries(entry).map(([key, item]) => {
+        if (key === 'sourceReference') return [key, remapSourceReference(item, (path) => paths.get(path) ?? null)];
+        if (key === 'recordingReference') return [key, item];
+        return [key, visit(item)];
+      }));
+    }
+    return entry;
+  };
+  return visit(value) as T;
 }
 
 /** Where a file without a place of its own in the target collection is copied to, by what it is. */
 function copyFolder(file: BundleFile, collectionId: string): string {
+  if (file.role === 'source-account') return `${COLLECTIONS_DIR}/${collectionId}/accounts`;
   const folder = REUSABLE_FILE_ROLES.has(file.role) ? 'statblocks' : file.vaultPath.endsWith('.md') ? 'notes' : 'files';
   return `${COLLECTIONS_DIR}/${collectionId}/${folder}`;
 }

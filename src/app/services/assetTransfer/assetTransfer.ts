@@ -100,7 +100,7 @@ async function transferGroup(app: App, assetService: AssetService, transfer: Gro
     existsInVault: (path) => app.vault.getAbstractFileByPath(path) !== null,
     hiddenFolders: new Set([...hiddenFiles].map(parentPath)),
   });
-  const rewrite = contentRewriter(plan.rewrites, sceneAdoption(targetCollectionId, assetService.getCollectionSettings(targetCollectionId)));
+  const rewrite = contentRewriter(plan.paths, newIds, sceneAdoption(targetCollectionId, assetService.getCollectionSettings(targetCollectionId)));
 
   const transferFiles = new TransferFiles(app);
   try {
@@ -140,9 +140,9 @@ async function filesUsedBy(app: App, assetService: AssetService, assets: readonl
 type ContentRewriter = (file: BundleFile) => TextRewrite;
 
 /** The new text of a transferred file: what it refers to follows the plan, and a scene adopts the target's rules. */
-function contentRewriter(rewrites: PathMap, adoption: SceneAdoption): ContentRewriter {
+function contentRewriter(paths: PathMap, assetIds: PathMap, adoption: SceneAdoption): ContentRewriter {
   return (file) => (text) => {
-    const remapped = rewriteText(file, text, rewrites);
+    const remapped = rewriteText(file, text, paths, assetIds);
     const adopt = file.role === 'scene-map' ? adoption.map : file.role === 'scene-snapshot' ? adoption.snapshot : null;
     const adopted = adopt?.(remapped) ?? remapped;
     return adopted === text ? null : adopted;

@@ -94,6 +94,24 @@ describe('renaming a map file in the vault', () => {
 });
 
 describe('rewriteMapReferences', () => {
+  it('follows token and text accounts and token note anchors without changing native identity', () => {
+    const oldPath = 'accounts/colleagues.json';
+    const original = { accountPath: oldPath, subjectId: oldPath, native: { nodeId: oldPath } };
+    const objects = {
+      tokens: { t: { imagePath: 'art.webp', notePath: 'Notes/Work.md#Scope', sourceReference: { ...original } } },
+      texts: { x: { sourceReference: { ...original } } },
+    };
+    const moves = movedPathOf([
+      { from: oldPath, to: 'accounts/renamed.json' },
+      { from: 'Notes/Work.md', to: 'Notes/Renamed.md' },
+    ]);
+    expect(rewriteMapReferences({ objects }, moves)).toBe(true);
+    expect(objects.tokens.t.sourceReference).toEqual({ ...original, accountPath: 'accounts/renamed.json' });
+    expect(objects.texts.x.sourceReference).toEqual(objects.tokens.t.sourceReference);
+    expect(objects.tokens.t.notePath).toBe('Notes/Renamed.md#Scope');
+    expect(rewriteMapReferences({ objects }, moves)).toBe(false);
+  });
+
   it('retargets token art, token statblocks and pin targets, leaving other paths alone', () => {
     const objects = {
       tokens: {
