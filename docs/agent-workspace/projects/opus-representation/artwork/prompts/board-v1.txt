@@ -1,0 +1,22 @@
+Use case: stylized-concept
+Asset type: opaque PNG background for a native Atlas VTT tabletop scene called The Table's Account.
+Create one richly readable hand-painted fantasy cartographic map at 1536x1024 pixels, landscape 3:2 (or the largest native landscape size available). Fine ink linework and watercolor washes, warm parchment with muted region accents, medium detail that reads when zoomed out, soft even daylight. Directly overhead terrain and floor plan, with slight oblique on buildings only.
+
+Overall framing and invariant layout:
+The painted deckle-edged parchment map rests on a dark wooden game table. Left, top and right margins show only a narrow deckled paper edge over wood. The bottom 13 percent of the image is a full-width horizontal strip of exposed dark wood. On this bottom strip, from left to right: a closed blank folding game-master screen; a small empty wooden bench/tray long enough for two or three tokens; an open completely blank journal with a quill. These three objects are on the table, outside the map. Everything on both map and table is unlettered.
+
+Map geography and landmarks, keep these exact relationships:
+1. A calm blue river descends from the map's top to its bottom slightly left of center, dividing west from east. A single sturdy stone bridge crosses it at the exact center of the overall image.
+2. Atlas Keep, west at left-middle: a cartographers' tower with an observatory dome and map tables visible on an open terrace, green and bronze accents.
+3. OpenRig Foundry, east at right-middle: a long workshop hall, row of SIX identical clearly open alcoves each holding exactly ONE empty chair, copper and charcoal accents, chimneys with light smoke.
+4. Planning Pavilion just east of the central stone bridge, near center-right: open-sided indigo and silver canvas pavilion with a round table and exactly two empty stools.
+5. Abandoned camp, northwest of the pavilion, across the river in upper-center-left: a small recently left cold campsite, dead fire ring, one empty stool and collapsed canvas. Faint footpath from camp crosses the river over a ford/stepping stones to the pavilion. This is a minor ford separate from the central stone bridge, not another bridge. The camp is recently left, not ancient ruins.
+6. Painter's atelier southwest at lower-left of center: small newly built pale timber hut, open front, easels, ochre and leaf-green accents.
+7. Quest board in south-center just above the exposed table strip: small village square, wooden notice board with exactly three entirely blank pinned paper sheets, plus a well.
+8. Relic archive at southeast lower-right: vaulted stone archive, open doors showing scroll shelves and exactly two closed chests.
+9. Hall of Judgment northeast upper-right: round colonnaded hall with a raised empty seat inside and an open plaza in front.
+10. Herald's waystation at top-center on the map's upper border: hilltop signal tower with an unlit lantern. A dirt road enters the map from beyond the top edge and passes this tower.
+
+Leave a clear low-detail open ground patch directly in front of EVERY landmark, each about 12 percent of the full image width, suitable for later editable tokens and labels. Space the buildings so all landmarks are distinct and the open patches remain unobstructed. Simple navigable dirt roads connect every landmark through the central stone bridge. Roads are ordinary paths, without arrowheads or special diagram connections.
+
+Strict exclusions: NO people, NO creatures, NO character tokens, NO lettering anywhere, NO numbers, NO runes, NO pseudo-writing, NO logos, NO watermarks, NO grid, NO interface or dashboard. Maps on tables, journals, scrolls, notice sheets and game-master screen are blank. Do not paint labels; they will be native editable Atlas objects later. Do not change landmark positions or substitute landmarks. Preserve the bottom table strip.

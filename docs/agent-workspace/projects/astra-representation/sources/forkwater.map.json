@@ -1,0 +1,291 @@
+{
+  "version": "1.0",
+  "id": "astra-forkwater",
+  "revision": 1,
+  "title": "Forkwater",
+  "map_type": "regional",
+  "purpose": "Symbolic regional landscape for native agent work: retained accounts, current investigation, shared undertaking and inspectable results. No physical distance or scheduling semantics.",
+  "inspiration": {
+    "premise": "An archive and a survey camp stand across an estuary around an open council island.",
+    "mood": [
+      "curiosity",
+      "careful exploration",
+      "quiet industry"
+    ],
+    "novelty": "balanced",
+    "motifs": [
+      "copper dome",
+      "teal braided water",
+      "warm sand"
+    ],
+    "references": []
+  },
+  "canvas": {
+    "aspect_ratio": [
+      3,
+      2
+    ],
+    "target_pixels": [
+      1536,
+      1024
+    ],
+    "margin_fraction": 0.03
+  },
+  "style": {
+    "preset": "watercolor-working-world",
+    "perspective": "illustrated_oblique",
+    "medium": "Fine ink with watercolor and gouache",
+    "linework": "Fine dark contours and crisp landmark silhouettes",
+    "palette": {
+      "water": "#266e76",
+      "sand": "#e7ca91",
+      "forest": "#68784a",
+      "roof": "#ae6c48",
+      "paper": "#f6efdf"
+    },
+    "surface_texture": "Subtle paper and terrain texture with quiet open areas",
+    "lighting": "Gentle afternoon light",
+    "density": "balanced",
+    "focal_entity_id": "clearing",
+    "hierarchy": [
+      "clearing",
+      "archive",
+      "camp",
+      "landing",
+      "river"
+    ],
+    "border_treatment": "No border"
+  },
+  "environment": {
+    "terrain_summary": "A south-draining estuary forks around a green island with a broad sandy clearing.",
+    "season": "late summer",
+    "time_of_day": "afternoon",
+    "weather": "clear",
+    "physical_logic": "naturalistic",
+    "exceptions": []
+  },
+  "entities": {
+    "archive": {
+      "name": "Retained archive",
+      "kind": "landmark",
+      "visibility": "public",
+      "importance": "supporting",
+      "quantity": 1,
+      "placement": {
+        "bounds": [
+          0.08,
+          0.12,
+          0.24,
+          0.28
+        ]
+      },
+      "appearance": "Weathered stone archive, copper dome and wharf",
+      "must_show": [],
+      "must_avoid": [
+        "text",
+        "labels",
+        "UI controls"
+      ],
+      "gameplay_role": "Symbolic home of earlier accounts",
+      "gm_notes": ""
+    },
+    "clearing": {
+      "name": "Council island",
+      "kind": "terrain",
+      "visibility": "public",
+      "importance": "primary",
+      "quantity": 1,
+      "placement": {
+        "bounds": [
+          0.35,
+          0.3,
+          0.3,
+          0.35
+        ]
+      },
+      "appearance": "Open pale-sand clearing with old tree toward north",
+      "must_show": [],
+      "must_avoid": [
+        "text",
+        "labels",
+        "UI controls"
+      ],
+      "gameplay_role": "Shared undertaking and changing perspectives",
+      "gm_notes": ""
+    },
+    "camp": {
+      "name": "Survey camp",
+      "kind": "settlement",
+      "visibility": "public",
+      "importance": "supporting",
+      "quantity": 1,
+      "placement": {
+        "bounds": [
+          0.7,
+          0.13,
+          0.27,
+          0.25
+        ]
+      },
+      "appearance": "Canvas shelters, wooden tables and lantern mast",
+      "must_show": [],
+      "must_avoid": [
+        "text",
+        "labels",
+        "UI controls"
+      ],
+      "gameplay_role": "Current investigation",
+      "gm_notes": ""
+    },
+    "landing": {
+      "name": "Result quay",
+      "kind": "landmark",
+      "visibility": "public",
+      "importance": "supporting",
+      "quantity": 1,
+      "placement": {
+        "bounds": [
+          0.73,
+          0.55,
+          0.2,
+          0.18
+        ]
+      },
+      "appearance": "Small quiet wooden landing stage",
+      "must_show": [],
+      "must_avoid": [
+        "text",
+        "labels",
+        "UI controls"
+      ],
+      "gameplay_role": "Inspect results and their basis",
+      "gm_notes": ""
+    },
+    "river": {
+      "name": "Forkwater",
+      "kind": "river",
+      "visibility": "public",
+      "importance": "ambient",
+      "quantity": 1,
+      "placement": {
+        "bounds": [
+          0.12,
+          0,
+          0.76,
+          1
+        ]
+      },
+      "appearance": "Teal river enters north, splits around island and opens south",
+      "must_show": [],
+      "must_avoid": [
+        "text",
+        "labels",
+        "UI controls"
+      ],
+      "gameplay_role": "Illustrated connection; not a workflow edge",
+      "gm_notes": ""
+    }
+  },
+  "connections": {},
+  "relationships": [
+    {
+      "from": "archive",
+      "to": "camp",
+      "relation": "west_of",
+      "strength": "must",
+      "detail": "The earlier account and current camp are visually distinct banks."
+    }
+  ],
+  "gameplay": {
+    "grid": {
+      "type": "none",
+      "render": "none",
+      "columns": null,
+      "rows": null,
+      "pixels_per_cell": null,
+      "hex_cell_width_px": null,
+      "hex_orientation": "none",
+      "offset_px": [
+        0,
+        0
+      ],
+      "units_per_cell": null,
+      "units": "abstract"
+    },
+    "entry_ids": [],
+    "objective_ids": [],
+    "require_reachability": false,
+    "minimum_path_width_cells": null,
+    "affordances": [
+      "Readable note destinations",
+      "Symbolic participant placements",
+      "Independent scenes showing changed roles and native lineage"
+    ],
+    "must_preserve": [
+      "Open clearing",
+      "Unlabeled map art",
+      "Distinct archive and camp"
+    ]
+  },
+  "annotations": {
+    "label_mode": "postprocess",
+    "labels": [
+      {
+        "id": "label-archive",
+        "entity_id": "archive",
+        "text": "THE RETAINED ACCOUNT",
+        "anchor": [
+          0.1725,
+          0.4004
+        ],
+        "rotation_deg": 0,
+        "visibility": "public"
+      },
+      {
+        "id": "label-camp",
+        "entity_id": "camp",
+        "text": "THE CURRENT EXPEDITION",
+        "anchor": [
+          0.7975,
+          0.3828
+        ],
+        "rotation_deg": 0,
+        "visibility": "public"
+      }
+    ],
+    "typography": "Native Atlas text objects; Georgia on warm ivory plates",
+    "markers": "vtt",
+    "clear_zones": [
+      {
+        "bounds": [
+          0.32,
+          0.4,
+          0.36,
+          0.18
+        ],
+        "purpose": "Council labels and work pin"
+      }
+    ]
+  },
+  "production": {
+    "audience": "player",
+    "variant": "base",
+    "action": "new_image",
+    "base_image_reference": null,
+    "edit_scope": [],
+    "output_format": "png",
+    "must_include": [
+      "One forked estuary",
+      "Archive, camp, central clearing and landing"
+    ],
+    "must_avoid": [
+      "Baked text",
+      "Grid",
+      "Tokens",
+      "Interface",
+      "Arrows"
+    ],
+    "revision_notes": "Brief issued to built-in image tool; source finalized with actual image dimensions and native label anchors after visual inspection. Artwork is symbolic, not a measured tactical map."
+  },
+  "locks": []
+}

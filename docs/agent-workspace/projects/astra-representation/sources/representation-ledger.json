@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "authority": "Content authoring sidecar, not a plugin schema or live connector",
+  "collectionUid": "53ff5122-20c9-4fe3-a9cf-7cd20417a8c3",
+  "observation": "2026-10-19T03:01:49.832Z",
+  "scale": "Symbolic relevance and perspective, not physical movement or scheduling",
+  "appearances": [
+    {
+      "object": "tok_astra_original",
+      "scene": "atlas-vtt/collections/Astra Representation/scenes/Astra - 01 Forkwater.atlasmap",
+      "meaning": "retained participant",
+      "referent": {
+        "kind": "OpenRig node",
+        "id": "01M58RZHEHPGWA3E2AP6ETY7VR"
+      },
+      "basis": "own historical report and preparation note",
+      "note": "atlas-vtt/collections/Astra Representation/notes/Astra - Earlier investigator.md"
+    },
+    {
+      "object": "tok_astra_current",
+      "scene": "atlas-vtt/collections/Astra Representation/scenes/Astra - 01 Forkwater.atlasmap",
+      "meaning": "current fork",
+      "referent": {
+        "kind": "OpenRig node",
+        "id": "01M58W9VEE8ZY4N05JVT3M2EPN"
+      },
+      "basis": "managed identity observed 2026-10-19T03:01:49.832Z; role interpretation authored by Astra",
+      "note": "atlas-vtt/collections/Astra Representation/notes/Astra - Current investigator.md"
+    },
+    {
+      "object": "tok_astra_author",
+      "scene": "atlas-vtt/collections/Astra Representation/scenes/Astra - 02 Council.atlasmap",
+      "meaning": "author for the undertaking",
+      "referent": {
+        "kind": "OpenRig node",
+        "id": "01M58W9VEE8ZY4N05JVT3M2EPN"
+      },
+      "basis": "managed identity observed 2026-10-19T03:01:49.832Z; role interpretation authored by Astra",
+      "note": "atlas-vtt/collections/Astra Representation/notes/Astra - Current investigator.md"
+    },
+    {
+      "object": "tok_astra_keeper",
+      "scene": "atlas-vtt/collections/Astra Representation/scenes/Astra - 02 Council.atlasmap",
+      "meaning": "context keeper for the undertaking",
+      "referent": {
+        "kind": "OpenRig node",
+        "id": "01M58W9VEE8ZY4N05JVT3M2EPN"
+      },
+      "basis": "managed identity observed 2026-10-19T03:01:49.832Z; role interpretation authored by Astra",
+      "note": "atlas-vtt/collections/Astra Representation/notes/Astra - Current investigator.md"
+    }
+  ],
+  "relationships": [
+    {
+      "kind": "forked-from",
+      "from": "01a151c4-f793-7580-beb7-07ccb65c5551",
+      "to": "01a1518f-cf46-78a2-a1d2-095ab025a1c1",
+      "basis": "coordinator-reported native fork; own preparation note",
+      "certainty": "attributed continuity account"
+    },
+    {
+      "kind": "same-subject",
+      "appearances": [
+        "tok_astra_current",
+        "tok_astra_author",
+        "tok_astra_keeper"
+      ],
+      "basis": "explicit author declaration with common native node and note"
+    },
+    {
+      "kind": "contributes-to",
+      "appearances": [
+        "tok_astra_author",
+        "tok_astra_keeper"
+      ],
+      "undertaking": "Atlas and OpenRig shared ontology",
+      "basis": "authored role interpretation; not native topology edges"
+    }
+  ],
+  "stateOwnership": {
+    "board": "Atlas scene files",
+    "native": "OpenRig and Codex",
+    "judgments": "their native or human owners",
+    "acceptance": "not claimed"
+  },
+  "changeCases": [
+    "same name and artwork; different native subjects",
+    "same native subject; different appearance roles and positions",
+    "original and revised reports remain inspectable",
+    "queue closure remains separate from owner acceptance"
+  ]
+}

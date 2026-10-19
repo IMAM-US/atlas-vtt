@@ -1,0 +1,317 @@
+{
+  "schema_version": 1,
+  "request_item": "atlas-opus-image-board-v1-20261019",
+  "parent_item": "atlas-opus-representation-20261018",
+  "producer": "planning-image-codex@atlas-integration-repos",
+  "creative_owner": "planning-opus@atlas-integration-repos",
+  "method": "built-in image_gen__imagegen; one fresh generation per requested image, seven calls",
+  "model": "not exposed by tool; not inferred",
+  "native_size_controls": "The callable tool schema exposes prompt and transparency, not a size parameter. Dimensions were requested in prompt and measured from the PNG files. Maximum supported dimensions were not established.",
+  "source_brief": "/Users/farieds/Project/atlas-openrig-integration-plan/docs/agent-workspace/projects/opus-representation/image-requests/board-v1.md",
+  "generated_at_utc": "2026-10-19",
+  "review_scope": "Generated raster inspection and PNG file validation only. No Atlas/native import, circular crop rendering, or 64/128-pixel tabletop review.",
+  "shared_limitations": [
+    "Portraits exceed the requested central-70-percent framing; circular crop safety is not established.",
+    "Faces share closely similar features across the six tokens; palettes and props supply the principal distinctions.",
+    "No transparent output was requested or produced.",
+    "Exact requested 1024-square size was not produced; all tokens measure 1254 square."
+  ],
+  "assets": [
+    {
+      "asset_id": "opus-planner",
+      "path": "/Users/farieds/Project/atlas-openrig-integration-plan/docs/agent-workspace/projects/opus-representation/artwork/tokens/opus-planner.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 2957041,
+      "sha256": "0e01401c3062d42231cadaa3fb3e107cae9b8299aab4d2138b2aa7afd1e5b7bf",
+      "png_color_type": 2,
+      "format": "PNG",
+      "color_mode": "RGB",
+      "transparency": "opaque; PNG color type 2 has no alpha channel or transparency chunk verified in file validation",
+      "requested_dimensions": {
+        "width": 1024,
+        "height": 1024,
+        "preference": "or closest native square size"
+      },
+      "source_generated_file": "/Users/farieds/.codex/generated_images/01a15214-c88f-7471-a5a5-268bb4ae3c45/exec-bfde70c8-5af3-46dc-b75f-19d63ca05206.png",
+      "prompt_path": "/Users/farieds/Project/atlas-openrig-integration-plan/docs/agent-workspace/projects/opus-representation/artwork/prompts/opus-planner.txt",
+      "prompt": "Use case: stylized-concept\nAsset type: one standalone square painted fantasy colleague portrait token for Atlas VTT.\nFormat requested: opaque PNG, 1024x1024 pixels or closest native square size. One character only, head and shoulders, face angled slightly toward viewer. Fine ink linework with warm watercolor washes on softly textured parchment, soft even daylight, medium detail and crisp readable silhouette; coherent hand-painted cartographic-fantasy token set. Calm, capable, gender-neutral fantasy archetype, without likeness to any real person or brand.\nComposition: centered head-and-shoulders bust, generous surrounding margin. Keep face, whole head and ALL key props within the central 70 percent of the square, designed to survive a centered circular crop. Hold the props compactly up near the chest rather than at the frame's edges. The character's shoulders may extend outward but the identifying equipment must remain inside the circle. A plain softly textured background in the character's requested accent color, no scenery. No baked border or ring.\n\nSubject and palette: A calm strategist-cartographer. Deep indigo and silver accents on simple practical robes, with a plain deep-indigo softly textured background. Key props: a compact folded map and a brass astrolabe, both visible close to the chest. The astrolabe has unlabeled mechanical circles. Quiet thoughtful expression.\n\nStrict exclusions: no text, no lettering, no numbers, no runes, no logos, no watermarks, no interface, no labels, no extra characters. Scrolls and maps may carry simple non-letter diagram marks appropriate to their role but no writing. All required props must be visible and readable, with plausible hands and anatomy.",
+      "method": "built-in image_gen__imagegen",
+      "tool_arguments": {
+        "transparent_background": false,
+        "referenced_image_paths": "omitted",
+        "num_last_images_to_include": "omitted"
+      },
+      "postprocessing": "none; byte-for-byte copy",
+      "review": {
+        "image": "reviewed",
+        "visual_review": "full generated image inspected inline",
+        "findings": [
+          "Indigo/silver strategist, folded map and brass astrolabe visible.",
+          "Portrait framing is larger than the requested central-70-percent safe area; map lower edge approaches the frame."
+        ],
+        "readable_lettering_seen": false,
+        "tabletop_review": "not_run",
+        "reviewed_display_sizes_px": [],
+        "atlas": "not_imported",
+        "creative_acceptance": "not asserted; Opus owns acceptance"
+      },
+      "prompt_sha256": "4762360d5f6b086c0faa3449e9f967cfd731ed9eb064fd92b37ef660e59b09ca",
+      "source_copy_verified": true
+    },
+    {
+      "asset_id": "astra-planner",
+      "path": "/Users/farieds/Project/atlas-openrig-integration-plan/docs/agent-workspace/projects/opus-representation/artwork/tokens/astra-planner.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 3280639,
+      "sha256": "489e3dd1066a65fbff0ab8b333ee1dbe0874b7b2569e6022f842b351cc65a3e5",
+      "png_color_type": 2,
+      "format": "PNG",
+      "color_mode": "RGB",
+      "transparency": "opaque; PNG color type 2 has no alpha channel or transparency chunk verified in file validation",
+      "requested_dimensions": {
+        "width": 1024,
+        "height": 1024,
+        "preference": "or closest native square size"
+      },
+      "source_generated_file": "/Users/farieds/.codex/generated_images/01a15214-c88f-7471-a5a5-268bb4ae3c45/exec-52bb83a5-7b36-423e-abb8-aaaa20e5e5f4.png",
+      "prompt_path": "/Users/farieds/Project/atlas-openrig-integration-plan/docs/agent-workspace/projects/opus-representation/artwork/prompts/astra-planner.txt",
+      "prompt": "Use case: stylized-concept\nAsset type: one standalone square painted fantasy colleague portrait token for Atlas VTT.\nFormat requested: opaque PNG, 1024x1024 pixels or closest native square size. One character only, head and shoulders, face angled slightly toward viewer. Fine ink linework with warm watercolor washes on softly textured parchment, soft even daylight, medium detail and crisp readable silhouette; coherent hand-painted cartographic-fantasy token set. Calm, capable, gender-neutral fantasy archetype, without likeness to any real person or brand.\nComposition: centered head-and-shoulders bust, generous surrounding margin. Keep face, whole head and ALL key props within the central 70 percent of the square, designed to survive a centered circular crop. Hold the props compactly up near the chest rather than at the frame's edges. The character's shoulders may extend outward but the identifying equipment must remain inside the circle. A plain softly textured background in the character's requested accent color, no scenery. No baked border or ring.\n\nSubject and palette: A star navigator. Teal and pale gold accents on a practical travel mantle, with a plain teal softly textured background. Key prop: one star-chart scroll held compactly close to the chest, showing a few clear star dots and simple constellation lines, no lettering. Thoughtful observant expression.\n\nStrict exclusions: no text, no lettering, no numbers, no runes, no logos, no watermarks, no interface, no labels, no extra characters. Scrolls and maps may carry simple non-letter diagram marks appropriate to their role but no writing. All required props must be visible and readable, with plausible hands and anatomy.",
+      "method": "built-in image_gen__imagegen",
+      "tool_arguments": {
+        "transparent_background": false,
+        "referenced_image_paths": "omitted",
+        "num_last_images_to_include": "omitted"
+      },
+      "postprocessing": "none; byte-for-byte copy",
+      "review": {
+        "image": "reviewed",
+        "visual_review": "full generated image inspected inline",
+        "findings": [
+          "Teal/gold navigator and star chart scroll visible.",
+          "Chart extends toward lower-right edge; a circular crop can trim its edges."
+        ],
+        "readable_lettering_seen": false,
+        "tabletop_review": "not_run",
+        "reviewed_display_sizes_px": [],
+        "atlas": "not_imported",
+        "creative_acceptance": "not asserted; Opus owns acceptance"
+      },
+      "prompt_sha256": "83863a366acf7a0359ca46de6b09d193085394899ce52f088c8ec4f631597480",
+      "source_copy_verified": true
+    },
+    {
+      "asset_id": "image-partner",
+      "path": "/Users/farieds/Project/atlas-openrig-integration-plan/docs/agent-workspace/projects/opus-representation/artwork/tokens/image-partner.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 3213506,
+      "sha256": "f696e6386c67692d868fff0df7bcf69a943c9ecf44d61e019541735f36adc9f4",
+      "png_color_type": 2,
+      "format": "PNG",
+      "color_mode": "RGB",
+      "transparency": "opaque; PNG color type 2 has no alpha channel or transparency chunk verified in file validation",
+      "requested_dimensions": {
+        "width": 1024,
+        "height": 1024,
+        "preference": "or closest native square size"
+      },
+      "source_generated_file": "/Users/farieds/.codex/generated_images/01a15214-c88f-7471-a5a5-268bb4ae3c45/exec-18413e92-2a84-4dd9-9e51-5afcb0b533d6.png",
+      "prompt_path": "/Users/farieds/Project/atlas-openrig-integration-plan/docs/agent-workspace/projects/opus-representation/artwork/prompts/image-partner.txt",
+      "prompt": "Use case: stylized-concept\nAsset type: one standalone square painted fantasy colleague portrait token for Atlas VTT.\nFormat requested: opaque PNG, 1024x1024 pixels or closest native square size. One character only, head and shoulders, face angled slightly toward viewer. Fine ink linework with warm watercolor washes on softly textured parchment, soft even daylight, medium detail and crisp readable silhouette; coherent hand-painted cartographic-fantasy token set. Calm, capable, gender-neutral fantasy archetype, without likeness to any real person or brand.\nComposition: centered head-and-shoulders bust, generous surrounding margin. Keep face, whole head and ALL key props within the central 70 percent of the square, designed to survive a centered circular crop. Hold the props compactly up near the chest rather than at the frame's edges. The character's shoulders may extend outward but the identifying equipment must remain inside the circle. A plain softly textured background in the character's requested accent color, no scenery. No baked border or ring.\n\nSubject and palette: A painter-artificer. Ochre and leaf-green accents on practical painter's clothing, with a plain ochre softly textured background. Key props: brushes tucked visibly behind one ear and a small brass lantern-projector held compactly near the chest, with a clearly readable lens and small lantern housing. Curious attentive expression.\n\nStrict exclusions: no text, no lettering, no numbers, no runes, no logos, no watermarks, no interface, no labels, no extra characters. Scrolls and maps may carry simple non-letter diagram marks appropriate to their role but no writing. All required props must be visible and readable, with plausible hands and anatomy.",
+      "method": "built-in image_gen__imagegen",
+      "tool_arguments": {
+        "transparent_background": false,
+        "referenced_image_paths": "omitted",
+        "num_last_images_to_include": "omitted"
+      },
+      "postprocessing": "none; byte-for-byte copy",
+      "review": {
+        "image": "reviewed",
+        "visual_review": "full generated image inspected inline",
+        "findings": [
+          "Ochre/green painter, brushes behind ear and brass lantern-projector visible.",
+          "Head and projector exceed the requested central-70-percent safe area."
+        ],
+        "readable_lettering_seen": false,
+        "tabletop_review": "not_run",
+        "reviewed_display_sizes_px": [],
+        "atlas": "not_imported",
+        "creative_acceptance": "not asserted; Opus owns acceptance"
+      },
+      "prompt_sha256": "9282290cf9acb851d4f10b93efb1ddb02db747d1004d692c1577db0fbce87795",
+      "source_copy_verified": true
+    },
+    {
+      "asset_id": "atlas-representative",
+      "path": "/Users/farieds/Project/atlas-openrig-integration-plan/docs/agent-workspace/projects/opus-representation/artwork/tokens/atlas-representative.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 3089783,
+      "sha256": "fef29aabfca87efd9a6b3998a5010cbc73c2b4853512fe6159b0f983476dd373",
+      "png_color_type": 2,
+      "format": "PNG",
+      "color_mode": "RGB",
+      "transparency": "opaque; PNG color type 2 has no alpha channel or transparency chunk verified in file validation",
+      "requested_dimensions": {
+        "width": 1024,
+        "height": 1024,
+        "preference": "or closest native square size"
+      },
+      "source_generated_file": "/Users/farieds/.codex/generated_images/01a15214-c88f-7471-a5a5-268bb4ae3c45/exec-e376d55c-425a-4349-a6f1-ee7f7e9ae65e.png",
+      "prompt_path": "/Users/farieds/Project/atlas-openrig-integration-plan/docs/agent-workspace/projects/opus-representation/artwork/prompts/atlas-representative.txt",
+      "prompt": "Use case: stylized-concept\nAsset type: one standalone square painted fantasy colleague portrait token for Atlas VTT.\nFormat requested: opaque PNG, 1024x1024 pixels or closest native square size. One character only, head and shoulders, face angled slightly toward viewer. Fine ink linework with warm watercolor washes on softly textured parchment, soft even daylight, medium detail and crisp readable silhouette; coherent hand-painted cartographic-fantasy token set. Calm, capable, gender-neutral fantasy archetype, without likeness to any real person or brand.\nComposition: centered head-and-shoulders bust, generous surrounding margin. Keep face, whole head and ALL key props within the central 70 percent of the square, designed to survive a centered circular crop. Hold the props compactly up near the chest rather than at the frame's edges. The character's shoulders may extend outward but the identifying equipment must remain inside the circle. A plain softly textured background in the character's requested accent color, no scenery. No baked border or ring.\n\nSubject and palette: A keep's map warden. Green and bronze accents on a practical warden's mantle, with a plain green softly textured background. Key prop: a compact map case studded with visible map pins, held compactly near the chest. The case should read as a cartographer's map carrier, with a few rolled paper edges visible. Steady watchful expression.\n\nStrict exclusions: no text, no lettering, no numbers, no runes, no logos, no watermarks, no interface, no labels, no extra characters. Scrolls and maps may carry simple non-letter diagram marks appropriate to their role but no writing. All required props must be visible and readable, with plausible hands and anatomy.",
+      "method": "built-in image_gen__imagegen",
+      "tool_arguments": {
+        "transparent_background": false,
+        "referenced_image_paths": "omitted",
+        "num_last_images_to_include": "omitted"
+      },
+      "postprocessing": "none; byte-for-byte copy",
+      "review": {
+        "image": "reviewed",
+        "visual_review": "full generated image inspected inline",
+        "findings": [
+          "Green/bronze warden, map case, pins and rolled papers visible.",
+          "Map case extends toward the lower-right edge and beyond the requested safe area."
+        ],
+        "readable_lettering_seen": false,
+        "tabletop_review": "not_run",
+        "reviewed_display_sizes_px": [],
+        "atlas": "not_imported",
+        "creative_acceptance": "not asserted; Opus owns acceptance"
+      },
+      "prompt_sha256": "5707f1549635010272be3d448fb92a8450417031e14e7a2076046399357f626d",
+      "source_copy_verified": true
+    },
+    {
+      "asset_id": "openrig-representative",
+      "path": "/Users/farieds/Project/atlas-openrig-integration-plan/docs/agent-workspace/projects/opus-representation/artwork/tokens/openrig-representative.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 3063568,
+      "sha256": "d1f04557da9df3943dfd6e37ef5aff1e318ee1ed0dd6c6a2f0903cca81fc159a",
+      "png_color_type": 2,
+      "format": "PNG",
+      "color_mode": "RGB",
+      "transparency": "opaque; PNG color type 2 has no alpha channel or transparency chunk verified in file validation",
+      "requested_dimensions": {
+        "width": 1024,
+        "height": 1024,
+        "preference": "or closest native square size"
+      },
+      "source_generated_file": "/Users/farieds/.codex/generated_images/01a15214-c88f-7471-a5a5-268bb4ae3c45/exec-d0d0ed8a-2aca-4f4a-b1e2-dbdfe9c1c3b1.png",
+      "prompt_path": "/Users/farieds/Project/atlas-openrig-integration-plan/docs/agent-workspace/projects/opus-representation/artwork/prompts/openrig-representative.txt",
+      "prompt": "Use case: stylized-concept\nAsset type: one standalone square painted fantasy colleague portrait token for Atlas VTT.\nFormat requested: opaque PNG, 1024x1024 pixels or closest native square size. One character only, head and shoulders, face angled slightly toward viewer. Fine ink linework with warm watercolor washes on softly textured parchment, soft even daylight, medium detail and crisp readable silhouette; coherent hand-painted cartographic-fantasy token set. Calm, capable, gender-neutral fantasy archetype, without likeness to any real person or brand.\nComposition: centered head-and-shoulders bust, generous surrounding margin. Keep face, whole head and ALL key props within the central 70 percent of the square, designed to survive a centered circular crop. Hold the props compactly up near the chest rather than at the frame's edges. The character's shoulders may extend outward but the identifying equipment must remain inside the circle. A plain softly textured background in the character's requested accent color, no scenery. No baked border or ring.\n\nSubject and palette: A foundry engineer. Copper and charcoal accents on practical engineer's clothing, with a plain charcoal softly textured background. Key props: a heavy ring of large metal keys and a small pulley wheel in its compact metal frame, both held close to the chest. Ingenious composed expression.\n\nStrict exclusions: no text, no lettering, no numbers, no runes, no logos, no watermarks, no interface, no labels, no extra characters. Scrolls and maps may carry simple non-letter diagram marks appropriate to their role but no writing. All required props must be visible and readable, with plausible hands and anatomy.",
+      "method": "built-in image_gen__imagegen",
+      "tool_arguments": {
+        "transparent_background": false,
+        "referenced_image_paths": "omitted",
+        "num_last_images_to_include": "omitted"
+      },
+      "postprocessing": "none; byte-for-byte copy",
+      "review": {
+        "image": "reviewed",
+        "visual_review": "full generated image inspected inline",
+        "findings": [
+          "Copper/charcoal engineer, key ring and framed pulley visible.",
+          "Keys and pulley approach lower corners; full crop safety is unverified."
+        ],
+        "readable_lettering_seen": false,
+        "tabletop_review": "not_run",
+        "reviewed_display_sizes_px": [],
+        "atlas": "not_imported",
+        "creative_acceptance": "not asserted; Opus owns acceptance"
+      },
+      "prompt_sha256": "f40abe782e10dc12a1ddc560feef94a37dd279dc5246328bf831d66d011500ad",
+      "source_copy_verified": true
+    },
+    {
+      "asset_id": "coordinator",
+      "path": "/Users/farieds/Project/atlas-openrig-integration-plan/docs/agent-workspace/projects/opus-representation/artwork/tokens/coordinator.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 2946787,
+      "sha256": "4bb5a10580a65129b2bd5acb80aeb9785f24b332ab4d3f90ae1036f4bc69e355",
+      "png_color_type": 2,
+      "format": "PNG",
+      "color_mode": "RGB",
+      "transparency": "opaque; PNG color type 2 has no alpha channel or transparency chunk verified in file validation",
+      "requested_dimensions": {
+        "width": 1024,
+        "height": 1024,
+        "preference": "or closest native square size"
+      },
+      "source_generated_file": "/Users/farieds/.codex/generated_images/01a15214-c88f-7471-a5a5-268bb4ae3c45/exec-d47f3a9a-0908-43e8-94a8-67cdadd26368.png",
+      "prompt_path": "/Users/farieds/Project/atlas-openrig-integration-plan/docs/agent-workspace/projects/opus-representation/artwork/prompts/coordinator.txt",
+      "prompt": "Use case: stylized-concept\nAsset type: one standalone square painted fantasy colleague portrait token for Atlas VTT.\nFormat requested: opaque PNG, 1024x1024 pixels or closest native square size. One character only, head and shoulders, face angled slightly toward viewer. Fine ink linework with warm watercolor washes on softly textured parchment, soft even daylight, medium detail and crisp readable silhouette; coherent hand-painted cartographic-fantasy token set. Calm, capable, gender-neutral fantasy archetype, without likeness to any real person or brand.\nComposition: centered head-and-shoulders bust, generous surrounding margin. Keep face, whole head and ALL key props within the central 70 percent of the square, designed to survive a centered circular crop. Hold the props compactly up near the chest rather than at the frame's edges. The character's shoulders may extend outward but the identifying equipment must remain inside the circle. A plain softly textured background in the character's requested accent color, no scenery. No baked border or ring.\n\nSubject and palette: A herald. Crimson and grey accents on a practical herald's mantle, with a plain muted-crimson softly textured background. Key props: a small signal lantern and a bundle of blank sealed scrolls with plain wax seals, held compactly close to the chest. Alert composed expression.\n\nStrict exclusions: no text, no lettering, no numbers, no runes, no logos, no watermarks, no interface, no labels, no extra characters. Scrolls and maps may carry simple non-letter diagram marks appropriate to their role but no writing. All required props must be visible and readable, with plausible hands and anatomy.",
+      "method": "built-in image_gen__imagegen",
+      "tool_arguments": {
+        "transparent_background": false,
+        "referenced_image_paths": "omitted",
+        "num_last_images_to_include": "omitted"
+      },
+      "postprocessing": "none; byte-for-byte copy",
+      "review": {
+        "image": "reviewed",
+        "visual_review": "full generated image inspected inline",
+        "findings": [
+          "Crimson/grey herald, signal lantern and sealed scroll bundle visible.",
+          "Lantern and scrolls approach lower corners; circular crop may trim prop edges."
+        ],
+        "readable_lettering_seen": false,
+        "tabletop_review": "not_run",
+        "reviewed_display_sizes_px": [],
+        "atlas": "not_imported",
+        "creative_acceptance": "not asserted; Opus owns acceptance"
+      },
+      "prompt_sha256": "f3c158311268dfa24c46198a60419d3ba6fb60cf2465d27e9da5e74e6aad3232",
+      "source_copy_verified": true
+    },
+    {
+      "asset_id": "board-v1",
+      "path": "/Users/farieds/Project/atlas-openrig-integration-plan/docs/agent-workspace/projects/opus-representation/artwork/board-v1.png",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 3809261,
+      "sha256": "37a74f9aaefa633ac8f927bef325370c6cf2584d7b2ac5979e75f0efdef64d5b",
+      "png_color_type": 2,
+      "format": "PNG",
+      "color_mode": "RGB",
+      "transparency": "opaque; PNG color type 2 has no alpha channel or transparency chunk verified in file validation",
+      "requested_dimensions": {
+        "width": 1536,
+        "height": 1024,
+        "preference": "or largest native landscape size"
+      },
+      "source_generated_file": "/Users/farieds/.codex/generated_images/01a15214-c88f-7471-a5a5-268bb4ae3c45/exec-7e77fff5-dc1d-4984-9831-1544dbff5ce7.png",
+      "prompt_path": "/Users/farieds/Project/atlas-openrig-integration-plan/docs/agent-workspace/projects/opus-representation/artwork/prompts/board-v1.txt",
+      "prompt": "Use case: stylized-concept\nAsset type: opaque PNG background for a native Atlas VTT tabletop scene called The Table's Account.\nCreate one richly readable hand-painted fantasy cartographic map at 1536x1024 pixels, landscape 3:2 (or the largest native landscape size available). Fine ink linework and watercolor washes, warm parchment with muted region accents, medium detail that reads when zoomed out, soft even daylight. Directly overhead terrain and floor plan, with slight oblique on buildings only.\n\nOverall framing and invariant layout:\nThe painted deckle-edged parchment map rests on a dark wooden game table. Left, top and right margins show only a narrow deckled paper edge over wood. The bottom 13 percent of the image is a full-width horizontal strip of exposed dark wood. On this bottom strip, from left to right: a closed blank folding game-master screen; a small empty wooden bench/tray long enough for two or three tokens; an open completely blank journal with a quill. These three objects are on the table, outside the map. Everything on both map and table is unlettered.\n\nMap geography and landmarks, keep these exact relationships:\n1. A calm blue river descends from the map's top to its bottom slightly left of center, dividing west from east. A single sturdy stone bridge crosses it at the exact center of the overall image.\n2. Atlas Keep, west at left-middle: a cartographers' tower with an observatory dome and map tables visible on an open terrace, green and bronze accents.\n3. OpenRig Foundry, east at right-middle: a long workshop hall, row of SIX identical clearly open alcoves each holding exactly ONE empty chair, copper and charcoal accents, chimneys with light smoke.\n4. Planning Pavilion just east of the central stone bridge, near center-right: open-sided indigo and silver canvas pavilion with a round table and exactly two empty stools.\n5. Abandoned camp, northwest of the pavilion, across the river in upper-center-left: a small recently left cold campsite, dead fire ring, one empty stool and collapsed canvas. Faint footpath from camp crosses the river over a ford/stepping stones to the pavilion. This is a minor ford separate from the central stone bridge, not another bridge. The camp is recently left, not ancient ruins.\n6. Painter's atelier southwest at lower-left of center: small newly built pale timber hut, open front, easels, ochre and leaf-green accents.\n7. Quest board in south-center just above the exposed table strip: small village square, wooden notice board with exactly three entirely blank pinned paper sheets, plus a well.\n8. Relic archive at southeast lower-right: vaulted stone archive, open doors showing scroll shelves and exactly two closed chests.\n9. Hall of Judgment northeast upper-right: round colonnaded hall with a raised empty seat inside and an open plaza in front.\n10. Herald's waystation at top-center on the map's upper border: hilltop signal tower with an unlit lantern. A dirt road enters the map from beyond the top edge and passes this tower.\n\nLeave a clear low-detail open ground patch directly in front of EVERY landmark, each about 12 percent of the full image width, suitable for later editable tokens and labels. Space the buildings so all landmarks are distinct and the open patches remain unobstructed. Simple navigable dirt roads connect every landmark through the central stone bridge. Roads are ordinary paths, without arrowheads or special diagram connections.\n\nStrict exclusions: NO people, NO creatures, NO character tokens, NO lettering anywhere, NO numbers, NO runes, NO pseudo-writing, NO logos, NO watermarks, NO grid, NO interface or dashboard. Maps on tables, journals, scrolls, notice sheets and game-master screen are blank. Do not paint labels; they will be native editable Atlas objects later. Do not change landmark positions or substitute landmarks. Preserve the bottom table strip.",
+      "method": "built-in image_gen__imagegen",
+      "tool_arguments": {
+        "transparent_background": false,
+        "referenced_image_paths": "omitted",
+        "num_last_images_to_include": "omitted"
+      },
+      "postprocessing": "none; byte-for-byte copy",
+      "review": {
+        "image": "reviewed",
+        "visual_review": "full generated image inspected inline",
+        "findings": [
+          "All requested landmarks and table-strip objects are visible; no people or readable lettering seen.",
+          "Table strip is about 17 percent rather than requested 12-14 percent; bridge lies slightly left and above overall midpoint; camp canvas appears partly standing; extra small downstream wooden crossing.",
+          "Opus explicitly inspected and accepted board-v1.png as is in its 2026-10-19 03:04Z message. No board revision requested."
+        ],
+        "readable_lettering_seen": false,
+        "tabletop_review": "not_run",
+        "reviewed_display_sizes_px": [],
+        "atlas": "not_imported",
+        "creative_acceptance": "accepted by Opus, message 2026-10-19 03:04Z"
+      },
+      "prompt_sha256": "8be53df14d7d124597a3009716a026c57f75dd54c6161bf69bc885a69c737bb7",
+      "source_copy_verified": true
+    }
+  ],
+  "source_brief_sha256": "fa45bbe094721280f9fb30d46017823394505c6e7e0fbd9a649982b5d814fd35"
+}

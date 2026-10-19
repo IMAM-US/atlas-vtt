@@ -1,0 +1,38 @@
+{
+  "images": [
+    {
+      "file": "artwork/forkwater-v1.png",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 3640272,
+      "sha256": "c7172f67284529769eab1e7dfa864d9f3ea3b64a292a03bd618bfd6ca3f70acf",
+      "pngColorType": 2,
+      "alpha": "not requested; opaque RGB",
+      "method": "built-in image_gen__imagegen",
+      "promptKey": "map",
+      "visualReview": "inspected actual tool output; accepted for this authored study by the author, not human approval",
+      "tabletopReview": "not run at 64/128 screen pixels",
+      "atlas": "not imported"
+    },
+    {
+      "file": "artwork/astral-owl-v1.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 3031632,
+      "sha256": "82acb9ed9c70f336de437f993ac26f9a470bf1f6c8abe3f3f4865d278dff9655",
+      "pngColorType": 2,
+      "alpha": "not requested; opaque RGB",
+      "method": "built-in image_gen__imagegen",
+      "promptKey": "owl",
+      "visualReview": "inspected actual tool output; accepted for this authored study by the author, not human approval",
+      "tabletopReview": "not run at 64/128 screen pixels",
+      "atlas": "not imported"
+    }
+  ],
+  "findings": [
+    "Map has the requested river split, archive, open island, camp and landing; no baked labels or grid.",
+    "Owl face and teal mantle have distinct silhouettes; native ring is the only border owner.",
+    "Actual portrait is 1254x1254, not the requested 1024 target; square artwork is retained unchanged."
+  ],
+  "sourceCopiesUnmodified": true
+}

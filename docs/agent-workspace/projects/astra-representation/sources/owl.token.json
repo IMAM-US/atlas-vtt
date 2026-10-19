@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "spec_id": "astra-owl-emblem",
+  "revision": 1,
+  "subjects": [
+    {
+      "subject_id": "astral-owl",
+      "name": "Astra owl emblem",
+      "visible_identity": {
+        "form": "anthropomorphic barn owl cartographer",
+        "apparent_age": null,
+        "anatomy": [
+          "owl head",
+          "feathered shoulders"
+        ],
+        "face_head": "cream heart-shaped face with dark eyes",
+        "coloring": [
+          "cream",
+          "russet",
+          "deep teal"
+        ],
+        "distinctive_features": [
+          "brass compass clasp"
+        ],
+        "clothing": [
+          "teal travel mantle"
+        ],
+        "equipment": [
+          "rolled chart"
+        ]
+      },
+      "identity_reference_ids": [],
+      "portrait_origin": null,
+      "gm_only": false,
+      "gm_notes": []
+    }
+  ],
+  "assets": [
+    {
+      "asset_id": "astra-token-owl-v1",
+      "subject_id": "astral-owl",
+      "title": "Astra owl emblem",
+      "intended_use": "Recognizable native movable token. Shared artwork deliberately does not prove shared native identity.",
+      "intent": "generate",
+      "kind": "portrait_circle",
+      "viewpoint": "front three-quarter bust",
+      "pose": "still, attentive",
+      "background": {
+        "mode": "solid",
+        "description": "Simple dark teal field"
+      },
+      "border": {
+        "mode": "atlas_ring",
+        "description": "Native Atlas ring only; no baked border"
+      },
+      "composition": {
+        "safe_margin_percent": 5,
+        "important_features": [
+          "Cream face",
+          "Dark eyes",
+          "Teal mantle"
+        ]
+      },
+      "output": {
+        "width_px": 1254,
+        "height_px": 1254,
+        "aspect_ratio": [
+          1,
+          1
+        ],
+        "tabletop_sizes_px": [
+          64,
+          128
+        ]
+      },
+      "art_direction": {
+        "medium": "Ink, watercolor and gouache",
+        "rendering": "Detailed warm fantasy atlas illustration with a strong face silhouette",
+        "palette": [
+          "cream",
+          "russet",
+          "teal",
+          "brass"
+        ],
+        "lighting": "Soft warm light",
+        "mood": "thoughtful"
+      },
+      "reference_ids": [],
+      "edit_target_ref": null,
+      "constraints": [
+        "No lettering",
+        "No baked ring",
+        "No status marks"
+      ],
+      "gm_only": false
+    }
+  ],
+  "references": [],
+  "locks": [],
+  "assumptions": [
+    "Original symbolic design chosen by Astra; not a real likeness.",
+    "Requested 1024 square artwork returned at 1254 square; original pixels preserved.",
+    "64/128 screen-pixel review remains for native visual verification."
+  ],
+  "gm_notes": []
+}

@@ -1,0 +1,29 @@
+{
+  "sourceSpecs": [
+    "forkwater.map.json",
+    "owl.token.json"
+  ],
+  "schemaValidation": {
+    "status": "not_run",
+    "reason": "The existing offline Python environment lacks jsonschema; dependency installation is outside assignment scope. Native bundle validation uses actual Atlas source separately."
+  },
+  "image": {
+    "status": "reviewed",
+    "map": "Actual generated output inspected for landmark count, composition and no baked text/grid.",
+    "owl": "Actual generated output inspected for anatomy, face clarity, native border ownership and no labels."
+  },
+  "tabletop": {
+    "status": "not_run",
+    "reason": "Native import/zoom review belongs to coordinator."
+  },
+  "atlas": {
+    "status": "not_imported"
+  },
+  "manualAtlasSetup": {
+    "grid": "Invisible square grid provides token sizing; snapping off; positions are symbolic.",
+    "nativeLabels": "32 editable text objects across two scenes",
+    "nativePins": "16 native note/scene links",
+    "images": "Original RGB PNG bytes copied unchanged",
+    "camera": "Default native map camera; coordinator should fit whole scene on import."
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "checkedAt": "2026-10-19T03:10:05.822Z",
+  "atlasRevision": "f0a1cc9cd3929a3d42a3c13f779c9310b94b4269",
+  "nativeManifestFunction": "manifestProblem, imported from actual repository TypeScript via Node native type stripping",
+  "nativeManifestResult": null,
+  "metrics": {
+    "scenes": 2,
+    "tokens": 4,
+    "texts": 32,
+    "pins": 16,
+    "links": 37,
+    "assets": 4,
+    "files": 17
+  },
+  "allFileHashesMatch": true,
+  "allLocalReferencesResolve": true,
+  "textBounds": "Conservative character-width estimate, not a rendered-font test",
+  "nativeRendering": "not run; coordinator owns import and visible review",
+  "problems": []
+}

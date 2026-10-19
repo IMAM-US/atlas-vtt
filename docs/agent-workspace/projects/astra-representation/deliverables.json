@@ -1,0 +1,57 @@
+{
+  "checkedAt": "2026-10-19T03:11:26.363Z",
+  "collection": "Astra Representation",
+  "collectionUid": "53ff5122-20c9-4fe3-a9cf-7cd20417a8c3",
+  "entryScene": "Astra - 01 Forkwater",
+  "archiveVerification": {
+    "manifestMatchesUnpacked": true,
+    "payloadHashesChecked": 17,
+    "failures": []
+  },
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 3282,
+      "sha256": "98ef41e0ecd567af65faf89df1e3b0509e5e6e6c5953d258a5b3168b6faea7a8"
+    },
+    {
+      "path": "Astra Representation v1.atlas-collection.zip",
+      "bytes": 10117710,
+      "sha256": "07dc4048141ea89c0b975602b72ae0787858541df3ab86f09ed1bb52cf23a09d"
+    },
+    {
+      "path": "unpacked/manifest.json",
+      "bytes": 7844,
+      "sha256": "6b0308d87dee0cbd3197d0c5dd5b87b7be6defdec16567439b697ac38c7289bc"
+    },
+    {
+      "path": "artwork/forkwater-v1.png",
+      "bytes": 3640272,
+      "sha256": "c7172f67284529769eab1e7dfa864d9f3ea3b64a292a03bd618bfd6ca3f70acf"
+    },
+    {
+      "path": "artwork/astral-owl-v1.png",
+      "bytes": 3031632,
+      "sha256": "82acb9ed9c70f336de437f993ac26f9a470bf1f6c8abe3f3f4865d278dff9655"
+    },
+    {
+      "path": "sources/native-evidence.json",
+      "bytes": 13003,
+      "sha256": "fb06585a3b9ddae77d1619d58c892b4cdcfcd3fa23301af7fdec47794c11b20d"
+    },
+    {
+      "path": "sources/representation-ledger.json",
+      "bytes": 3504,
+      "sha256": "07531d8f51c7e52e86abfcf7fc482fd624b3b87700c9c652a2c656e0a7567cb6"
+    },
+    {
+      "path": "validation.json",
+      "bytes": 644,
+      "sha256": "9d9ab5986237f9f71718c570807ab243fae1f16fb1c76a578a5e6503f5691d97"
+    }
+  ],
+  "retainedOriginalReports": {
+    "astra.md": "bd6cfdca10ddddb0388d3061011e34f8f9c3cb1a3cfb6127b8ed4e467d1d417f",
+    "ontology-astra.md": "6819e4566e504a529716cc7025eae95f1fda8e0dd2337b759eef87e3d59e367c"
+  }
+}

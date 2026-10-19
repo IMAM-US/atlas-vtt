@@ -1,0 +1,226 @@
+{
+  "format": 4,
+  "exportedAt": 1792378909832,
+  "collection": {
+    "id": "Astra Representation",
+    "uid": "53ff5122-20c9-4fe3-a9cf-7cd20417a8c3",
+    "name": "Astra Representation",
+    "version": 1,
+    "description": "Forkwater: the same work seen through changing participants and authored accounts.",
+    "author": "Independent Astra / planning.astra",
+    "publisherId": "71bf355a-73c9-46e0-b2ec-4508491fb0ad",
+    "tags": {},
+    "settings": {
+      "conditions": []
+    },
+    "createdAt": 1792378909832,
+    "modifiedAt": 1792378909832,
+    "releasedAt": 1792378909832,
+    "coverPath": "atlas-vtt/collections/Astra Representation/cover.png"
+  },
+  "release": {
+    "kind": "release",
+    "notes": "Independent Astra content study. Observed native identities with authored places and perspectives. Offline notes and editable scenes; no live connector."
+  },
+  "assets": [
+    {
+      "collection": "Astra Representation",
+      "tags": [],
+      "createdAt": 1792378909832,
+      "modifiedAt": 1792378909832,
+      "id": "astra-map-forkwater-v1",
+      "type": "map",
+      "name": "Forkwater estuary",
+      "mapFilePath": "atlas-vtt/assets/astra-forkwater-v1.png",
+      "filePath": "atlas-vtt/collections/Astra Representation/maps/astra-map-forkwater-v1.json"
+    },
+    {
+      "collection": "Astra Representation",
+      "tags": [],
+      "createdAt": 1792378909832,
+      "modifiedAt": 1792378909832,
+      "id": "astra-token-owl-v1",
+      "type": "token",
+      "name": "Astra owl emblem",
+      "imagePath": "atlas-vtt/collections/Astra Representation/tokens/astra-owl-v1.png",
+      "size": 1.5,
+      "showRing": true
+    },
+    {
+      "collection": "Astra Representation",
+      "tags": [],
+      "createdAt": 1792378909832,
+      "modifiedAt": 1792378909832,
+      "id": "astra-scene-forkwater-v1",
+      "type": "scene",
+      "name": "Astra - 01 Forkwater",
+      "mapId": "astra-map-forkwater-v1",
+      "data": {
+        "mapPath": "atlas-vtt/collections/Astra Representation/scenes/Astra - 01 Forkwater.atlasmap"
+      },
+      "filePath": "atlas-vtt/collections/Astra Representation/scenes/astra-scene-forkwater-v1.json"
+    },
+    {
+      "collection": "Astra Representation",
+      "tags": [],
+      "createdAt": 1792378909832,
+      "modifiedAt": 1792378909832,
+      "id": "astra-scene-council-v1",
+      "type": "scene",
+      "name": "Astra - 02 Council",
+      "mapId": "astra-map-forkwater-v1",
+      "data": {
+        "mapPath": "atlas-vtt/collections/Astra Representation/scenes/Astra - 02 Council.atlasmap"
+      },
+      "filePath": "atlas-vtt/collections/Astra Representation/scenes/astra-scene-council-v1.json"
+    }
+  ],
+  "files": [
+    {
+      "vaultPath": "atlas-vtt/assets/astra-forkwater-v1.png",
+      "role": "background",
+      "sha256": "c7172f67284529769eab1e7dfa864d9f3ea3b64a292a03bd618bfd6ca3f70acf",
+      "owners": [
+        "astra-map-forkwater-v1",
+        "astra-scene-forkwater-v1",
+        "astra-scene-council-v1"
+      ]
+    },
+    {
+      "vaultPath": "atlas-vtt/collections/Astra Representation/tokens/astra-owl-v1.png",
+      "role": "token-image",
+      "sha256": "82acb9ed9c70f336de437f993ac26f9a470bf1f6c8abe3f3f4865d278dff9655",
+      "owners": [
+        "astra-token-owl-v1",
+        "astra-scene-forkwater-v1",
+        "astra-scene-council-v1"
+      ]
+    },
+    {
+      "vaultPath": "atlas-vtt/collections/Astra Representation/cover.png",
+      "role": "cover",
+      "sha256": "c7172f67284529769eab1e7dfa864d9f3ea3b64a292a03bd618bfd6ca3f70acf"
+    },
+    {
+      "vaultPath": "atlas-vtt/collections/Astra Representation/maps/astra-map-forkwater-v1.json",
+      "role": "asset-file",
+      "sha256": "f02b245a9d16980976335ce562f03542091ef8e7ec00332261056b7457e87c69",
+      "owners": [
+        "astra-map-forkwater-v1"
+      ]
+    },
+    {
+      "vaultPath": "atlas-vtt/collections/Astra Representation/scenes/astra-scene-forkwater-v1.json",
+      "role": "asset-file",
+      "sha256": "6dc70a46126c2754400dfb9e065b4ca3eb555d762f75043c18dc4aa01ebd2c81",
+      "owners": [
+        "astra-scene-forkwater-v1"
+      ]
+    },
+    {
+      "vaultPath": "atlas-vtt/collections/Astra Representation/scenes/astra-scene-council-v1.json",
+      "role": "asset-file",
+      "sha256": "5283312c239400bc9a6a31e1260c430816cbfefb36a4b3d5d5b25b674d50eed2",
+      "owners": [
+        "astra-scene-council-v1"
+      ]
+    },
+    {
+      "vaultPath": "atlas-vtt/collections/Astra Representation/scenes/Astra - 01 Forkwater.atlasmap",
+      "role": "scene-map",
+      "sha256": "55fd6c4e7abc0878ae2e03a7a84623ce6f8662e64e31befafc2eae6536e0a6bf",
+      "owners": [
+        "astra-scene-forkwater-v1"
+      ]
+    },
+    {
+      "vaultPath": "atlas-vtt/collections/Astra Representation/scenes/Astra - 02 Council.atlasmap",
+      "role": "scene-map",
+      "sha256": "5e499ba6b4726e17ee0501e97f7963e79a6338bd63532799908a119b31df343a",
+      "owners": [
+        "astra-scene-council-v1"
+      ]
+    },
+    {
+      "vaultPath": "atlas-vtt/collections/Astra Representation/notes/Astra - Council perspective.md",
+      "role": "linked-note",
+      "sha256": "c5a55b5a9aab1d75bb9eb661e69785d23feaf20500096eadf1cea85b01035d59",
+      "owners": [
+        "astra-scene-forkwater-v1",
+        "astra-scene-council-v1"
+      ]
+    },
+    {
+      "vaultPath": "atlas-vtt/collections/Astra Representation/notes/Astra - Current investigator.md",
+      "role": "linked-note",
+      "sha256": "6cdf49e2e7047f5aa5a97629042c96a780a9dd072edfa0e98dab72fb2e0ca8bc",
+      "owners": [
+        "astra-scene-forkwater-v1",
+        "astra-scene-council-v1"
+      ]
+    },
+    {
+      "vaultPath": "atlas-vtt/collections/Astra Representation/notes/Astra - Earlier investigator.md",
+      "role": "linked-note",
+      "sha256": "092c18bed2843c90f30f30f6e63196ce5c0172348ba8c9aa62ee9ad74a5bee68",
+      "owners": [
+        "astra-scene-forkwater-v1",
+        "astra-scene-council-v1"
+      ]
+    },
+    {
+      "vaultPath": "atlas-vtt/collections/Astra Representation/notes/Astra - Original proposal.md",
+      "role": "linked-note",
+      "sha256": "7c86fca99bb8d3d54ab92174c05c082b1d45871c82ee17d8246b019c5d624e05",
+      "owners": [
+        "astra-scene-forkwater-v1",
+        "astra-scene-council-v1"
+      ]
+    },
+    {
+      "vaultPath": "atlas-vtt/collections/Astra Representation/notes/Astra - Result quay.md",
+      "role": "linked-note",
+      "sha256": "b0e7d27c1f79128474ebd1585892d508e113a3d51f2749b89a08502f4d5ff98d",
+      "owners": [
+        "astra-scene-forkwater-v1",
+        "astra-scene-council-v1"
+      ]
+    },
+    {
+      "vaultPath": "atlas-vtt/collections/Astra Representation/notes/Astra - Revised proposal.md",
+      "role": "linked-note",
+      "sha256": "3de8988706b7add763b32968749924e244aa052348bf92d68295b45c2b897b25",
+      "owners": [
+        "astra-scene-forkwater-v1",
+        "astra-scene-council-v1"
+      ]
+    },
+    {
+      "vaultPath": "atlas-vtt/collections/Astra Representation/notes/Astra - Source ledger.md",
+      "role": "linked-note",
+      "sha256": "05ea30c8976ed91e347779715deb2da8e3c2b7d87a33e99ddf7948a69b93219d",
+      "owners": [
+        "astra-scene-forkwater-v1",
+        "astra-scene-council-v1"
+      ]
+    },
+    {
+      "vaultPath": "atlas-vtt/collections/Astra Representation/notes/Astra - Start here.md",
+      "role": "linked-note",
+      "sha256": "5a84ea0bee0bbe4af85f225af33ffdaf1a2dfcc56632be854836ee0d2ff1e351",
+      "owners": [
+        "astra-scene-forkwater-v1",
+        "astra-scene-council-v1"
+      ]
+    },
+    {
+      "vaultPath": "atlas-vtt/collections/Astra Representation/notes/Astra - Work and native route.md",
+      "role": "linked-note",
+      "sha256": "f4fc97f15f49f7a67e47a6c9574088e1ae9324ce56bf9e5268fe99cdc4ff5942",
+      "owners": [
+        "astra-scene-forkwater-v1",
+        "astra-scene-council-v1"
+      ]
+    }
+  ]
+}

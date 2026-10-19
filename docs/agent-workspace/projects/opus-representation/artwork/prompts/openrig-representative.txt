@@ -1,0 +1,8 @@
+Use case: stylized-concept
+Asset type: one standalone square painted fantasy colleague portrait token for Atlas VTT.
+Format requested: opaque PNG, 1024x1024 pixels or closest native square size. One character only, head and shoulders, face angled slightly toward viewer. Fine ink linework with warm watercolor washes on softly textured parchment, soft even daylight, medium detail and crisp readable silhouette; coherent hand-painted cartographic-fantasy token set. Calm, capable, gender-neutral fantasy archetype, without likeness to any real person or brand.
+Composition: centered head-and-shoulders bust, generous surrounding margin. Keep face, whole head and ALL key props within the central 70 percent of the square, designed to survive a centered circular crop. Hold the props compactly up near the chest rather than at the frame's edges. The character's shoulders may extend outward but the identifying equipment must remain inside the circle. A plain softly textured background in the character's requested accent color, no scenery. No baked border or ring.
+
+Subject and palette: A foundry engineer. Copper and charcoal accents on practical engineer's clothing, with a plain charcoal softly textured background. Key props: a heavy ring of large metal keys and a small pulley wheel in its compact metal frame, both held close to the chest. Ingenious composed expression.
+
+Strict exclusions: no text, no lettering, no numbers, no runes, no logos, no watermarks, no interface, no labels, no extra characters. Scrolls and maps may carry simple non-letter diagram marks appropriate to their role but no writing. All required props must be visible and readable, with plausible hands and anatomy.
