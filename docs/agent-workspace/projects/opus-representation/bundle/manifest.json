@@ -1,0 +1,357 @@
+{
+  "format": 4,
+  "exportedAt": 1792380754000,
+  "collection": {
+    "id": "Opus Representation",
+    "uid": "6f3e2c1a-8b47-4d2e-9a5f-1c0d7e4b9a62",
+    "version": 3,
+    "name": "Opus Representation",
+    "tags": {},
+    "settings": {
+      "conditions": [],
+      "widgets": {
+        "widget-opus-road-to-synthesis": {
+          "id": "widget-opus-road-to-synthesis",
+          "type": "clock",
+          "label": "Road to synthesis (declared by Opus)",
+          "icon": "scroll",
+          "visible": true,
+          "visibleToPlayers": false,
+          "value": 1,
+          "order": 0,
+          "segments": 4,
+          "showCount": true,
+          "scope": "scene"
+        }
+      }
+    },
+    "createdAt": 1792380754000,
+    "modifiedAt": 1792380754000,
+    "publisherId": "0b9d4e7f-3a21-4c86-b5e0-7d2f1a6c8e93",
+    "releasedAt": 1792380754000,
+    "author": "Opus 5.5 planner (planning-opus@atlas-integration-repos)",
+    "coverPath": "atlas-vtt/collections/Opus Representation/cover.png"
+  },
+  "release": {
+    "kind": "release",
+    "notes": "Independent representation of the Opus 5.5 planner's revised ontology. Content only: no agents, connector, launcher or live state. Every observation is a dated capture; proposed interactions are marked as proposed. Version 2: notes live in the collection's notes folder and link to each other as siblings, so links survive import. Version 3: a second snapshot, Current table account, and instructions that save and restore named snapshots, since a restore cannot be undone."
+  },
+  "assets": [
+    {
+      "type": "map",
+      "name": "The Table's Account board",
+      "mapFilePath": "atlas-vtt/assets/Opus_Representation_board_1792382900000_opusv1.png",
+      "collection": "Opus Representation",
+      "tags": [],
+      "id": "map-1792382900000-opusv1",
+      "createdAt": 1792380754000,
+      "modifiedAt": 1792380754000,
+      "filePath": "atlas-vtt/collections/Opus Representation/maps/map-1792382900000-opusv1.json"
+    },
+    {
+      "type": "scene",
+      "name": "The Table's Account",
+      "collection": "Opus Representation",
+      "tags": [],
+      "data": {
+        "mapPath": "atlas-vtt/collections/Opus Representation/scenes/Table account.atlasmap"
+      },
+      "id": "scene-1792382900001-opusv1",
+      "createdAt": 1792380754000,
+      "modifiedAt": 1792380754000,
+      "filePath": "atlas-vtt/collections/Opus Representation/scenes/scene-1792382900001-opusv1.json"
+    },
+    {
+      "type": "token",
+      "name": "Opus planner",
+      "imagePath": "atlas-vtt/collections/Opus Representation/tokens/opus-planner.png",
+      "size": 1,
+      "collection": "Opus Representation",
+      "tags": [
+        "colleague"
+      ],
+      "id": "token-1792382900010-opus",
+      "createdAt": 1792380754000,
+      "modifiedAt": 1792380754000
+    },
+    {
+      "type": "token",
+      "name": "Astra planner",
+      "imagePath": "atlas-vtt/collections/Opus Representation/tokens/astra-planner.png",
+      "size": 1,
+      "collection": "Opus Representation",
+      "tags": [
+        "colleague"
+      ],
+      "id": "token-1792382900011-astra",
+      "createdAt": 1792380754000,
+      "modifiedAt": 1792380754000
+    },
+    {
+      "type": "token",
+      "name": "Image partner",
+      "imagePath": "atlas-vtt/collections/Opus Representation/tokens/image-partner.png",
+      "size": 1,
+      "collection": "Opus Representation",
+      "tags": [
+        "colleague"
+      ],
+      "id": "token-1792382900012-image",
+      "createdAt": 1792380754000,
+      "modifiedAt": 1792380754000
+    },
+    {
+      "type": "token",
+      "name": "Atlas representative",
+      "imagePath": "atlas-vtt/collections/Opus Representation/tokens/atlas-representative.png",
+      "size": 1,
+      "collection": "Opus Representation",
+      "tags": [
+        "colleague"
+      ],
+      "id": "token-1792382900013-atlas",
+      "createdAt": 1792380754000,
+      "modifiedAt": 1792380754000
+    },
+    {
+      "type": "token",
+      "name": "OpenRig representative",
+      "imagePath": "atlas-vtt/collections/Opus Representation/tokens/openrig-representative.png",
+      "size": 1,
+      "collection": "Opus Representation",
+      "tags": [
+        "colleague"
+      ],
+      "id": "token-1792382900014-openrig",
+      "createdAt": 1792380754000,
+      "modifiedAt": 1792380754000
+    },
+    {
+      "type": "token",
+      "name": "Coordinator",
+      "imagePath": "atlas-vtt/collections/Opus Representation/tokens/coordinator.png",
+      "size": 1,
+      "collection": "Opus Representation",
+      "tags": [
+        "colleague"
+      ],
+      "id": "token-1792382900015-coord",
+      "createdAt": 1792380754000,
+      "modifiedAt": 1792380754000
+    }
+  ],
+  "files": [
+    {
+      "vaultPath": "atlas-vtt/collections/Opus Representation/maps/map-1792382900000-opusv1.json",
+      "role": "asset-file",
+      "owners": [
+        "map-1792382900000-opusv1"
+      ],
+      "sha256": "5c83dd6827e9439ac48570061e355547de4b84babf860f83121d3b86d320e89d"
+    },
+    {
+      "vaultPath": "atlas-vtt/assets/Opus_Representation_board_1792382900000_opusv1.png",
+      "role": "background",
+      "owners": [
+        "map-1792382900000-opusv1",
+        "scene-1792382900001-opusv1"
+      ],
+      "sha256": "37a74f9aaefa633ac8f927bef325370c6cf2584d7b2ac5979e75f0efdef64d5b"
+    },
+    {
+      "vaultPath": "atlas-vtt/collections/Opus Representation/scenes/scene-1792382900001-opusv1.json",
+      "role": "asset-file",
+      "owners": [
+        "scene-1792382900001-opusv1"
+      ],
+      "sha256": "e1ea33b37b65ddb04ad019c616b24a70117ce41d28b0b578613cf9d968953b95"
+    },
+    {
+      "vaultPath": "atlas-vtt/collections/Opus Representation/scenes/Table account.atlasmap",
+      "role": "scene-map",
+      "owners": [
+        "scene-1792382900001-opusv1"
+      ],
+      "sha256": "49b0ecd81eb841271d486852edeb793fcdcff83d703f3ed68ebe4912956c3daa"
+    },
+    {
+      "vaultPath": "atlas-vtt/collections/Opus Representation/tokens/opus-planner.png",
+      "role": "token-image",
+      "owners": [
+        "token-1792382900010-opus",
+        "scene-1792382900001-opusv1"
+      ],
+      "sha256": "0e01401c3062d42231cadaa3fb3e107cae9b8299aab4d2138b2aa7afd1e5b7bf"
+    },
+    {
+      "vaultPath": "atlas-vtt/collections/Opus Representation/tokens/astra-planner.png",
+      "role": "token-image",
+      "owners": [
+        "token-1792382900011-astra",
+        "scene-1792382900001-opusv1"
+      ],
+      "sha256": "489e3dd1066a65fbff0ab8b333ee1dbe0874b7b2569e6022f842b351cc65a3e5"
+    },
+    {
+      "vaultPath": "atlas-vtt/collections/Opus Representation/tokens/image-partner.png",
+      "role": "token-image",
+      "owners": [
+        "token-1792382900012-image",
+        "scene-1792382900001-opusv1"
+      ],
+      "sha256": "f696e6386c67692d868fff0df7bcf69a943c9ecf44d61e019541735f36adc9f4"
+    },
+    {
+      "vaultPath": "atlas-vtt/collections/Opus Representation/tokens/atlas-representative.png",
+      "role": "token-image",
+      "owners": [
+        "token-1792382900013-atlas",
+        "scene-1792382900001-opusv1"
+      ],
+      "sha256": "fef29aabfca87efd9a6b3998a5010cbc73c2b4853512fe6159b0f983476dd373"
+    },
+    {
+      "vaultPath": "atlas-vtt/collections/Opus Representation/tokens/openrig-representative.png",
+      "role": "token-image",
+      "owners": [
+        "token-1792382900014-openrig",
+        "scene-1792382900001-opusv1"
+      ],
+      "sha256": "d1f04557da9df3943dfd6e37ef5aff1e318ee1ed0dd6c6a2f0903cca81fc159a"
+    },
+    {
+      "vaultPath": "atlas-vtt/collections/Opus Representation/tokens/coordinator.png",
+      "role": "token-image",
+      "owners": [
+        "token-1792382900015-coord",
+        "scene-1792382900001-opusv1"
+      ],
+      "sha256": "4bb5a10580a65129b2bd5acb80aeb9785f24b332ab4d3f90ae1036f4bc69e355"
+    },
+    {
+      "vaultPath": "atlas-vtt/collections/Opus Representation/notes/Astra planner.md",
+      "role": "linked-note",
+      "owners": [
+        "scene-1792382900001-opusv1"
+      ],
+      "sha256": "06828cfd14272e6278888e7764d3fb8b09ffe90a627354401cd04ad69ba21810"
+    },
+    {
+      "vaultPath": "atlas-vtt/collections/Opus Representation/notes/Atlas representative.md",
+      "role": "linked-note",
+      "owners": [
+        "scene-1792382900001-opusv1"
+      ],
+      "sha256": "8bb8cc17fc00825adbadc128c5f766ff35bc7ed18ed9553470b93d15ed9f32b8"
+    },
+    {
+      "vaultPath": "atlas-vtt/collections/Opus Representation/notes/Coordinator.md",
+      "role": "linked-note",
+      "owners": [
+        "scene-1792382900001-opusv1"
+      ],
+      "sha256": "319e994946eebf38e2cf0b8aee3fe3542892b204546b82fb04111d055d8192dd"
+    },
+    {
+      "vaultPath": "atlas-vtt/collections/Opus Representation/notes/Image partner.md",
+      "role": "linked-note",
+      "owners": [
+        "scene-1792382900001-opusv1"
+      ],
+      "sha256": "7b5b1e07019fb800e8afe477213be62c47977f5a6f8b03cdaa8cefdb82491b6b"
+    },
+    {
+      "vaultPath": "atlas-vtt/collections/Opus Representation/notes/Judgment.md",
+      "role": "linked-note",
+      "owners": [
+        "scene-1792382900001-opusv1"
+      ],
+      "sha256": "46f8005e04a4f6231a6d37c7fd62d9b6632f86b6815269606831ada803e4af9a"
+    },
+    {
+      "vaultPath": "atlas-vtt/collections/Opus Representation/notes/Ledger.md",
+      "role": "linked-note",
+      "owners": [
+        "scene-1792382900001-opusv1"
+      ],
+      "sha256": "4118fa4af39d8ea6429ed5b136760c7693192a53de3696962d27212c1a0627ca"
+    },
+    {
+      "vaultPath": "atlas-vtt/collections/Opus Representation/notes/OpenRig representative.md",
+      "role": "linked-note",
+      "owners": [
+        "scene-1792382900001-opusv1"
+      ],
+      "sha256": "9dc5584c81142790d1f120e173ef3c8b0ef3967e2fe4520908cec66c71f2e627"
+    },
+    {
+      "vaultPath": "atlas-vtt/collections/Opus Representation/notes/Opus planner.md",
+      "role": "linked-note",
+      "owners": [
+        "scene-1792382900001-opusv1"
+      ],
+      "sha256": "1f145f5346fe16a4a5b62cc7fd3d82734ce2961738240611d6ed763fd04d1333"
+    },
+    {
+      "vaultPath": "atlas-vtt/collections/Opus Representation/notes/Places.md",
+      "role": "linked-note",
+      "owners": [
+        "scene-1792382900001-opusv1"
+      ],
+      "sha256": "43fdcd6a335cd6d70eb1ae98bdc94066e782619a1e2d6381db60f12ae6ae47c7"
+    },
+    {
+      "vaultPath": "atlas-vtt/collections/Opus Representation/notes/Quest log.md",
+      "role": "linked-note",
+      "owners": [
+        "scene-1792382900001-opusv1"
+      ],
+      "sha256": "6340af100d73aea44ff117ee55ca1aa0ae450fd3dbdbf2081a77c2a20351d033"
+    },
+    {
+      "vaultPath": "atlas-vtt/collections/Opus Representation/notes/Relic archive.md",
+      "role": "linked-note",
+      "owners": [
+        "scene-1792382900001-opusv1"
+      ],
+      "sha256": "dd0f4d4e97ea0165ffb40e5c74aa66fbbf658a34c38b0aa9cfc7f82764afdf37"
+    },
+    {
+      "vaultPath": "atlas-vtt/collections/Opus Representation/notes/Start here.md",
+      "role": "linked-note",
+      "owners": [
+        "scene-1792382900001-opusv1"
+      ],
+      "sha256": "d9adfa2406469a4143f312f247034bd9e221755376d51464052e5b726bf826af"
+    },
+    {
+      "vaultPath": "atlas-vtt/collections/Opus Representation/notes/The fork.md",
+      "role": "linked-note",
+      "owners": [
+        "scene-1792382900001-opusv1"
+      ],
+      "sha256": "d0a7a17edab1b69ec97129ac8e021ea7f4df7dbe4c1236221ffeb4df4033c063"
+    },
+    {
+      "vaultPath": "atlas-vtt/collections/Opus Representation/scenes/.snapshots/Table account/snapshot-1792371060000-beforefork.json",
+      "role": "scene-snapshot",
+      "owners": [
+        "scene-1792382900001-opusv1"
+      ],
+      "sha256": "66456eab810aa09bc2cfbb24a97649a3aad6b6ffc1824afbd95c6c84d8f3ed03"
+    },
+    {
+      "vaultPath": "atlas-vtt/collections/Opus Representation/scenes/.snapshots/Table account/snapshot-1792371060001-current.json",
+      "role": "scene-snapshot",
+      "owners": [
+        "scene-1792382900001-opusv1"
+      ],
+      "sha256": "def2c9d17e0409307cce727f2745e137cc7b2175ae30659d659443c51d12c2b1"
+    },
+    {
+      "vaultPath": "atlas-vtt/collections/Opus Representation/cover.png",
+      "role": "cover",
+      "sha256": "37a74f9aaefa633ac8f927bef325370c6cf2584d7b2ac5979e75f0efdef64d5b"
+    }
+  ]
+}

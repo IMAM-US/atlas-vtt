@@ -1,0 +1,148 @@
+{
+  "verifiedAt": "2026-10-19T03:37:39.677455+00:00",
+  "baseline": "f0a1cc9cd3929a3d42a3c13f779c9310b94b4269",
+  "reviewVault": "/Users/farieds/Project/atlas-agent-workspace-review",
+  "bundles": [
+    {
+      "path": "docs/agent-workspace/projects/astra-representation/Astra Representation v1.atlas-collection.zip",
+      "sha256": "07dc4048141ea89c0b975602b72ae0787858541df3ab86f09ed1bb52cf23a09d",
+      "collectionUid": "53ff5122-20c9-4fe3-a9cf-7cd20417a8c3",
+      "version": 1,
+      "assets": 4,
+      "verifiedPayloadHashes": 17
+    },
+    {
+      "path": "docs/agent-workspace/projects/opus-representation/Opus Representation v3.atlas-collection.zip",
+      "sha256": "57aedcc88cdd95a46a52cc5920a3ae5ce920d04be01744b8655d8aa44302d570",
+      "collectionUid": "6f3e2c1a-8b47-4d2e-9a5f-1c0d7e4b9a62",
+      "version": 3,
+      "assets": 8,
+      "verifiedPayloadHashes": 26
+    }
+  ],
+  "opusHistory": {
+    "installedCollectionMetadataVersion": 3,
+    "fullNativeV3Update": "observed: 7 files written, 0 removed, replaced files backed up by Atlas",
+    "snapshotRoundTrip": "Before the fork (reconstructed 00:51Z) then Current table account, restored through native UI",
+    "historical": {
+      "tokens": {
+        "tok_1792382902000_coord1": {
+          "name": "Coordinator",
+          "x": 775,
+          "y": 150
+        },
+        "tok_1792382902001_atlas1": {
+          "name": "Atlas representative",
+          "x": 330,
+          "y": 470
+        },
+        "tok_1792382902002_openrig1": {
+          "name": "OpenRig representative",
+          "x": 1245,
+          "y": 528
+        },
+        "tok_1792382902003_opus1": {
+          "name": "Opus planner",
+          "x": 480,
+          "y": 232
+        },
+        "tok_1792382902004_astra1": {
+          "name": "Astra planner",
+          "x": 962,
+          "y": 452
+        }
+      },
+      "textCount": 15,
+      "drawings": 0
+    },
+    "currentObjectsBackgroundWidgetsEqualV3": true,
+    "currentTokens": 7,
+    "currentTexts": 30,
+    "localExtraSnapshot": "Coordinator verification return point, created natively before testing; outside published bundle",
+    "undo": "Atlas disables Undo after restore; instructions corrected and a named current snapshot bundled"
+  },
+  "protectedOriginalFiles": {
+    "count": 26,
+    "allByteIdentical": true,
+    "changed": []
+  },
+  "nativeUnresolvedLinks": {
+    "result": "No unresolved links found.",
+    "scope": "whole isolated review vault",
+    "method": "Obsidian CLI query after final native v3 update"
+  },
+  "astraMoveUndo": [
+    {
+      "token": "tok_astra_author",
+      "from": [
+        565,
+        480
+      ],
+      "to": [
+        504.10485133020336,
+        463.9749608763693
+      ],
+      "noteUnchanged": true
+    },
+    {
+      "token": "tok_astra_keeper",
+      "from": [
+        980,
+        480
+      ],
+      "to": [
+        980,
+        480
+      ],
+      "noteUnchanged": true
+    }
+  ],
+  "astraUndoRestoredExactObjects": true,
+  "screenshots": [
+    {
+      "path": "astra-council.png",
+      "sha256": "cba9598025485c41eb203707b87d84b04a3d6fd471010f4f2f9fbc56a7cc562f"
+    },
+    {
+      "path": "astra-forkwater.png",
+      "sha256": "eff40bce464432900a5296649737e79437dc382d65687388a082a2448361465d"
+    },
+    {
+      "path": "opus-before-fork.png",
+      "sha256": "01782b17d543680d7a31bc4600cdcd7f28ef973874fdd8a335966963a0541588"
+    },
+    {
+      "path": "opus-table.png",
+      "sha256": "2e0c98f95ec2297f97a1e5ff7c2320685fd829b3e3bc7303d1447c0d79d9cbba"
+    }
+  ],
+  "queue": [
+    {
+      "qitemId": "atlas-astra-representation-20261018",
+      "sourceSession": "external-atlas-plan-coordinator",
+      "destinationSession": "planning-astra@atlas-integration-repos",
+      "state": "done",
+      "claimedAt": "2026-10-19T02:55:19.652Z",
+      "tsUpdated": "2026-10-19T03:12:06.593Z",
+      "closureReason": "no-follow-on"
+    },
+    {
+      "qitemId": "atlas-opus-representation-20261018",
+      "sourceSession": "external-atlas-plan-coordinator",
+      "destinationSession": "planning-opus@atlas-integration-repos",
+      "state": "done",
+      "claimedAt": "2026-10-19T02:55:04.392Z",
+      "tsUpdated": "2026-10-19T03:21:24.090Z",
+      "closureReason": "no-follow-on"
+    },
+    {
+      "qitemId": "atlas-opus-image-board-v1-20261019",
+      "sourceSession": "planning-opus@atlas-integration-repos",
+      "destinationSession": "planning-image-codex@atlas-integration-repos",
+      "state": "done",
+      "claimedAt": "2026-10-19T03:02:30.544Z",
+      "tsUpdated": "2026-10-19T03:10:57.111Z",
+      "closureReason": "no-follow-on"
+    }
+  ]
+}

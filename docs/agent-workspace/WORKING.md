@@ -1,8 +1,12 @@
 # Atlas agent workspace working document
 
-Updated: 2026-10-18 America/Guayaquil. Status: ontology and labeling synthesis for review; live integration remains incomplete. Documentation only. Implementation is not authorized.
+Updated: 2026-10-18 America/Guayaquil. Status: two independent native Atlas representations are ready for owner review. Live integration remains incomplete; product integration code and a third project are not authorized.
 
-Start here for current direction. The [ontology synthesis](ontology-synthesis.md) compares both revised models, explains the labeling contract through a concrete journey, and records the remaining decisions. The earlier [integration plan](integration-plan.md) retains the capability survey, source seams and transport findings at its recorded baseline.
+Owner direction after this comparison: first see Astra's and Opus's own representations in two separate Atlas projects, then decide how to synthesize a third. The prior synthesis below remains a recommendation, not the chosen project model. Bounded native project-content authoring was authorized. Opus directed a dedicated Codex image partner through OpenRig, received its generated board and six portraits directly, and inspected and accepted them.
+
+Start with the [two independent projects](projects/independent-representations.md): Astra's **Forkwater** and Opus's **The Table's Account**. Both are available as separate collections in the isolated `atlas-agent-workspace-review` vault, with editable native content, portable bundles and actual native previews. Their [verification](projects/independent-representations-evidence/verification.md) records navigation, label/reference checks, preservation and Opus's historical/current snapshot round trip. No combined project was made.
+
+The earlier [ontology synthesis](ontology-synthesis.md) compares the revised written models and remains a proposal. The [integration plan](integration-plan.md) retains the capability survey, source seams and transport findings at its recorded baseline.
 
 ## Confirmed owner direction
 
@@ -73,12 +77,12 @@ This order replaces the earlier resource-launcher-first framing. Engineering sho
 
 ## Decisions still open
 
-The owner has confirmed the goal and freedom requirements, not approved a particular ontology schema. Review the [comparison and tradeoffs](ontology-synthesis.md#comparison-and-synthesis) before accepting the proposed interpretation rules, the first scene's curation remit, or which evidence/acceptance claims it should show. The recommended next design example is the complete colleague journey with one current appearance, one historical account and one deliberately changing scene. Implementation remains unapproved.
+The owner has confirmed the goal and freedom requirements, not approved a particular ontology schema. The immediate decision follows review of the [two separate representations](projects/independent-representations.md): what each makes clear, what remains too restrictive, and whether and how to synthesize a third project. The earlier [comparison and tradeoffs](ontology-synthesis.md#comparison-and-synthesis) remain available as advice. Product integration implementation remains unapproved.
 
 ## Outputs and evidence
 
 - [Astra's full revised attempt](integration-planning/2026-10-18/ontology-astra.md) and [Opus 5.5's full revised attempt](integration-planning/2026-10-18/ontology-opus-5.5.md) remain independently authored. The [synthesis](ontology-synthesis.md) records where they agree, differ and remain incomplete. Earlier [Astra](integration-planning/2026-10-18/astra.md) and [Opus](integration-planning/2026-10-18/opus-5.5.md) reports remain unchanged.
 - [Recorded scene](recorded-scene.md), [native verification](integration-team/native-verification.md), [harness correction](integration-team/harness-correction.md), [collaboration evidence](integration-team/evidence.md) and [role-home verification](vault-homes/verification.md) retain their original bounded claims. They do not establish live synchronization or delegated scene editing.
-- This change is documentation only. Verification covers source references, document links, unchanged raw attempts, diff scope and the actual OpenRig assignment/completion records. No application tests, build, deployment, native-vault installation or permission-policy change is part of this work.
+- The independent-project delivery authors content through existing Atlas features. Verification covers the actual native scenes and links, 43 bundle payload hashes, unchanged raw attempts, the protected original review-vault files and OpenRig task/image handoffs. No application code, build, deployment, canonical-vault installation or permission-policy change is part of this work. Native content review does not establish acceptance of a shared ontology or a live integration.
 
 Keep this entry concise. Date owner decisions, distinguish recommendations from accepted semantics, and refresh installed/source facts before implementation.
