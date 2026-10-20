@@ -4,6 +4,8 @@ import { isPersistedMapEnvelope } from './MapPersistence';
 import { normalizeImagePath } from '../utils/pathUtils';
 import { mapThumbnailPath } from '../utils/dataFileMigration';
 import { movedPathOf, rewriteMapReferences, type MovedPath, type PathMove } from './renamedPaths';
+import { accountPathOf } from '../agent-links/account/references';
+import { rewriteAccountNotePaths } from '../agent-links/account/accountReferences';
 import { SceneSnapshotService } from '../snapshots/SceneSnapshotService';
 
 /**
@@ -40,7 +42,8 @@ export class FileReferenceService {
     await this.updateAssetMetadata(moved);
     await this.updateScenes(moved);
     for (const { from, to } of fileMoves) await this.renameMapThumbnail(from, to);
-    await this.updateMapFiles(moved);
+    const accountPaths = await this.updateMapFiles(moved);
+    await this.updateAccountFiles(accountPaths, moved);
     await this.updateStatblockFrontmatter(moved);
     await this.updateLootBases(moved);
   }
@@ -137,36 +140,55 @@ export class FileReferenceService {
   // .atlasmap files
   // ---------------------------------------------------------------------------
 
-  private async updateMapFiles(moved: MovedPath): Promise<boolean> {
+  /** Rewrites every map and snapshot; returns the source accounts the maps point at, which follow moves separately. */
+  private async updateMapFiles(moved: MovedPath): Promise<Set<string>> {
     const mapFiles = this.app.vault.getFiles().filter(f => f.extension === 'atlasmap');
     const snapshots = new SceneSnapshotService(this.app);
-    let anyChanged = false;
+    const accountPaths = new Set<string>();
 
     /** Returns the rewritten map JSON, or null when the map references none of the moved files. */
     const rewriteMap = (content: string): string | null => {
       const mapData: unknown = JSON.parse(content);
       if (!isPersistedMapEnvelope(mapData)) return null;
-      return rewriteMapReferences(mapData.state, moved) ? JSON.stringify(mapData, null, 2) : null;
+      const changed = rewriteMapReferences(mapData.state, moved);
+      for (const object of [...Object.values(mapData.state?.objects?.tokens ?? {}), ...Object.values(mapData.state?.objects?.texts ?? {})]) {
+        const accountPath = accountPathOf(object);
+        if (accountPath) accountPaths.add(accountPath);
+      }
+      return changed ? JSON.stringify(mapData, null, 2) : null;
     };
 
     for (const mapFile of mapFiles) {
       try {
         if (rewriteMap(await this.app.vault.read(mapFile)) !== null) {
           await this.app.vault.process(mapFile, (latest) => rewriteMap(latest) ?? latest);
-          anyChanged = true;
         }
       } catch (error) {
         console.error(`[FileReferenceService] Error updating map ${mapFile.path}:`, error);
       }
       // Scene snapshots hold the same map state, so they follow renamed files too.
       try {
-        if (await snapshots.rewriteFiles(mapFile.path, rewriteMap)) anyChanged = true;
+        await snapshots.rewriteFiles(mapFile.path, rewriteMap);
       } catch (error) {
         console.error(`[FileReferenceService] Error updating snapshots of ${mapFile.path}:`, error);
       }
     }
 
-    return anyChanged;
+    return accountPaths;
+  }
+
+  /** The typed note references of the source accounts scenes point at follow moved notes; nothing else in an account changes. */
+  private async updateAccountFiles(accountPaths: ReadonlySet<string>, moved: MovedPath): Promise<void> {
+    for (const accountPath of accountPaths) {
+      const file = this.app.vault.getAbstractFileByPath(accountPath);
+      if (!(file instanceof TFile)) continue;
+      try {
+        const rewrite = (text: string): string => rewriteAccountNotePaths(text, moved);
+        if (rewrite(await this.app.vault.read(file)) !== await this.app.vault.read(file)) await this.app.vault.process(file, rewrite);
+      } catch (error) {
+        console.error(`[FileReferenceService] Error updating source account ${accountPath}:`, error);
+      }
+    }
   }
 
   // ---------------------------------------------------------------------------

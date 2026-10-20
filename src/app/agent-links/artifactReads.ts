@@ -1,6 +1,6 @@
 import type { AccountArtifact } from './account/accountSchema';
 import type { AgentLinkSourceSettings } from './sourceSettings';
-import { expandRoot, isAllowedRoot } from './sourceSettings';
+import { confinedRoot } from './sourceSettings';
 import { readCheckoutFacts, readGitFile, readWorkingGitFile, type CheckoutFacts } from './native/gitFiles';
 import { readLocalFile, readPreservedFile } from './native/localFiles';
 import { failure, now, type ReadFailure } from './reads';
@@ -40,8 +40,8 @@ const outsideRoots = (): ReadFailure => ({ state: 'unavailable', message: 'This 
 async function working(source: AgentLinkSourceSettings, artifact: AccountArtifact, reviewedRevision: string | undefined): Promise<ArtifactSource | null> {
   const locator = artifact.working;
   if (!locator) return null;
-  if (!isAllowedRoot(source, locator.root)) return outsideRoots();
-  const root = expandRoot(locator.root);
+  const root = await confinedRoot(source, locator.root);
+  if (!root) return outsideRoots();
   try {
     let checkout: CheckoutFacts | null = null;
     try { checkout = await readCheckoutFacts(root, reviewedRevision); } catch { checkout = null; }
@@ -56,9 +56,10 @@ async function working(source: AgentLinkSourceSettings, artifact: AccountArtifac
 async function captured(source: AgentLinkSourceSettings, artifact: AccountArtifact): Promise<ArtifactSource | null> {
   const locator = artifact.captured;
   if (!locator) return null;
-  if (!isAllowedRoot(source, locator.root)) return outsideRoots();
+  const root = await confinedRoot(source, locator.root);
+  if (!root) return outsideRoots();
   try {
-    const file = await readPreservedFile(expandRoot(locator.root), locator.path, locator.sha256);
+    const file = await readPreservedFile(root, locator.path, locator.sha256);
     return { state: 'current', source: 'captured', path: file.path, sha256: file.sha256, sizeBytes: file.sizeBytes, text: textOf(file.bytes),
       checkout: null, label: `As captured ${locator.capturedAt}`, observedAt: file.observedAt };
   } catch (error) {
@@ -69,12 +70,13 @@ async function captured(source: AgentLinkSourceSettings, artifact: AccountArtifa
 async function reviewed(source: AgentLinkSourceSettings, artifact: AccountArtifact): Promise<ArtifactSource | null> {
   const revision = artifact.reviewed;
   if (!revision) return null;
-  const root = revision.root ?? artifact.working?.root;
+  const named = revision.root ?? artifact.working?.root;
   const path = revision.path ?? artifact.working?.path;
-  if (!root || !path) return { state: 'unavailable', message: 'The reviewed revision has no repository to read from.', observedAt: now() };
-  if (!isAllowedRoot(source, root)) return outsideRoots();
+  if (!named || !path) return { state: 'unavailable', message: 'The reviewed revision has no repository to read from.', observedAt: now() };
+  const root = await confinedRoot(source, named);
+  if (!root) return outsideRoots();
   try {
-    const file = await readGitFile(expandRoot(root), path, revision.revision);
+    const file = await readGitFile(root, path, revision.revision);
     if (revision.sha256 && file.sha256 !== revision.sha256) {
       return { state: 'unavailable', message: 'The reviewed revision does not match the hash the account recorded.', observedAt: now() };
     }
@@ -85,11 +87,13 @@ async function reviewed(source: AgentLinkSourceSettings, artifact: AccountArtifa
   }
 }
 
-/** Reads each source independently; one missing source never falls back to another. */
-export async function inspectArtifact(source: AgentLinkSourceSettings, artifact: AccountArtifact): Promise<ArtifactRead> {
+/** Reads each source independently; one missing source never falls back to another. A cancelled read throws. */
+export async function inspectArtifact(source: AgentLinkSourceSettings, artifact: AccountArtifact, signal?: AbortSignal): Promise<ArtifactRead> {
+  signal?.throwIfAborted();
   const [workingRead, capturedRead, reviewedRead] = await Promise.all([
     working(source, artifact, artifact.reviewed?.revision), captured(source, artifact), reviewed(source, artifact),
   ]);
+  signal?.throwIfAborted();
   return { artifact, working: workingRead, captured: capturedRead, reviewed: reviewedRead, observedAt: now() };
 }
 

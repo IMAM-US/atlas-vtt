@@ -38,22 +38,36 @@ async function processTty(pid: number, options?: ProcessReadOptions): Promise<{ 
   // Only process ID, TTY and start time. Do not collect command text or environment.
   const text = await runNativeRead('/bin/ps', ['-p', String(pid), '-o', 'pid=,tty=,lstart='], options);
   const match = /^\s*(\d+)\s+(\S+)\s+(.+)$/.exec(text);
-  if (!match || Number(match[1]) !== pid || !match[2] || match[2] === '??' || match[2] === '?') {
+  if (!match || Number(match[1]) !== pid || !match[2] || match[2] === '??' || match[2] === '?' || !/^(\/dev\/)?[A-Za-z0-9_.-]+$/.test(match[2])) {
     throw new Error('The attached client has no qualified terminal process.');
   }
   return { tty: match[2].startsWith('/dev/') ? match[2] : `/dev/${match[2]}`, started: match[3]! };
 }
 
-/** All formats are adapter constants. Read each field separately so names cannot corrupt a delimiter. */
+/** One field of exactly one client, selected by its tty; several or no lines mean the client is not uniquely attached. */
+async function readClientField(connection: TmuxConnection, tty: string, field: string, options?: ProcessReadOptions): Promise<string> {
+  const text = await runNativeRead(connection.executablePath, [
+    '-S', connection.socketPath, 'list-clients', '-f', `#{==:#{client_tty},${tty}}`, '-F', `#{${field}}`,
+  ], options);
+  const lines = text.split('\n');
+  if (lines.length !== 1) throw new Error('The attached client could not be identified uniquely.');
+  return lines[0]!;
+}
+
+/**
+ * All formats are adapter constants, read one field at a time so names cannot corrupt a
+ * delimiter. The client is selected with a `list-clients` filter on its exact tty, which
+ * tmux expands per client (its own session and active pane). `display-message -c <tty>`
+ * answered for the focused client and `-t <tty>` for the session's most recent client on
+ * a server with many attached clients, so neither names one client.
+ */
 export async function readTmuxClientView(connection: TmuxConnection, pid: number, options?: ProcessReadOptions): Promise<TmuxClientView> {
   options?.signal?.throwIfAborted();
   const identity = await serverIdentity(connection.socketPath);
   if (!(await readTmuxClientPids(connection, options)).includes(pid)) throw new Error('The process is not attached to this tmux server.');
   const process = await processTty(pid, options);
   const fields = ['client_pid', 'client_tty', 'client_session', 'pane_id', 'pane_pid', 'client_created', 'client_flags', 'socket_path'] as const;
-  const values = await Promise.all(fields.map((field) => runNativeRead(connection.executablePath, [
-    '-S', connection.socketPath, 'display-message', '-p', '-c', process.tty, `#{${field}}`,
-  ], options)));
+  const values = await Promise.all(fields.map((field) => readClientField(connection, process.tty, field, options)));
   const [clientPid, tty, sessionName, paneId, panePid, created, flags, socketPath] = values;
   if (Number(clientPid) !== pid || tty !== process.tty || !sessionName || !paneId || !/^%\d+$/.test(paneId)
     || !panePid || !/^\d+$/.test(panePid) || !created || !socketPath || flags === undefined
@@ -63,9 +77,7 @@ export async function readTmuxClientView(connection: TmuxConnection, pid: number
   }
   const after = await processTty(pid, options);
   if (after.tty !== process.tty || after.started !== process.started) throw new Error('The native client process changed.');
-  const current = await Promise.all(['client_session', 'pane_id'].map((field) => runNativeRead(connection.executablePath, [
-    '-S', connection.socketPath, 'display-message', '-p', '-c', process.tty, `#{${field}}`,
-  ], options)));
+  const current = await Promise.all(['client_session', 'pane_id'].map((field) => readClientField(connection, process.tty, field, options)));
   if (current[0] !== sessionName || current[1] !== paneId) throw new Error('The native client changed its displayed view.');
   return {
     socketPath: connection.socketPath, socketIdentity: identity, clientPid: pid, clientTty: tty,

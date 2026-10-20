@@ -29,10 +29,10 @@ export function WorkSection({ subject, owned, mapWork, liveMapWork }: {
   const { loaded, openSubject } = useCard();
   const [open, setOpen] = useState<{ qitemId: string; sourceKey: string } | null>(null);
   const address = subject.seat.sessionAddress ?? subject.seat.logicalId;
-  const fresh = newWork(owned, mapWork);
+  const fresh = newWork(owned, mapWork, subject.sourceKey);
   const toggle = (qitemId: string, sourceKey: string): void => setOpen((current) => (current?.qitemId === qitemId ? null : { qitemId, sourceKey }));
   const handoffLink = (sessionAddress: string | null, subjectId: string | undefined): React.ReactNode => {
-    const target = subjectId ? subjectOf(loaded.account, subjectId) : sessionAddress ? seatBySessionAddress(loaded.account, sessionAddress) : null;
+    const target = subjectId ? subjectOf(loaded.account, subjectId) : sessionAddress ? seatBySessionAddress(loaded.account, subject.sourceKey, sessionAddress) : null;
     if (!target) return sessionAddress ? `→ handed off to ${sessionAddress}` : null;
     return <Button variant="link" className="agent-link-inline" onClick={() => openSubject(target.id)}>→ handed off to {target.caption}</Button>;
   };
@@ -42,8 +42,8 @@ export function WorkSection({ subject, owned, mapWork, liveMapWork }: {
     {owned?.state === 'current' && fresh.length === 0 && <p className="agent-link-muted">Now: no work beyond the map's · {clock(owned.observedAt)}</p>}
     {fresh.map((item) => {
       const qitemId = String(item.qitemId);
-      const authored = workByQitem(loaded.account, qitemId);
-      return <RouteRow key={qitemId} label="Now" onPress={() => toggle(qitemId, subject.sourceKey)} detail={`${authored?.caption ?? rowCaption(item)} · ${liveState(item)}`} route={workRoute(qitemId)} tone="changed">
+      const authored = workByQitem(loaded.account, subject.sourceKey, qitemId);
+      return <RouteRow key={qitemId} label="Now" onPress={() => toggle(qitemId, subject.sourceKey)} detail={`${authored?.caption ?? rowCaption(item)} · ${liveState(item)}`} route={workRoute(subject.sourceKey, qitemId)} tone="changed">
         {open?.qitemId === qitemId && <WorkDetail sourceKey={subject.sourceKey} qitemId={qitemId} authored={authored} />}
       </RouteRow>;
     })}
@@ -53,11 +53,11 @@ export function WorkSection({ subject, owned, mapWork, liveMapWork }: {
       const item = live?.state === 'current' ? live.item : null;
       const state = item ? liveState(item) : live?.state === 'unavailable' ? `on map: ${work.captured.state} ${clock(work.captured.observedAt)} · live unavailable` : `on map: ${work.captured.state} ${clock(work.captured.observedAt)} · checking…`;
       const handedTo = text(item?.handedOffTo) ?? work.captured.handedOffTo ?? null;
-      return <RouteRow key={work.id} label="Map" onPress={() => toggle(work.qitemId, work.sourceKey)} detail={<>{work.caption} · {state}{work.review ? ' · review ✓' : ''}</>} route={workRoute(work.qitemId)}>
+      return <RouteRow key={work.id} label="Map" onPress={() => toggle(work.qitemId, work.sourceKey)} detail={<>{work.caption} · {state}{work.review ? ' · review ✓' : ''}</>} route={workRoute(work.sourceKey, work.qitemId)}>
         {handedTo && <p className="agent-link-muted">{handoffLink(handedTo, work.handedOffToSubjectId)}</p>}
         {open?.qitemId === work.qitemId && <WorkDetail sourceKey={work.sourceKey} qitemId={work.qitemId} authored={work} />}
       </RouteRow>;
     })}
-    <RouteRow label="All current rows" detail={owned?.state === 'current' ? `${owned.items.length} owned · ${clock(owned.observedAt)}` : ''} route={ownedWorkRoute(address)} tone="muted" />
+    <RouteRow label="All current rows" detail={owned?.state === 'current' ? `${owned.items.length} owned · ${clock(owned.observedAt)}` : ''} route={ownedWorkRoute(subject.sourceKey, address)} tone="muted" />
   </section>;
 }

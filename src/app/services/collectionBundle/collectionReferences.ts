@@ -6,6 +6,7 @@ import { isRecord } from '../assetMetadataGuards';
 import { imageReference, localImage } from '../statblockImportCandidates';
 import { linkedFilePath } from '../sceneLinks';
 import { accountPathOf } from '../../agent-links/account/references';
+import { accountNotePaths } from '../../agent-links/account/accountReferences';
 import { ownedPaths } from '../vault-sync/assetFiles';
 import type { BundleFile, BundleFileRole, StatblockImageKey } from './bundleFormat';
 
@@ -44,6 +45,7 @@ export class CollectionReferenceCollector {
   private readonly missing = new Map<string, MissingReference>();
   private owner: Asset | null = null;
   private ownedFiles: ReadonlySet<string> = new Set();
+  private readonly accountPaths = new Set<string>();
 
   constructor(private readonly app: App, private readonly assets: AssetService) {}
 
@@ -55,6 +57,7 @@ export class CollectionReferenceCollector {
     }
     this.owner = null;
     for (const notePath of this.statblockNotes) this.collectStatblockImage(notePath);
+    for (const accountPath of this.accountPaths) await this.collectAccountNotes(accountPath);
     return { files: [...this.files.values()], missing: [...this.missing.values()] };
   }
 
@@ -138,9 +141,19 @@ export class CollectionReferenceCollector {
   }
 
   /** Only Markdown notes travel as notes; a pin may also open a scene's map, which travels with its scene. */
-  private addLinkedNote(link: string | undefined): void {
+  private addLinkedNote(link: string | undefined, owners?: readonly string[]): void {
     const path = link ? linkedFilePath(link) : '';
-    if (path.toLowerCase().endsWith('.md')) this.add(path, 'linked-note');
+    if (path.toLowerCase().endsWith('.md')) this.add(path, 'linked-note', owners);
+  }
+
+  /** The typed notes an account names travel with the scenes that use the account; nothing else in it is read as a path. */
+  private async collectAccountNotes(accountPath: string): Promise<void> {
+    const file = this.app.vault.getAbstractFileByPath(accountPath);
+    const entry = this.files.get(accountPath);
+    if (!(file instanceof TFile) || !entry) return;
+    let value: unknown;
+    try { value = JSON.parse(await this.app.vault.read(file)); } catch { return; }
+    for (const notePath of accountNotePaths(value)) this.addLinkedNote(notePath, entry.owners ?? []);
   }
 
   private addStatblockNote(path: string | undefined): void {
@@ -172,6 +185,7 @@ export class CollectionReferenceCollector {
     if (role === 'source-account' && this.ownedFiles.has(path)) {
       throw new Error(`Source account conflicts with an existing asset file: ${path}`);
     }
+    if (role === 'source-account') this.accountPaths.add(path);
     const existing = this.files.get(path);
     if (existing) {
       if (existing.role !== role && (role === 'source-account' || existing.role === 'source-account')) {

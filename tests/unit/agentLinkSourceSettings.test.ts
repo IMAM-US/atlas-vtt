@@ -1,8 +1,10 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
-import { homedir } from 'os';
+import { mkdtemp, mkdir, realpath, symlink } from 'fs/promises';
+import { homedir, tmpdir } from 'os';
+import { join } from 'path';
 import {
-  defaultSourceSettings, expandRoot, isAllowedRoot, openRigConnectionOf, readAgentLinkSettings, viewConnectionsOf,
+  confinedRoot, defaultSourceSettings, expandRoot, openRigConnectionOf, readAgentLinkSettings, viewConnectionsOf,
 } from '../../src/app/agent-links/sourceSettings';
 import { claudeRecordRelativePath } from '../../src/app/agent-links/native/providerRecordLocator';
 
@@ -14,13 +16,27 @@ describe('source settings', () => {
     expect(readAgentLinkSettings({ sources: [] })).toEqual({ sources: [defaultSourceSettings()] });
   });
 
-  it('confines artifact roots to the allowed roots', () => {
-    const source = { ...defaultSourceSettings(), allowedRoots: ['~/Project/example', '/evidence'] };
-    expect(isAllowedRoot(source, `${homedir()}/Project/example`)).toBe(true);
-    expect(isAllowedRoot(source, `${homedir()}/Project/example/sub`)).toBe(true);
-    expect(isAllowedRoot(source, `${homedir()}/Project/example-other`)).toBe(false);
-    expect(isAllowedRoot(source, '/evidence/../etc')).toBe(false);
-    expect(isAllowedRoot(source, 'relative')).toBe(false);
+  it('confines artifact roots to the real paths of the allowed roots', async () => {
+    const base = await realpath(await mkdtemp(join(tmpdir(), 'atlas-roots-')));
+    await mkdir(join(base, 'allowed', 'inside'), { recursive: true });
+    await mkdir(join(base, 'outside'), { recursive: true });
+    await symlink(join(base, 'outside'), join(base, 'allowed', 'escape'));
+    await symlink(join(base, 'allowed'), join(base, 'alias'));
+    const source = { ...defaultSourceSettings(), allowedRoots: [join(base, 'allowed'), '/nonexistent-root'] };
+    expect(await confinedRoot(source, join(base, 'allowed'))).toBe(join(base, 'allowed'));
+    expect(await confinedRoot(source, join(base, 'allowed', 'inside'))).toBe(join(base, 'allowed', 'inside'));
+    // A link inside an allowed root that points outside is outside.
+    expect(await confinedRoot(source, join(base, 'allowed', 'escape'))).toBeNull();
+    expect(await confinedRoot(source, join(base, 'allowed', 'escape', 'deeper'))).toBeNull();
+    // A link to the allowed root reads at the real allowed path.
+    expect(await confinedRoot(source, join(base, 'alias', 'inside'))).toBe(join(base, 'allowed', 'inside'));
+    expect(await confinedRoot(source, join(base, 'allowed-other'))).toBeNull();
+    expect(await confinedRoot(source, join(base, 'outside'))).toBeNull();
+    expect(await confinedRoot(source, `${base}/allowed/../outside`)).toBeNull();
+    expect(await confinedRoot(source, 'relative')).toBeNull();
+    // An allowed root that is itself a link anchors at its real path.
+    const linked = { ...defaultSourceSettings(), allowedRoots: [join(base, 'alias')] };
+    expect(await confinedRoot(linked, join(base, 'allowed', 'inside'))).toBe(join(base, 'allowed', 'inside'));
     expect(expandRoot('~/x')).toBe(`${homedir()}/x`);
     expect(expandRoot('x')).toBe('');
   });

@@ -7,6 +7,7 @@ import { capturedFileRoute, reviewedFileRoute, workingFileRoute, type NativeRout
 import { useCard } from './cardContext';
 import { RouteRow } from './RouteRow';
 import { clock, short } from './timeLabels';
+import { useActionSignal } from './useActionSignal';
 
 export interface ArtifactGroup { heading: string; work: AccountWork | null; artifacts: AccountArtifact[] }
 
@@ -27,13 +28,21 @@ export function ArtifactSection({ groups }: { groups: readonly ArtifactGroup[] }
 
 function ArtifactRows({ heading, work, artifact }: { heading: string; work: AccountWork | null; artifact: AccountArtifact }): React.ReactElement {
   const { sources, loaded } = useCard();
+  const next = useActionSignal();
   const [read, setRead] = useState<ArtifactRead | null>(null);
   const [busy, setBusy] = useState(false);
   const [viewing, setViewing] = useState<ArtifactFile['source'] | null>(null);
   const sourceKey = work?.sourceKey ?? 'local';
   const inspect = async (): Promise<void> => {
+    const signal = next();
     setBusy(true);
-    setRead(await sources.inspectArtifact(sourceKey, artifact));
+    try {
+      const result = await sources.inspectArtifact(sourceKey, artifact, { signal });
+      if (signal.aborted) return;
+      setRead(result);
+    } catch {
+      if (signal.aborted) return;
+    }
     setBusy(false);
   };
   const review = work?.review && artifact.reviewed && work.review.revision === artifact.reviewed.revision ? work.review : null;
@@ -41,7 +50,7 @@ function ArtifactRows({ heading, work, artifact }: { heading: string; work: Acco
   const reviewNote = review ? `Review ✓ ${reviewer ? `by ${reviewer.caption} ` : ''}at ${short(review.revision)}` : null;
   const open = async (file: ArtifactFile): Promise<void> => {
     if (file.source !== 'working') { setViewing((current) => (current === file.source ? null : file.source)); return; }
-    try { await sources.openFile(file.path); } catch (error) { new Notice(error instanceof Error ? error.message : 'The file could not be opened.'); }
+    try { await sources.openArtifactWorkingFile(sourceKey, artifact); } catch (error) { new Notice(error instanceof Error ? error.message : 'The file could not be opened.'); }
   };
   const summary = (): string => {
     if (!read) return [artifact.working && 'working', artifact.captured && 'captured', artifact.reviewed && 'reviewed'].filter(Boolean).join(' · ');
@@ -52,7 +61,7 @@ function ArtifactRows({ heading, work, artifact }: { heading: string; work: Acco
   };
   const entries: Array<[ArtifactFile['source'], ArtifactSource | null]> = read ? [['working', read.working], ['captured', read.captured], ['reviewed', read.reviewed]] : [];
   const comparison = read ? compareArtifact(read) : null;
-  return <RouteRow label={busy ? 'Inspecting…' : 'Inspect'} onPress={() => { void inspect(); }} disabledReason={busy ? 'Reading…' : null}
+  return <RouteRow label={busy ? 'Checking…' : 'Check'} onPress={() => { void inspect(); }} disabledReason={busy ? 'Reading…' : null}
     detail={<>{artifact.caption} · {heading} · {summary()}</>} route={workingFileRoute(artifact) ?? capturedFileRoute(artifact) ?? reviewedFileRoute(artifact)}
     tone={comparison?.kind === 'split' ? 'changed' : undefined}>
     {comparison && comparison.kind !== 'none' && comparison.checkoutNote && <p className="agent-link-muted agent-link-row--changed">{comparison.kind === 'equal' ? 'Same bytes, different checkout. ' : ''}{comparison.checkoutNote}</p>}

@@ -45,10 +45,14 @@ describe('headlineOf', () => {
     expect(headlineOf(subject, account.capturedAt, current('conversation-one'), owned(['qitem-build-one', 'qitem-new']), account.work))
       .toEqual({ identity: 'Same seat and conversation as map (10:00Z)', tone: 'changed', work: 'Work changed: new work since 11:30Z' });
     expect(headlineOf(subject, account.capturedAt, current(null), null, account.work).identity).toContain('exact conversation not qualified now');
+    const pinned = { ...subject, policy: 'captured-conversation' as const };
+    expect(headlineOf(pinned, account.capturedAt, current('other-conversation'), null, account.work).identity).toBe("The seat now holds another conversation; this card pins the map's (10:00Z)");
   });
 
   it('counts only rows the map does not represent as new work', () => {
-    expect(newWork(owned(['qitem-build-one', 'qitem-new']), account.work).map((item) => item.qitemId)).toEqual(['qitem-new']);
-    expect(newWork({ state: 'unavailable', message: 'x', observedAt: 't' }, account.work)).toEqual([]);
+    expect(newWork(owned(['qitem-build-one', 'qitem-new']), account.work, 'local').map((item) => item.qitemId)).toEqual(['qitem-new']);
+    // The same queue id on another source is not the map's work.
+    expect(newWork(owned(['qitem-build-one']), account.work, 'other-source').map((item) => item.qitemId)).toEqual(['qitem-build-one']);
+    expect(newWork({ state: 'unavailable', message: 'x', observedAt: 't' }, account.work, 'local')).toEqual([]);
   });
 });

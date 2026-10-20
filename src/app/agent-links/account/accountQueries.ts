@@ -19,9 +19,9 @@ export function workOf(account: AccountDocument, workId: string): AccountWork | 
   return account.work.find((entry) => entry.id === workId) ?? null;
 }
 
-/** The authored entry for a native queue item, so a live row can offer its authored artifacts. */
-export function workByQitem(account: AccountDocument, qitemId: string): AccountWork | null {
-  return account.work.find((entry) => entry.qitemId === qitemId) ?? null;
+/** The authored entry for a native queue item of one source, so a live row can offer its authored artifacts. */
+export function workByQitem(account: AccountDocument, sourceKey: string, qitemId: string): AccountWork | null {
+  return account.work.find((entry) => entry.sourceKey === sourceKey && entry.qitemId === qitemId) ?? null;
 }
 
 export function artifactOf(account: AccountDocument, artifactId: string): AccountArtifact | null {
@@ -32,9 +32,9 @@ export function artifactsOf(account: AccountDocument, ids: readonly string[] | u
   return (ids ?? []).flatMap((id) => { const found = artifactOf(account, id); return found ? [found] : []; });
 }
 
-/** The seat a native session address names in this account; addresses are locators, so this is for navigation only. */
-export function seatBySessionAddress(account: AccountDocument, sessionAddress: string): SeatSubject | null {
-  return account.subjects.find((entry): entry is SeatSubject => entry.kind === 'seat' && entry.seat.sessionAddress === sessionAddress) ?? null;
+/** The seat a session address names within one source; addresses are locators, so this is for navigation only. */
+export function seatBySessionAddress(account: AccountDocument, sourceKey: string, sessionAddress: string): SeatSubject | null {
+  return account.subjects.find((entry): entry is SeatSubject => entry.kind === 'seat' && entry.sourceKey === sourceKey && entry.seat.sessionAddress === sessionAddress) ?? null;
 }
 
 /** The map's work for a seat, in authored order. */

@@ -72,9 +72,11 @@ describe('account queries', () => {
     const builder = account.subjects[0];
     if (builder.kind !== 'seat') throw new Error('expected a seat');
     expect(mapWorkOf(account, builder).map((entry) => entry.id)).toEqual(['work:build-one']);
-    expect(workByQitem(account, 'qitem-build-one')?.id).toBe('work:build-one');
-    expect(workByQitem(account, 'qitem-unknown')).toBeNull();
-    expect(seatBySessionAddress(account, 'lead@example')?.id).toBe('seat:lead');
+    expect(workByQitem(account, 'local', 'qitem-build-one')?.id).toBe('work:build-one');
+    expect(workByQitem(account, 'other-source', 'qitem-build-one')).toBeNull();
+    expect(workByQitem(account, 'local', 'qitem-unknown')).toBeNull();
+    expect(seatBySessionAddress(account, 'local', 'lead@example')?.id).toBe('seat:lead');
+    expect(seatBySessionAddress(account, 'other-source', 'lead@example')).toBeNull();
     expect(groupsContaining(account, 'seat:panel-a').map((group) => group.id)).toEqual(['group:panel']);
     expect(groupsContaining(account, 'seat:builder')).toEqual([]);
   });

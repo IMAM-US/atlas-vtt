@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useAtlasStore, useViewStoreHook } from '../../react/ViewStoreContext';
 import type { SourceReference } from '../../types';
 import { AgentLinkCard } from './AgentLinkCard';
@@ -27,6 +27,10 @@ export function AgentLinkOverlay(): React.ReactElement | null {
     return [{ objectId: id, label, reference: object.sourceReference }];
   }), [selectedIds, tokens, texts]);
   const chosen = bound.find((entry) => entry.objectId === clickedObjectId) ?? null;
+  // A click is spent once its object leaves the selection: a later marquee reselect opens no card without a new click.
+  useEffect(() => {
+    if (clickedObjectId && !selectedIds.includes(clickedObjectId)) store.getState().setClickedObjectId(null);
+  }, [store, clickedObjectId, selectedIds]);
   const anchorId = chosen?.objectId ?? bound[0]?.objectId ?? null;
   const anchor = useObjectAnchor(anchorId);
   const container = useRef<HTMLDivElement | null>(null);

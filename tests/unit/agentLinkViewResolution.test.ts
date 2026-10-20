@@ -67,26 +67,30 @@ function command(file: string, args: string[]): string {
   const socketPath = args[1]!;
   const server = servers.get(socketPath);
   if (!server) throw new Error('Server unavailable');
+  if (args[2] === 'list-clients' && args[3] === '-f') {
+    // A client is selected by its exact tty; tmux expands the format per client.
+    const match = /^#\{==:#\{client_tty\},(.+)\}$/.exec(args[4]!);
+    expect(match).not.toBeNull();
+    if (match![1] !== `/dev/tty${server.client}`) return '';
+    const field = args[6]!.slice(2, -1);
+    const count = (fieldReads.get(field) ?? 0) + 1;
+    fieldReads.set(field, count);
+    onFieldRead(field, count);
+    const values: Record<string, string> = {
+      client_pid: String(server.client), client_tty: `/dev/tty${server.client}`, client_session: intended.sessionName,
+      pane_id: server.activePane, pane_pid: String(server.activePane === '%7' ? server.root : server.root + 1),
+      client_created: '1000', client_flags: '', socket_path: socketPath,
+    };
+    return values[field]!;
+  }
   if (args[2] === 'list-clients') return String(server.client);
   if (args[2] === 'list-panes') {
     expect(args).toEqual(['-S', socketPath, 'list-panes', '-s', '-t', '=builder@example', '-F', '#{pane_id}']);
     return '%7\n%8';
   }
   expect(args[2]).toBe('display-message');
-  if (args.includes('-t')) {
-    expect(args.slice(-3)).toEqual(['-t', '%7', '#{pane_pid}']);
-    return String(server.root);
-  }
-  const field = args.at(-1)!.slice(2, -1);
-  const count = (fieldReads.get(field) ?? 0) + 1;
-  fieldReads.set(field, count);
-  onFieldRead(field, count);
-  const values: Record<string, string> = {
-    client_pid: String(server.client), client_tty: `/dev/tty${server.client}`, client_session: intended.sessionName,
-    pane_id: server.activePane, pane_pid: String(server.activePane === '%7' ? server.root : server.root + 1),
-    client_created: '1000', client_flags: '', socket_path: socketPath,
-  };
-  return values[field]!;
+  expect(args.slice(-3)).toEqual(['-t', '%7', '#{pane_pid}']);
+  return String(server.root);
 }
 
 beforeEach(() => {

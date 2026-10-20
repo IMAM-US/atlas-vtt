@@ -9,6 +9,7 @@ import { useCard } from './cardContext';
 import { RouteRow } from './RouteRow';
 import { SourcesSection } from './SourcesSection';
 import { clock } from './timeLabels';
+import { useActionSignal } from './useActionSignal';
 
 interface MemberState { seat: SeatRead | null; owned: OwnedWork | null }
 
@@ -24,6 +25,7 @@ function memberNow(state: MemberState | undefined): string {
 /** A group is a party marker: open it to see who is in it, then go to a member. It is never a sixth participant. */
 export function GroupCard({ subject }: { subject: GroupSubject }): React.ReactElement {
   const { loaded, sources, openSubject } = useCard();
+  const next = useActionSignal();
   const members = subject.members.map((member) => ({ member, seat: seatOf(loaded.account, member.subjectId) }));
   const convener = subject.convenerId ? subjectOf(loaded.account, subject.convenerId) : null;
   const [states, setStates] = useState<ReadonlyMap<string, MemberState>>(new Map());
@@ -48,14 +50,16 @@ export function GroupCard({ subject }: { subject: GroupSubject }): React.ReactEl
   }, [sources, subject.id]);
 
   /** Derived at action time from the members' resolved views, never from a tab's name. */
-  const showPanelTab = async (): Promise<void> => {
+  const showGroupTab = async (): Promise<void> => {
+    const signal = next();
     setBusy(true);
     const resolved: Array<{ seat: SeatSubject; witness: HerdrViewWitness }> = [];
     let reason: string | null = null;
     for (const { seat } of members) {
       const state = seat ? states.get(seat.id)?.seat : null;
       if (!seat || !state || state.state !== 'current') { reason = 'Not every member is live.'; break; }
-      const views = await sources.resolveViews(seat, state);
+      const views = await sources.resolveViews(seat, state, { signal });
+      if (signal.aborted) return;
       const exact = views.state === 'unavailable' ? [] : views.views.filter((view) => view.exact);
       if (exact.length !== 1) { reason = `${seat.caption}: ${views.state === 'unavailable' ? views.message : exact.length ? 'several views' : 'no exact view'}`; break; }
       resolved.push({ seat, witness: exact[0]!.witness });
@@ -63,7 +67,8 @@ export function GroupCard({ subject }: { subject: GroupSubject }): React.ReactEl
     const first = resolved[0];
     if (!reason && first && resolved.every(({ witness }) => witness.socketPath === first.witness.socketPath && witness.pane.tab_id === first.witness.pane.tab_id)) {
       const state = states.get(first.seat.id)?.seat;
-      const result: Focus = state?.state === 'current' ? await sources.showView(first.seat, state, first.witness) : { state: 'unavailable', message: 'Member changed.', observedAt: '' };
+      const result: Focus = state?.state === 'current' ? await sources.showView(first.seat, state, first.witness, { signal }) : { state: 'unavailable', message: 'Member changed.', observedAt: '' };
+      if (signal.aborted) return;
       setPanelTab(result.state === 'unavailable' ? { status: result.message, previous: null, sourceKey: first.seat.sourceKey }
         : { status: result.status === 'focused' ? `Herdr shows the tab with all ${resolved.length} members.` : result.message, previous: result.previous, sourceKey: first.seat.sourceKey });
     } else {
@@ -73,7 +78,9 @@ export function GroupCard({ subject }: { subject: GroupSubject }): React.ReactEl
   };
   const returnToPrevious = async (): Promise<void> => {
     if (!panelTab?.previous) return;
-    const result = await sources.returnToView(panelTab.sourceKey, panelTab.previous);
+    const signal = next();
+    const result = await sources.returnToView(panelTab.sourceKey, panelTab.previous, { signal });
+    if (signal.aborted) return;
     setPanelTab({ ...panelTab, status: result.state === 'unavailable' ? result.message : result.status === 'focused' ? 'Returned to the previous view.' : result.message, previous: null });
   };
 
@@ -86,7 +93,7 @@ export function GroupCard({ subject }: { subject: GroupSubject }): React.ReactEl
         disabledReason={seat ? null : 'Not in this account'} detail={<>{seat?.caption ?? member.subjectId}{member.summary ? ` · ${member.summary}` : ''} · {memberNow(seat ? states.get(seat.id) : undefined)}</>} />)}
     </section>
     <section className="agent-link-section" aria-label="Group actions">
-      <RouteRow label="Show Panel tab" onPress={() => { void showPanelTab(); }} disabledReason={busy ? 'Resolving…' : null} detail={panelTab?.status ?? 'only when every member is in one tab'}>
+      <RouteRow label="Show group tab" onPress={() => { void showGroupTab(); }} disabledReason={busy ? 'Resolving…' : null} detail={panelTab?.status ?? `only when all ${members.length} members are in one tab`}>
         {panelTab?.previous && <Button variant="secondary" onClick={() => { void returnToPrevious(); }}>Return to previous view · {panelTab.previous.label}</Button>}
       </RouteRow>
       {convener && <RouteRow label={`${convener.caption} ▸`} onPress={() => openSubject(convener.id)} detail="consulting the group goes through the convener" />}

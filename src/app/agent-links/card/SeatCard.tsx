@@ -20,8 +20,8 @@ export function SeatCard({ subject }: { subject: SeatSubject }): React.ReactElem
   const runtime = reads.seat?.state === 'current' ? reads.seat.process.runtime : subject.participant?.runtime ?? '';
   const groups = groupsContaining(loaded.account, subject.id);
   const artifactGroups: ArtifactGroup[] = [
-    ...newWork(reads.owned, mapWork).flatMap((item) => {
-      const authored = workByQitem(loaded.account, String(item.qitemId));
+    ...newWork(reads.owned, mapWork, subject.sourceKey).flatMap((item) => {
+      const authored = workByQitem(loaded.account, subject.sourceKey, String(item.qitemId));
       return authored ? [{ heading: 'current work', work: authored, artifacts: artifactsOf(loaded.account, authored.artifactIds) }] : [];
     }),
     ...mapWork.map((work) => ({ heading: 'map work', work, artifacts: artifactsOf(loaded.account, work.artifactIds) })),

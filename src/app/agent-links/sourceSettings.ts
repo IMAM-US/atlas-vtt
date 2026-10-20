@@ -1,3 +1,4 @@
+import { realpath } from 'fs/promises';
 import { homedir } from 'os';
 import { isAbsolute, resolve } from 'path';
 import { isRecord } from '../services/assetMetadataGuards';
@@ -65,11 +66,25 @@ export function expandRoot(root: string): string {
   return isAbsolute(expanded) ? resolve(expanded) : '';
 }
 
-/** Whether `root` is one of the allowed roots or lies below one. */
-export function isAllowedRoot(source: AgentLinkSourceSettings, root: string): boolean {
-  const target = expandRoot(root);
-  if (!target) return false;
-  return source.allowedRoots.map(expandRoot).some((allowed) => allowed && (target === allowed || target.startsWith(`${allowed}/`)));
+async function realRoot(path: string): Promise<string | null> {
+  const expanded = expandRoot(path);
+  if (!expanded) return null;
+  try { return await realpath(expanded); } catch { return null; }
+}
+
+/**
+ * The real path of `root` when it lies within an allowed root, or null. Both sides are
+ * resolved through symlinks first, so an account cannot name a link that escapes the
+ * configured roots; reads anchor to the returned path, never to the account's spelling.
+ */
+export async function confinedRoot(source: AgentLinkSourceSettings, root: string): Promise<string | null> {
+  const target = await realRoot(root);
+  if (!target) return null;
+  for (const allowed of source.allowedRoots) {
+    const anchor = await realRoot(allowed);
+    if (anchor && (target === anchor || target.startsWith(`${anchor}/`))) return target;
+  }
+  return null;
 }
 
 export function openRigConnectionOf(source: AgentLinkSourceSettings): OpenRigConnection | null {

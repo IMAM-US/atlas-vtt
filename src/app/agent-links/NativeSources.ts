@@ -4,6 +4,8 @@ import { loadAccountJson } from './account/loadAccountJson';
 import { validateAccount } from './account/accountValidation';
 import type { AccountArtifact, CapturedParticipant, SeatSubject } from './account/accountSchema';
 import { inspectArtifact, type ArtifactRead } from './artifactReads';
+import { confinedRoot } from './sourceSettings';
+import { readLocalFilePrefix } from './native/localFiles';
 import { focusHerdrView, returnToHerdrView } from './native/herdrFocus';
 import type { HerdrViewWitness } from './native/herdrViews';
 import { openLocalFile } from './native/desktopOpen';
@@ -18,8 +20,15 @@ import {
   failure, now, type ConversationRecord, type CurrentSeat, type Focus, type LoadedAccount, type OwnedWork, type Screen, type SeatRead, type Views, type Work,
 } from './reads';
 import { expandRoot, openRigConnectionOf, viewConnectionsOf, type AgentLinkSourceSettings } from './sourceSettings';
+import type { ProviderRecord } from './native/providerRecord';
 
 interface Options { signal?: AbortSignal }
+/**
+ * Which participant a live action targets. `pinned` (default) honours the subject's policy:
+ * a `captured-conversation` subject refuses when the seat's current conversation is not the
+ * pinned one or cannot be qualified. `current` is the explicitly labelled other choice.
+ */
+interface ActionOptions extends Options { choice?: 'pinned' | 'current' }
 
 /**
  * The one entrance the card uses to its native sources. It joins the authored account with
@@ -105,10 +114,28 @@ export class NativeSources {
     }
   }
 
+  /** Why a live action on `identity` would not reach the subject's pinned conversation, or null when it may proceed. */
+  pinnedConversationProblem(subject: SeatSubject, identity: CurrentSeat): string | null {
+    if (subject.policy !== 'captured-conversation') return null;
+    const pinned = subject.participant;
+    if (!pinned) return 'This subject pins a captured conversation but the account records none.';
+    if (!identity.participant) return 'The pinned conversation cannot be qualified right now.';
+    if (identity.participant.runtime !== pinned.runtime || identity.participant.conversationId !== pinned.conversationId) {
+      return 'The seat now holds another conversation; this card pins the captured one.';
+    }
+    return null;
+  }
+
+  private refused(subject: SeatSubject, identity: CurrentSeat, options: ActionOptions): string | null {
+    return options.choice === 'current' ? null : this.pinnedConversationProblem(subject, identity);
+  }
+
   /** Read-only capture of the seat's screen; it changes no focus and sends no input. */
-  async readScreen(subject: SeatSubject, identity: CurrentSeat, options: Options = {}): Promise<Screen> {
+  async readScreen(subject: SeatSubject, identity: CurrentSeat, options: ActionOptions = {}): Promise<Screen> {
     const bound = this.connection(subject);
     if (typeof bound === 'string') return { state: 'unavailable', message: bound, observedAt: now() };
+    const refused = this.refused(subject, identity, options);
+    if (refused) return { state: 'unavailable', message: refused, observedAt: now() };
     try {
       if (identity.participant) {
         const screen = await readOpenRigScreen(bound.source, bound.seat, identity.participant, options);
@@ -130,9 +157,11 @@ export class NativeSources {
   }
 
   /** Existing Herdr views of the seat's participant, qualified by process, in the strongest scope the runtime allows. */
-  async resolveViews(subject: SeatSubject, identity: CurrentSeat, options: Options = {}): Promise<Views> {
+  async resolveViews(subject: SeatSubject, identity: CurrentSeat, options: ActionOptions = {}): Promise<Views> {
     const bound = this.views(subject);
     if (typeof bound === 'string') return { state: 'unavailable', message: bound, observedAt: now() };
+    const refused = this.refused(subject, identity, options);
+    if (refused) return { state: 'unavailable', message: refused, observedAt: now() };
     try {
       const resolution = identity.participant
         ? await resolveNativeViews(bound.source, bound.seat, identity.participant, bound.connections, options)
@@ -144,9 +173,11 @@ export class NativeSources {
   }
 
   /** One explicit focus request after re-resolving the participant; the result is read back, never assumed. */
-  async showView(subject: SeatSubject, identity: CurrentSeat, view: HerdrViewWitness, options: Options = {}): Promise<Focus> {
+  async showView(subject: SeatSubject, identity: CurrentSeat, view: HerdrViewWitness, options: ActionOptions = {}): Promise<Focus> {
     const bound = this.views(subject);
     if (typeof bound === 'string') return { state: 'unavailable', message: bound, observedAt: now() };
+    const refused = this.refused(subject, identity, options);
+    if (refused) return { state: 'unavailable', message: refused, observedAt: now() };
     const revalidate = async (): Promise<void> => {
       if (identity.participant) {
         const current = await readOpenRigParticipant(bound.source, bound.seat, options);
@@ -174,23 +205,43 @@ export class NativeSources {
     }
   }
 
-  inspectArtifact(sourceKey: string, artifact: AccountArtifact): Promise<ArtifactRead> {
-    return inspectArtifact(this.source(sourceKey), artifact);
+  inspectArtifact(sourceKey: string, artifact: AccountArtifact, options: Options = {}): Promise<ArtifactRead> {
+    return inspectArtifact(this.source(sourceKey), artifact, options.signal);
   }
 
-  /** Opens a file a confined read has just validated with the system's default application. */
-  async openFile(path: string): Promise<void> {
-    await openLocalFile(path);
+  /**
+   * Opens an artifact's working file with the system's default application after confining
+   * and reading it again now; a path retained from an earlier read is never opened as is.
+   */
+  async openArtifactWorkingFile(sourceKey: string, artifact: AccountArtifact): Promise<void> {
+    const locator = artifact.working;
+    if (!locator) throw new Error('This artifact has no working file.');
+    const root = await confinedRoot(this.source(sourceKey), locator.root);
+    if (!root) throw new Error('This path is outside the allowed roots in Atlas settings.');
+    const file = await readLocalFilePrefix(root, locator.path, { maxBytes: 1 });
+    await openLocalFile(file.path);
+  }
+
+  /** Opens the exact provider record after locating and validating it again now. */
+  async openConversationRecord(sourceKey: string, participant: Pick<CapturedParticipant, 'runtime' | 'conversationId'> & { cwd?: string | null }): Promise<ProviderRecord> {
+    const located = await this.locateRecord(sourceKey, participant);
+    if (located.state === 'unavailable') throw new Error(located.message);
+    await openLocalFile(located.record.path);
+    return located.record;
   }
 
   /** The exact provider record of a conversation, validated by its own header; never the seat's aggregate transcript. */
-  async locateRecord(sourceKey: string, participant: Pick<CapturedParticipant, 'runtime' | 'conversationId'> & { cwd?: string | null }): Promise<ConversationRecord> {
+  async locateRecord(
+    sourceKey: string, participant: Pick<CapturedParticipant, 'runtime' | 'conversationId'> & { cwd?: string | null }, options: Options = {},
+  ): Promise<ConversationRecord> {
     const source = this.source(sourceKey);
     try {
+      options.signal?.throwIfAborted();
       const record = await locateConversationRecord(
         { claudeProjectsRoot: expandRoot(source.claudeProjectsRoot), codexSessionsRoot: expandRoot(source.codexSessionsRoot) },
         { runtime: participant.runtime, conversationId: participant.conversationId, ...(participant.cwd ? { cwd: participant.cwd } : {}) },
       );
+      options.signal?.throwIfAborted();
       return { state: 'current', record, observedAt: now() };
     } catch (error) {
       return failure(error, 'The conversation record could not be located.');

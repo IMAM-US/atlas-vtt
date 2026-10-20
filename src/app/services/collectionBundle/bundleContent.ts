@@ -1,5 +1,6 @@
 import type { BundleFile, BundleFileRole } from './bundleFormat';
 import { remapPaths, type PathMap } from './pathRemap';
+import { rewriteAccountNotePaths } from '../../agent-links/account/accountReferences';
 
 /** JSON files carry vault paths and asset ids that must follow the files and records they point at. */
 const JSON_ROLES: ReadonlySet<BundleFileRole> = new Set<BundleFileRole>(['asset-file', 'scene-map', 'scene-snapshot']);
@@ -51,8 +52,8 @@ function relinkStatblockNote(file: BundleFile, text: string, rewrites: PathMap):
 
 /** `text` of a file that `refersToFiles`, with the paths and ids it refers to rewritten; `text` itself when nothing changes. */
 export function rewriteText(file: BundleFile, text: string, paths: PathMap, assetIds: PathMap = new Map()): string {
-  // A native-source account is carried verbatim. Only schema-declared vault fields may be remapped later.
-  if (file.role === 'source-account') return text;
+  // A native-source account follows only its typed note references, by vault path; native ids and locators stay as written.
+  if (file.role === 'source-account') return rewriteAccountNotePaths(text, (path) => paths.get(path) ?? null);
   if (JSON_ROLES.has(file.role)) return rewriteJson(text, paths, assetIds);
   if (file.role === 'statblock-note') return relinkStatblockNote(file, text, paths);
   return text;
@@ -72,7 +73,7 @@ export function rewriteContent(file: BundleFile, raw: ArrayBuffer, paths: PathMa
 
 /** Whether the file is text that refers to other files or records: JSON, or a statblock note that shows artwork. */
 export const refersToFiles = (file: BundleFile): boolean =>
-  JSON_ROLES.has(file.role) || (file.role === 'statblock-note' && file.statblockImage !== undefined);
+  JSON_ROLES.has(file.role) || file.role === 'source-account' || (file.role === 'statblock-note' && file.statblockImage !== undefined);
 
 /** Whether `rewriteContent` may change the file's bytes, so they must be read to know the result. */
 export const mayRewrite = (file: BundleFile, paths: PathMap, assetIds: PathMap = new Map()): boolean =>

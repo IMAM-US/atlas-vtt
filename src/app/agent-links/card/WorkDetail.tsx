@@ -49,7 +49,7 @@ export function WorkDetail({ sourceKey, qitemId, authored }: { sourceKey: string
       <p className="agent-link-muted">{review.summary}</p>
       <p className="agent-link-muted">Applies to revision {review.revision}; later bytes, other work and other branches are not covered.</p>
     </div>}
-    <RouteRow label="Transitions" detail={`${work.transitions.length} recorded`} route={transitionsRoute(qitemId)} tone="muted">
+    <RouteRow label="Transitions" detail={`${work.transitions.length} recorded`} route={transitionsRoute(sourceKey, qitemId)} tone="muted">
       <ol className="agent-link-transitions">{work.transitions.slice(-12).map((entry, index) => <li key={index}>{transitionLine(entry)}</li>)}</ol>
     </RouteRow>
   </div>;

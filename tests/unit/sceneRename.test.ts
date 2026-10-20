@@ -93,6 +93,29 @@ describe('renaming a map file in the vault', () => {
   });
 });
 
+describe('source accounts on note rename', () => {
+  it('points the account\'s typed note references at the renamed note and leaves native ids alone', async () => {
+    const accountPath = `${scenes}/accounts/links.json`;
+    const account = {
+      format: 'atlas-source-account', version: 1,
+      subjects: [{ id: 'seat:one', kind: 'seat', notePath: 'Notes/Seat.md', seat: { nodeId: 'Notes/Seat.md' } }],
+    };
+    const { app, files } = createInMemoryApp({
+      files: {
+        [`${scenes}/Bound.atlasmap`]: JSON.stringify({ version: 3, state: { objects: { tokens: { t: { id: 't', kind: 'token', x: 0, y: 0, imagePath: 'art.webp', sourceReference: { accountPath, subjectId: 'seat:one' } } }, pins: {} } } }),
+        [accountPath]: JSON.stringify(account, null, 2) + '\n',
+        'Notes/Seat.md': '# Seat',
+      },
+    });
+    await AssetService.getInstance(app).initialize();
+    await new FileReferenceService(app).handleFileRenamed('Notes/Seat.md', 'Notes/Renamed Seat.md');
+    const rewritten = JSON.parse(files.get(accountPath)!) as typeof account;
+    expect(rewritten.subjects[0]!.notePath).toBe('Notes/Renamed Seat.md');
+    expect(rewritten.subjects[0]!.seat.nodeId).toBe('Notes/Seat.md');
+    expect(files.get(accountPath)!.endsWith('\n')).toBe(true);
+  });
+});
+
 describe('rewriteMapReferences', () => {
   it('follows token and text accounts and token note anchors without changing native identity', () => {
     const oldPath = 'accounts/colleagues.json';
