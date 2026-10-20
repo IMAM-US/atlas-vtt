@@ -23,7 +23,7 @@ settings or successful provider execution.
 
 ## Existing workload boundary
 
-Current source workflow: Plugin CI. `build-plugin` (npm install, typecheck, lint, community scan, release-channel and changelog checks, reporting-service tests, Vitest, build, postbuild, preflight, installable artifact) and `dependency-review`.
+Current source workflow: Plugin CI. `build-plugin` (npm install, typecheck, lint, community scan, release-channel and changelog checks, reporting-service tests, Vitest, build, postbuild, preflight, installable artifact) and `dependency-review`, joined by `gate`, the one check main's `main-required-checks` ruleset requires.
 The existing GitHub Actions workflows remain intact and own execution until a
 replacement is qualified against the exact workload and required checks.
 
