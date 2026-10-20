@@ -110,6 +110,39 @@ it('retains truncation and reconciles a global sequence gap without declaring em
   expect(f.wire.subscribe).toHaveBeenCalledTimes(1);
 });
 
+it('reconciles reordered child-before-parent delivery and ignores the obsolete connection', async () => {
+  vi.useFakeTimers();
+  const f = fixture(), handle = f.model.watchOwned(subject);
+  await vi.advanceTimersByTimeAsync(5);
+  const old = vi.mocked(f.wire.subscribe).mock.calls[0]!;
+  f.emit('queue.handed_off', 11);
+  await vi.advanceTimersByTimeAsync(5);
+  const before = handle.getSnapshot();
+  f.emit('view.changed', 13);
+  expect(old[2].aborted).toBe(true);
+  expect(f.close).toHaveBeenCalledTimes(1);
+  expect(handle.getSnapshot()).toMatchObject({ freshness: 'last-known', value: before.value });
+  expect(f.model.getConnection()).toMatchObject({ status: 'reconnecting', epoch: before.epoch });
+  const held = handle.getSnapshot();
+  f.emit('queue.created', 12);
+  expect(handle.getSnapshot()).toBe(held);
+  vi.mocked(f.config.backend.readOwned).mockResolvedValue(owned('created-during-gap'));
+  await vi.advanceTimersByTimeAsync(510);
+  expect(f.wire.subscribe).toHaveBeenCalledTimes(2);
+  expect(vi.mocked(f.wire.subscribe).mock.calls[1]?.[1].seq).toBe('13');
+  expect(handle.getSnapshot()).toMatchObject({ freshness: 'live', value: { items: [{ qitemId: 'created-during-gap' }] } });
+  expect(handle.getSnapshot().epoch).toBeGreaterThan(before.epoch);
+  const recovered = handle.getSnapshot(), reads = vi.mocked(f.config.backend.readOwned).mock.calls.length;
+  old[3]({ type: 'queue.created', seq: 12 });
+  old[3]({ type: 'queue.updated', seq: 14 });
+  old[4](new Error('Obsolete disconnect'));
+  await vi.advanceTimersByTimeAsync(5);
+  expect(handle.getSnapshot()).toBe(recovered);
+  expect(f.config.backend.readOwned).toHaveBeenCalledTimes(reads);
+  expect(f.model.getConnection().status).toBe('connected');
+  handle.release(); expect(f.close).toHaveBeenCalledTimes(2);
+});
+
 it('rejects a changed boot epoch before publishing hydrated facts', async () => {
   vi.useFakeTimers();
   const f = fixture();

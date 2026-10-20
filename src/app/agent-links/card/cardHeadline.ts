@@ -1,6 +1,7 @@
 import type { AccountWork, SeatSubject } from '../account/accountSchema';
 import type { NativeObject } from '../native/openRigRead';
 import type { OwnedWork, SeatRead } from '../reads';
+import type { ConversationObservationState } from '../live/ConversationObservation';
 import { clock } from './timeLabels';
 
 export interface Headline {
@@ -24,7 +25,7 @@ export function newWork(owned: OwnedWork | null, mapWork: readonly AccountWork[]
  * One line states the most consequential established difference: different seat, new
  * participant, new work, or "same as map" naming what matched. Unread facets stay unverified.
  */
-export function headlineOf(subject: SeatSubject, capturedAt: string, seat: SeatRead | null, owned: OwnedWork | null, mapWork: readonly AccountWork[]): Headline {
+export function headlineOf(subject: SeatSubject, capturedAt: string, seat: SeatRead | null, owned: OwnedWork | null, mapWork: readonly AccountWork[], conversation?: ConversationObservationState): Headline {
   const fresh = newWork(owned, mapWork, subject.sourceKey);
   const earliest = fresh.map(createdAt).filter((value): value is string => value !== null).sort()[0];
   const work = fresh.length ? `Work changed: ${fresh.length === 1 ? 'new work' : `${fresh.length} new rows`}${earliest ? ` since ${clock(earliest)}` : ''}` : null;
@@ -33,10 +34,18 @@ export function headlineOf(subject: SeatSubject, capturedAt: string, seat: SeatR
   if (seat.state === 'unavailable') return { identity: `Unavailable: ${seat.message}`, tone: 'unavailable', work };
   if (seat.state === 'unverified') return { identity: 'Same seat as map; its participant is not verified right now', tone: 'unavailable', work };
   const captured = subject.participant;
-  if (captured && seat.participant && (seat.participant.conversationId !== captured.conversationId || seat.participant.runtime !== captured.runtime)) {
+  // The dated comparison is presentation evidence, independent of current action authority.
+  const exact = conversation ? conversation.value : seat;
+  const participant = exact?.state === 'current' ? exact.participant : null;
+  const qualifier = conversation?.changedSince ? `, seat changed since ${clock(conversation.changedSince)}`
+    : conversation && (!conversation.applicable || conversation.needsRecheck) ? ', needs rechecking' : '';
+  const read = conversation && participant ? `read ${clock(exact?.observedAt)}${qualifier}` : '';
+  if (captured && participant && (participant.conversationId !== captured.conversationId || participant.runtime !== captured.runtime)) {
     const pinned = subject.policy === 'captured-conversation';
-    return { identity: pinned ? `The seat now holds another conversation; this card pins the map's (${clock(capturedAt)})` : `New participant since the map (${seat.participant.runtime}); the map's conversation is previous`, tone: 'changed', work };
+    const occupant = conversation && !conversation.applicable ? 'Another conversation was read in this seat' : 'The seat now holds another conversation';
+    return { identity: pinned ? `${occupant}; this card pins the map's (${clock(capturedAt)})${read ? `; ${read}` : ''}`
+      : `New participant since the map (${participant.runtime}); the map's conversation is previous${read ? ` (${read})` : ''}`, tone: 'changed', work };
   }
-  if (captured && !seat.participant) return { identity: `Same seat as map (${clock(capturedAt)}); exact conversation not qualified now`, tone: 'same', work };
-  return { identity: `Same seat${captured ? ' and conversation' : ''} as map (${clock(capturedAt)})`, tone: work ? 'changed' : 'same', work };
+  if (captured && !participant) return { identity: `Same seat as map (${clock(capturedAt)}); exact conversation not qualified now`, tone: 'same', work };
+  return { identity: `Same seat${captured ? ' and conversation' : ''} as map (${clock(capturedAt)})${read ? `; ${read}` : ''}`, tone: work ? 'changed' : 'same', work };
 }

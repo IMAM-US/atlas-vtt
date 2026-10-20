@@ -135,6 +135,7 @@ export class OpenRigLive {
     let buffered = 0;
     const subscription = await this.wire.subscribe(source, frontier, signal, (event: NativeEvent) => {
       if (signal.aborted || epoch !== this.epoch || event.seq <= cursor) return;
+      // Native children may precede persisted parents. Rehydrate rather than skip the missing invalidation.
       if (event.seq !== cursor + 1 || event.type === 'event.delivery_poisoned') {
         this.disconnected(epoch, new Error('Native event continuity is unverified; reconciling.')); return;
       }
