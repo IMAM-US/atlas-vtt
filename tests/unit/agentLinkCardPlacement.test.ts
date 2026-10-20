@@ -4,6 +4,7 @@ import { CARD_WIDTH, cardPlacement } from '../../src/app/agent-links/card/cardPl
 import { headlineOf, newWork } from '../../src/app/agent-links/card/cardHeadline';
 import { validateAccount } from '../../src/app/agent-links/account/accountValidation';
 import { exampleAccount } from '../fixtures/exampleAccount';
+import type { ConversationObservationState } from '../../src/app/agent-links/live/ConversationObservation';
 
 describe('cardPlacement', () => {
   const container = { width: 1200, height: 800 };
@@ -67,5 +68,22 @@ describe('headlineOf', () => {
     // The same queue id on another source is not the map's work.
     expect(newWork(owned(['qitem-build-one']), account.work, 'other-source').map((item) => item.qitemId)).toEqual(['qitem-build-one']);
     expect(newWork({ state: 'unavailable', message: 'x', observedAt: 't' }, account.work, 'local')).toEqual([]);
+  });
+
+  it('retains dated comparisons after invalidation without borrowing a prior refused read', () => {
+    const observation: ConversationObservationState = { value: current('other-conversation'), previous: null, pending: false,
+      applicable: false, needsRecheck: true, changedSince: null };
+    const headline = (value = observation): string => headlineOf(subject, account.capturedAt, current(null), null, account.work, value).identity;
+    expect(headline()).toBe("New participant since the map (claude-code); the map's conversation is previous (read 12:00Z, needs rechecking)");
+    expect(headline({ ...observation, changedSince: '2026-01-01T12:00:00Z' })).toContain('(read 12:00Z, seat changed since 12:00Z)');
+    expect(headline({ ...observation, value: current('conversation-one') })).toBe('Same seat and conversation as map (10:00Z); read 12:00Z, needs rechecking');
+    expect(headline({ ...observation, applicable: true, needsRecheck: false })).toContain('(read 12:00Z)');
+    const pinned = { ...subject, policy: 'captured-conversation' as const };
+    expect(headlineOf(pinned, account.capturedAt, current(null), null, account.work, observation).identity)
+      .toBe("Another conversation was read in this seat; this card pins the map's (10:00Z); read 12:00Z, needs rechecking");
+    for (const value of [null, { ...current(null), participantMessage: 'Native exact join refused.' }]) {
+      expect(headline({ ...observation, value, previous: observation.value })).toContain('exact conversation not qualified now');
+      expect(headline({ ...observation, value, previous: observation.value })).not.toContain('New participant');
+    }
   });
 });

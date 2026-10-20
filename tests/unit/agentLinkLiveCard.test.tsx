@@ -36,7 +36,9 @@ function fixture(): { sources: NativeSources; registry: LiveSources; process: Re
   const work = vi.fn(async () => ({ state: 'unavailable', message: 'Not expanded', observedAt: new Date().toISOString() }));
   const registry = new LiveSources(() => ({ settings, backend: { readSeat: process, readOwned: owned,
     readWork: work } }));
-  return { registry, process, exact, owned, work, sources: { live: registry, readSeat: exact, source: () => settings, pinnedConversationProblem: () => null, resolveViews: vi.fn(async () => ({ state: 'unavailable', message: 'No view in this test', observedAt: new Date().toISOString() })) } as unknown as NativeSources };
+  return { registry, process, exact, owned, work, sources: { live: registry, readSeat: exact, source: () => settings, pinnedConversationProblem: () => null,
+    readScreen: vi.fn(async () => ({ state: 'unavailable', message: 'No screen in this test', observedAt: new Date().toISOString() })),
+    resolveViews: vi.fn(async () => ({ state: 'unavailable', message: 'No view in this test', observedAt: new Date().toISOString() })) } as unknown as NativeSources };
 }
 function Card({ sources, selected = subject }: { sources: NativeSources; selected?: SeatSubject }): React.ReactElement {
   const account = { capturedAt: '2026-01-01T10:00:00Z', subjects: [selected], sources: [], work: [], artifacts: [] } as unknown as AccountDocument;
@@ -49,6 +51,7 @@ afterEach(() => { cleanup(); vi.useRealTimers(); transport.seq = 10; transport.c
 
 it('updates the open card from native invalidations, keeps one exact opening read, and closes the last subscriber', async () => {
   vi.useFakeTimers();
+  vi.setSystemTime(new Date('2026-01-01T12:00:00Z'));
   const f = fixture();
   const view = render(<Card sources={f.sources} />); await settle();
   expect(f.exact).toHaveBeenCalledTimes(1);
@@ -63,11 +66,18 @@ it('updates the open card from native invalidations, keeps one exact opening rea
   expect(screen.getByText(/New native work · in-progress/)).toBeTruthy();
   expect(screen.getByText('1+ owned')).toBeTruthy();
   expect(f.exact).toHaveBeenCalledTimes(1);
+  vi.setSystemTime(new Date('2026-01-01T13:00:00Z'));
   await act(async () => transport.lost?.(new Error('Socket closed')));
   expect(screen.getAllByText(/Last known/).length).toBeGreaterThan(0);
+  const headline = (): string => view.container.querySelector('.agent-link-headline')?.textContent ?? '';
+  expect(headline()).toContain("New participant since the map (codex); the map's conversation is previous (read 12:00Z, needs rechecking)");
   await settle(800);
+  expect(headline()).toContain('(read 12:00Z, needs rechecking)');
+  expect(headline()).not.toContain('not qualified');
   expect(f.exact).toHaveBeenCalledTimes(1);
   expect(screen.getByRole('button', { name: 'Recheck conversation' })).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'Read screen' })); await settle();
+  expect(f.sources.readScreen).toHaveBeenCalledWith(subject, expect.objectContaining({ participant: null }), expect.anything());
   view.unmount();
   expect(f.registry.openRig('a').getConnection().status).toBe('closed');
   expect(transport.close).toHaveBeenCalledTimes(2);

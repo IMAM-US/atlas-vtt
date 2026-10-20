@@ -20,7 +20,7 @@ export function SeatCard({ subject }: { subject: SeatSubject }): React.ReactElem
   const reads = useSeatReads(subject, mapWork);
   const activity = activityLabel(subject, reads.snapshot?.inventory);
   const activityChanged = useFactChange(reads.snapshot?.inventory.value ? activity ?? 'unknown' : null);
-  const headline = headlineOf(subject, loaded.account.capturedAt, reads.seat, reads.owned, mapWork);
+  const headline = headlineOf(subject, loaded.account.capturedAt, reads.seat, reads.owned, mapWork, reads.snapshot?.conversation);
   const runtime = reads.seat?.state === 'current' ? reads.seat.process.runtime : subject.participant?.runtime ?? '';
   const groups = groupsContaining(loaded.account, subject.id);
   const artifactGroups: ArtifactGroup[] = [
