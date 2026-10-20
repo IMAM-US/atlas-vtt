@@ -76,3 +76,34 @@ it('retains an earlier exact observation when an explicit recheck is refused', a
     value: { participant: null, participantMessage: 'Native 409 refusal.' }, needsRecheck: true });
   exact.dispose(); handle.release();
 });
+
+it('refreshes the cached process before an explicit recheck when no event covered its replacement', async () => {
+  vi.useFakeTimers();
+  const cache = new ObservationCache('a', 1);
+  const reader = vi.fn(async () => ({ kind: 'value' as const, value: seat(1) }));
+  const handle = cache.observe('seat:a', false, reader);
+  const read = vi.fn(async () => seat(1, true));
+  const exact = new ConversationObservation(handle, read);
+  cache.connect(1, new AbortController().signal, async () => {}); await vi.advanceTimersByTimeAsync(5);
+  expect(read).toHaveBeenCalledTimes(1);
+  // Native process changes without any delivered invalidation. Only explicit demand discovers it.
+  reader.mockResolvedValue({ kind: 'value', value: seat(2) }); read.mockResolvedValue(seat(2, true));
+  exact.recheck(); await vi.advanceTimersByTimeAsync(5);
+  expect(reader).toHaveBeenCalledTimes(2);
+  expect(read).toHaveBeenCalledTimes(2);
+  expect(exact.getSnapshot()).toMatchObject({ applicable: true, needsRecheck: false, changedSince: null, value: { process: { processId: 2 } } });
+  exact.dispose(); handle.release();
+});
+
+it('starts an opening demand with a new process read when another consumer already cached it', async () => {
+  vi.useFakeTimers(); const cache = new ObservationCache('a', 1);
+  const reader = vi.fn(async () => ({ kind: 'value' as const, value: seat(1) }));
+  const handle = cache.observe('seat:a', false, reader);
+  cache.connect(1, new AbortController().signal, async () => {}); await vi.advanceTimersByTimeAsync(5);
+  reader.mockResolvedValue({ kind: 'value', value: seat(2) });
+  const read = vi.fn(async () => seat(2, true)); const exact = new ConversationObservation(handle, read);
+  await vi.advanceTimersByTimeAsync(5);
+  expect(reader).toHaveBeenCalledTimes(2); expect(read).toHaveBeenCalledTimes(1);
+  expect(exact.getSnapshot()).toMatchObject({ applicable: true, value: { process: { processId: 2 } } });
+  exact.dispose(); handle.release();
+});

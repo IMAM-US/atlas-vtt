@@ -3,7 +3,7 @@ import { Button } from '../../packages/components/primitives/button';
 import type { GroupSubject, SeatSubject } from '../account/accountSchema';
 import { artifactsOf, seatOf, subjectOf } from '../account/accountQueries';
 import type { HerdrViewWitness } from '../native/herdrViews';
-import type { Focus } from '../reads';
+import type { CurrentSeat, Focus } from '../reads';
 import { ArtifactSection } from './ArtifactSection';
 import { useCard } from './cardContext';
 import { RouteRow } from './RouteRow';
@@ -16,10 +16,10 @@ import { activityLabel, freshnessLabel } from './freshnessLabels';
 function memberNow(subject: SeatSubject | null, state: MemberState | undefined): string {
   if (!subject || !state) return 'Refreshing…';
   const activity = activityLabel(subject, state.inventory);
-  const rows = state.owned?.state === 'current' ? `owns ${state.owned.items.length}${state.owned.truncated ? '+' : ''} row${state.owned.items.length === 1 ? '' : 's'}` : '';
-  const identity = state.seat?.state === 'different-seat' ? 'different seat now' : state.seat?.state === 'unverified' ? 'not verified' : '';
-  return [identity, activity, freshnessLabel(state.inventory, true), rows, freshnessLabel(state.work, true),
-    freshnessLabel(state.process, true)].filter(Boolean).join(' · ');
+  const processAvailable = state.seat?.state === 'current' && ['read', 'live', 'refreshing'].includes(state.process.freshness);
+  const rows = processAvailable && state.owned?.state === 'current' ? `owns ${state.owned.items.length}${state.owned.truncated ? '+' : ''} row${state.owned.items.length === 1 ? '' : 's'}` : '';
+  return [...new Set([activity, freshnessLabel(state.inventory, true), rows, freshnessLabel(state.work, true),
+    freshnessLabel(state.process, true)].filter(Boolean))].join(' · ');
 }
 
 /** A group is a party marker: open it to see who is in it, then go to a member. It is never a sixth participant. */
@@ -36,21 +36,23 @@ export function GroupCard({ subject }: { subject: GroupSubject }): React.ReactEl
   const showGroupTab = async (): Promise<void> => {
     const signal = next();
     setBusy(true);
-    const resolved: Array<{ seat: SeatSubject; witness: HerdrViewWitness }> = [];
+    const resolved: Array<{ seat: SeatSubject; identity: CurrentSeat; witness: HerdrViewWitness }> = [];
     let reason: string | null = null;
     for (const { seat } of members) {
-      const state = seat ? states.get(seat.id)?.seat : null;
-      if (!seat || !state || state.state !== 'current') { reason = 'Not every member is live.'; break; }
+      if (!seat) { reason = 'A member is not in this account.'; break; }
+      // The explicit action requalifies its participant; background group selectors stay process-only.
+      const state = await sources.readSeat(seat, { signal });
+      if (signal.aborted) return;
+      if (state.state !== 'current') { reason = `${seat.caption}: ${state.message}`; break; }
       const views = await sources.resolveViews(seat, state, { signal });
       if (signal.aborted) return;
       const exact = views.state === 'unavailable' ? [] : views.views.filter((view) => view.exact);
       if (exact.length !== 1) { reason = `${seat.caption}: ${views.state === 'unavailable' ? views.message : exact.length ? 'several views' : 'no exact view'}`; break; }
-      resolved.push({ seat, witness: exact[0]!.witness });
+      resolved.push({ seat, identity: state, witness: exact[0]!.witness });
     }
     const first = resolved[0];
     if (!reason && first && resolved.every(({ witness }) => witness.socketPath === first.witness.socketPath && witness.pane.tab_id === first.witness.pane.tab_id)) {
-      const state = states.get(first.seat.id)?.seat;
-      const result: Focus = state?.state === 'current' ? await sources.showView(first.seat, state, first.witness, { signal }) : { state: 'unavailable', message: 'Member changed.', observedAt: '' };
+      const result: Focus = await sources.showView(first.seat, first.identity, first.witness, { signal });
       if (signal.aborted) return;
       setPanelTab(result.state === 'unavailable' ? { status: result.message, previous: null, sourceKey: first.seat.sourceKey }
         : { status: result.status === 'focused' ? `Herdr shows the tab with all ${resolved.length} members.` : result.message, previous: result.previous, sourceKey: first.seat.sourceKey });

@@ -29,19 +29,24 @@ it('model updates schedule no map write, with a positive control on the real per
   const unsubscribe = store.subscribe(viewChanged);
   let incoming: ((event: NativeEvent) => void) | undefined;
   let revision = 1;
+  let watermark = 0;
+  const subscribed = vi.fn();
   const model = new OpenRigLive({ settings: { ...defaultSourceSettings('source-a'), openRigEndpoint: 'http://127.0.0.1:1', openRigHostId: 'host-a' }, backend: {
     readSeat: async () => ({ state: 'unavailable', message: 'Not used', observedAt: new Date().toISOString() }),
     readWork: async () => ({ state: 'unavailable', message: 'Not used', observedAt: new Date().toISOString() }),
     readOwned: async () => ({ state: 'current', sessionName: 'builder@example', items: [{ qitemId: `work-${revision}` }], truncated: false, observedAt: new Date().toISOString() }),
-  } }, { frontier: async () => ({ hostId: 'host-a', bootEpoch: 'boot-a', seq: '0' }),
-    subscribe: async (_source, _frontier, _signal, onEvent) => { incoming = onEvent; return { close: (): void => {} }; } }, 1);
+  } }, { frontier: async () => ({ hostId: 'host-a', bootEpoch: 'boot-a', seq: String(watermark) }),
+    subscribe: async (_source, _frontier, _signal, onEvent) => { subscribed(); incoming = onEvent; return { close: (): void => {} }; } }, 1);
   const subject: SeatSubject = { id: 'a', kind: 'seat', sourceKey: 'source-a', caption: 'Builder', policy: 'current-seat', workIds: [], observedAt: '', seat: { rigId: 'rig-a', nodeId: 'node-a', logicalId: 'builder' } };
   const handle = model.watchOwned(subject);
   try {
     await vi.waitFor(() => expect(handle.getSnapshot().freshness).toBe('live'));
-    revision = 2; incoming?.({ type: 'queue.updated', seq: 1 });
+    const epoch = model.getConnection().epoch;
+    revision = 2; watermark = 1; incoming?.({ type: 'queue.updated', seq: 1 });
     await vi.waitFor(() => expect(handle.getSnapshot().value).toMatchObject({ items: [{ qitemId: 'work-2' }] }));
     expect(viewChanged).not.toHaveBeenCalled();
     expect(scheduled).not.toHaveBeenCalled();
+    expect(subscribed).toHaveBeenCalledTimes(1);
+    expect(model.getConnection()).toMatchObject({ status: 'connected', epoch });
   } finally { handle.release(); model.dispose(); unsubscribe(); }
 });

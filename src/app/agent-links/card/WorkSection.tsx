@@ -8,7 +8,7 @@ import type { OwnedWork, Work } from '../reads';
 import { newWork } from './cardHeadline';
 import { useCard } from './cardContext';
 import { RouteRow } from './RouteRow';
-import { short } from './timeLabels';
+import { clock, short } from './timeLabels';
 import { WorkDetail } from './WorkDetail';
 import type { Observation } from '../live/types';
 import { freshnessLabel } from './freshnessLabels';
@@ -20,9 +20,10 @@ const rowCaption = (item: NativeObject): string =>
 
 function liveState(item: NativeObject): string {
   const state = text(item.state) ?? 'unknown';
-  if (state === 'done' && text(item.handedOffTo)) return 'handed off';
-  if (state === 'blocked') return `waiting on ${short(text(item.blockedOn), 24)}`;
-  return state;
+  const updated = clock(text(item.tsUpdated) ?? text(item.claimedAt));
+  if (state === 'done' && text(item.handedOffTo)) return `handed off${updated ? ` at ${updated}` : ''}`;
+  const label = state === 'blocked' ? `waiting on ${short(text(item.blockedOn), 24)}` : state;
+  return `${label}${updated ? `, updated ${updated}` : ''}`;
 }
 
 /** *Now* rows are the seat's current native custody; *Map* rows are what this map represents. Neither replaces the other. */

@@ -6,7 +6,7 @@ import type { NativeObject } from '../native/openRigRead';
 import { transitionsRoute } from '../nativeRoutes';
 import { useCard } from './cardContext';
 import { RouteRow } from './RouteRow';
-import { clock, short } from './timeLabels';
+import { clock, dateClock, short } from './timeLabels';
 import { freshnessLabel } from './freshnessLabels';
 import { useWorkRead } from './useWorkRead';
 
@@ -34,6 +34,7 @@ export function WorkDetail({ sourceKey, qitemId, authored }: { sourceKey: string
   const closed = text(item.state) === 'done';
   const waiting = item.waiting && typeof item.waiting === 'object' ? item.waiting as NativeObject : null;
   const backstop = waiting?.nextBackstop && typeof waiting.nextBackstop === 'object' ? waiting.nextBackstop as NativeObject : null;
+  const deadlineAt = dateClock(text(waiting?.deadlineAt)), backstopAt = dateClock(text(backstop?.dueAt));
   return <div className="agent-link-detail">
     <p className="agent-link-muted">{freshnessLabel(observation)}</p>
     <dl>
@@ -41,8 +42,8 @@ export function WorkDetail({ sourceKey, qitemId, authored }: { sourceKey: string
       <dt>Owner</dt><dd>{text(item.destinationSession)} · from {text(item.sourceSession)}</dd>
       <dt>Times</dt><dd>created {clock(text(item.tsCreated))}{text(item.claimedAt) ? ` · claimed ${clock(text(item.claimedAt))}` : ''} · updated {clock(text(item.tsUpdated))} · read {clock(work.observedAt)}</dd>
       {text(item.blockedOn) && <><dt>Blocked on</dt><dd>{text(item.blockedOn)}</dd></>}
-      {text(waiting?.deadlineAt) && <><dt>Closure due</dt><dd>{new Date(text(waiting?.deadlineAt)).toUTCString()} · Read {clock(work.observedAt)}</dd></>}
-      {text(backstop?.dueAt) && <><dt>Backstop due</dt><dd>{new Date(text(backstop?.dueAt)).toUTCString()}{text(backstop?.mechanism) ? ` (${text(backstop?.mechanism)})` : ''} · Read {clock(work.observedAt)}</dd></>}
+      {deadlineAt && <><dt>Closure due</dt><dd>{deadlineAt} · Read {clock(work.observedAt)}</dd></>}
+      {backstopAt && <><dt>Backstop due</dt><dd>{backstopAt}{text(backstop?.mechanism) ? ` (${text(backstop?.mechanism)})` : ''} · Read {clock(work.observedAt)}</dd></>}
     </dl>
     {body && <pre className="agent-link-body">{body.length > BODY_LIMIT ? `${body.slice(0, BODY_LIMIT)}…` : body}</pre>}
     {review && <div className="agent-link-review">

@@ -39,7 +39,7 @@ export function SeatCard({ subject }: { subject: SeatSubject }): React.ReactElem
       <Button variant="ghost" size="sm" onClick={reads.refresh}>Refresh</Button>
       {groups.map((group) => <Button key={group.id} variant="ghost" size="sm" onClick={() => openSubject(group.id)}>in {group.caption}</Button>)}
     </p>
-    <p className={`agent-link-muted${activityChanged ? ' agent-link-row--changed' : ''}`}>{activity ? `Activity: ${activity}` : 'Activity not confirmed'} · {freshnessLabel(reads.snapshot?.inventory)}</p>
+    <p className={`agent-link-muted${activityChanged ? ' agent-link-row--changed' : ''}`}>{reads.snapshot?.inventory.value ? activity ? `Activity: ${activity}` : 'Activity not confirmed' : 'Activity'} · {freshnessLabel(reads.snapshot?.inventory)}</p>
     <ConversationSection subject={subject} seat={reads.seat} conversation={reads.snapshot?.conversation} recheck={reads.recheckConversation} />
     <WorkSection subject={subject} owned={reads.owned} mapWork={mapWork} liveMapWork={reads.mapWork} observation={reads.snapshot?.owned} mapObservations={reads.snapshot?.mapWork} />
     <ArtifactSection groups={artifactGroups} />
