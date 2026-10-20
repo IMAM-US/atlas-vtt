@@ -81,6 +81,7 @@ export class InteractionController implements ITokenInteractionController {
   private updateUIPosition?: (tokenId: string, x: number, y: number) => void;
   private updateControlsPosition?: (x: number, y: number, tokenSize: number) => void;
   private onTokensHeldChange?: (tokenIds: string[]) => void;
+  private onTokenClick?: (tokenId: string) => void;
   private updateHandlePositions?: () => void;
   private dragRuler?: DragRuler;
 
@@ -401,12 +402,14 @@ export class InteractionController implements ITokenInteractionController {
       if (!this.dragState.hasMoved && this.dragState.clickToken) {
         // This was a click, not a drag
         // Selection was already handled in prepareInteraction
-        
+        const clicked = this.dragState.clickToken.id;
+
         // Clean up and exit early - no drag occurred
         this.cleanupDragListeners();
         this.viewport.plugins.resume('drag');
         delete this.dragState.clickToken;
         this.dragState.hasMoved = false;
+        this.onTokenClick?.(clicked);
         return;
       }
       
@@ -745,6 +748,11 @@ export class InteractionController implements ITokenInteractionController {
    */
   setTokensHeldCallback(callback: (tokenIds: string[]) => void): void {
     this.onTokensHeldChange = callback;
+  }
+
+  /** Receives the token a completed click landed on: pressed and released without a drag. Selection happened on press. */
+  setTokenClickCallback(callback: (tokenId: string) => void): void {
+    this.onTokenClick = callback;
   }
 
   setDragRuler(ruler: DragRuler): void {

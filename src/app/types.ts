@@ -10,6 +10,16 @@ export interface RecordingReference {
 }
 
 /**
+ * Points an appearance at a subject of a vault-local source account (`agent-links/account`),
+ * distinct from `recordingReference`. Only `accountPath` is a vault path: it follows renames,
+ * moves and collection transfers. `subjectId` is the account's own key, never a native id.
+ */
+export interface SourceReference {
+  accountPath: string;
+  subjectId: string;
+}
+
+/**
  * Note pin object that links to an Obsidian note
  */
 export interface NotePin {
@@ -34,6 +44,7 @@ export interface TokenResourceValue {
 /** Base interface for any token entity. */
 export interface BaseToken {
   recordingReference?: RecordingReference;
+  sourceReference?: SourceReference;
   /** False preserves the whole artwork without an Atlas frame. Defaults to true. */
   showRing?: boolean;
   /** Per-instance resources imported from a statblock beyond HP, stress and hope. */
@@ -118,6 +129,7 @@ export type TokenStateSnapshot = Omit<TokenEntity, 'id' | 'x' | 'y' | 'instanceN
  */
 export interface TextElement {
   recordingReference?: RecordingReference;
+  sourceReference?: SourceReference;
   id: string;
   kind: 'text';
   x: number;
