@@ -88,7 +88,7 @@ describe('conversation record rows', () => {
     expect(within(rowOf('Current conversation record')).queryByRole('button', { name: /Copy native route/ })).toBeNull();
   });
 
-  it('discards a read that completes after the current identity changed, and opens the identity the row names', async () => {
+  it('keeps a read that completes after the current identity changed under its own conversation, never the row\'s new one, and opens the identity the row names', async () => {
     const native = deferredSources();
     const { rerender } = render(<Records sources={native.sources} current={seatWith(FIRST)} />);
     fireEvent.click(screen.getByRole('button', { name: 'Current conversation record' }));
