@@ -17,7 +17,9 @@ function memberNow(state: MemberState | undefined): string {
   if (!state?.seat) return 'checking…';
   if (state.seat.state !== 'current') return state.seat.state === 'different-seat' ? 'different seat now' : state.seat.state === 'unverified' ? 'not verified' : 'unavailable';
   const activity = state.seat.node.agentActivity;
-  const word = typeof activity === 'object' && activity && 'state' in activity && typeof activity.state === 'string' ? activity.state.replace(/_/g, ' ') : 'live';
+  const reported = typeof activity === 'object' && activity && 'state' in activity && typeof activity.state === 'string' ? activity.state : null;
+  // A missing or "unknown" activity is not evidence of anything, so the row shows only what is known.
+  const word = reported === null || reported === 'unknown' ? '' : reported.replace(/_/g, ' ');
   const rows = state.owned?.state === 'current' ? `owns ${state.owned.items.length} row${state.owned.items.length === 1 ? '' : 's'}` : '';
   return [word, rows, clock(state.seat.observedAt)].filter(Boolean).join(' · ');
 }
@@ -90,7 +92,7 @@ export function GroupCard({ subject }: { subject: GroupSubject }): React.ReactEl
     <section className="agent-link-section" aria-label="Members">
       <h4>Members</h4>
       {members.map(({ member, seat }) => <RouteRow key={member.subjectId} label={member.lens} onPress={seat ? () => openSubject(seat.id) : undefined}
-        disabledReason={seat ? null : 'Not in this account'} detail={<>{seat?.caption ?? member.subjectId}{member.summary ? ` · ${member.summary}` : ''} · {memberNow(seat ? states.get(seat.id) : undefined)}</>} />)}
+        disabledReason={seat ? null : 'Not in this account'} detail={<>{seat?.seat.logicalId ?? member.subjectId}{member.summary ? ` · ${member.summary}` : ''} · {memberNow(seat ? states.get(seat.id) : undefined)}</>} />)}
     </section>
     <section className="agent-link-section" aria-label="Group actions">
       <RouteRow label="Show group tab" onPress={() => { void showGroupTab(); }} disabledReason={busy ? 'Resolving…' : null} detail={panelTab?.status ?? `only when all ${members.length} members are in one tab`}>
