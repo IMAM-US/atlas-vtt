@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { Notice } from 'obsidian';
 import { Button } from '../../packages/components/primitives/button';
 import type { SeatSubject } from '../account/accountSchema';
 import type { HerdrViewWitness } from '../native/herdrViews';
 import type { ResolvedNativeView } from '../native/viewResolution';
-import { paneFocusRoute, recordRoute, screenRoute } from '../nativeRoutes';
-import type { ConversationRecord, CurrentSeat, Focus, Screen, SeatRead, Views } from '../reads';
+import { paneFocusRoute, screenRoute } from '../nativeRoutes';
+import type { CurrentSeat, Focus, Screen, SeatRead, Views } from '../reads';
 import { useCard } from './cardContext';
+import { ConversationRecords } from './ConversationRecords';
 import { RouteRow } from './RouteRow';
-import { clock, short } from './timeLabels';
+import { clock } from './timeLabels';
 import { useActionSignal } from './useActionSignal';
 
 const SCREEN_LINES = 40;
@@ -34,7 +34,6 @@ export function ConversationSection({ subject, seat }: { subject: SeatSubject; s
   const [views, setViews] = useState<Views | null>(null);
   const [focus, setFocus] = useState<Focus | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
-  const [record, setRecord] = useState<{ which: 'current' | 'previous'; read: ConversationRecord } | null>(null);
   const [choice, setChoice] = useState<Choice>('pinned');
 
   const readScreen = async (which: Choice): Promise<void> => {
@@ -75,29 +74,10 @@ export function ConversationSection({ subject, seat }: { subject: SeatSubject; s
     setFocus(result.state === 'unavailable' ? result : { ...result, previous: null });
     setBusy(null);
   };
-  const locate = async (which: 'current' | 'previous'): Promise<void> => {
-    const participant = participantFor(which);
-    if (!participant) return;
-    const signal = next();
-    setBusy('record');
-    const read = await sources.locateRecord(subject.sourceKey, participant, { signal });
-    if (signal.aborted) return;
-    setRecord({ which, read });
+  /** Record actions share the section's one in-flight action; an action they abort leaves no busy state behind. */
+  const startRecordAction = (): AbortSignal => {
     setBusy(null);
-  };
-  const participantFor = (which: 'current' | 'previous'): { runtime: 'claude-code' | 'codex'; conversationId: string; cwd: string | null } | null =>
-    which === 'current' && current?.participant
-      ? { runtime: current.participant.runtime === 'codex' ? 'codex' : 'claude-code', conversationId: current.participant.conversationId, cwd: current.cwd }
-      : subject.participant ? { runtime: subject.participant.runtime, conversationId: subject.participant.conversationId, cwd: subject.participant.cwd ?? current?.cwd ?? null } : null;
-  const openRecord = async (which: 'current' | 'previous'): Promise<void> => {
-    const participant = participantFor(which);
-    if (!participant) return;
-    const signal = next();
-    try {
-      await sources.openConversationRecord(subject.sourceKey, participant, { signal });
-    } catch (error) {
-      if (!signal.aborted) new Notice(error instanceof Error ? error.message : 'The record could not be opened.');
-    }
+    return next();
   };
 
   const changed = Boolean(current?.participant && subject.participant
@@ -135,23 +115,6 @@ export function ConversationSection({ subject, seat }: { subject: SeatSubject; s
       <RouteRow label="Current occupant: read screen" onPress={() => { void readScreen('current'); }} disabledReason={busyReason} detail="another conversation, not the map's" tone="changed" />
       <RouteRow label="Current occupant: show in Herdr" onPress={() => { void resolve('current'); }} disabledReason={busyReason} detail="another conversation, not the map's" tone="changed" />
     </>}
-    {(subject.participant || current?.participant) && <RouteRow label={changed ? (pinnedElsewhere ? 'Pinned conversation record' : 'Current conversation record') : 'Conversation record'}
-      onPress={() => { void locate(changed && pinnedElsewhere ? 'previous' : 'current'); }}
-      disabledReason={current?.participant || subject.participant ? null : 'No conversation'}
-      detail={`${short(changed && pinnedElsewhere ? subject.participant?.conversationId : current?.participant?.conversationId ?? subject.participant?.conversationId)}… · growing record`}
-      route={record?.read.state === 'current' ? recordRoute(record.read.record.path) : null}>
-      {record && <RecordDetail read={record.read} onOpen={() => openRecord(record.which)} />}
-    </RouteRow>}
-    {changed && !pinnedElsewhere && subject.participant && <RouteRow label="Previous conversation record" onPress={() => { void locate('previous'); }} detail={`${short(subject.participant.conversationId)}… · map's conversation`} />}
-    {changed && pinnedElsewhere && current?.participant && <RouteRow label="Current occupant: conversation record" onPress={() => { void locate('current'); }} detail={`${short(current.participant.conversationId)}… · another conversation`} tone="changed" />}
+    <ConversationRecords subject={subject} current={current} changed={changed} pinnedElsewhere={pinnedElsewhere} startAction={startRecordAction} />
   </section>;
-}
-
-function RecordDetail({ read, onOpen }: { read: ConversationRecord; onOpen: () => Promise<void> }): React.ReactElement {
-  if (read.state === 'unavailable') return <p className="agent-link-muted agent-link-row--unavailable">{read.message}</p>;
-  const { record } = read;
-  return <div className="agent-link-list">
-    <p className="agent-link-muted">Exact provider record · {record.validatedRecords} record{record.validatedRecords === 1 ? '' : 's'} checked · {Math.round(record.fileSizeBytes / 1024)} KB{record.complete ? '' : ' and growing'} · {clock(read.observedAt)}</p>
-    <Button variant="secondary" onClick={() => { void onOpen(); }}>Open record</Button>
-  </div>;
 }

@@ -27,7 +27,7 @@ export function SeatCard({ subject }: { subject: SeatSubject }): React.ReactElem
     ...mapWork.map((work) => ({ heading: 'map work', work, artifacts: artifactsOf(loaded.account, work.artifactIds) })),
   ];
   return <>
-    <p className="agent-link-identity">{subject.caption} · {subject.seat.rigName ?? subject.seat.rigId} · {runtime || 'runtime unknown'}</p>
+    <p className="agent-link-identity">{subject.seat.logicalId} · {subject.seat.rigName ?? subject.seat.rigId} · {runtime || 'runtime unknown'}</p>
     <p className={`agent-link-headline agent-link-headline--${headline.tone}`}>{headline.identity}</p>
     {headline.work && <p className="agent-link-headline agent-link-headline--changed">● {headline.work}</p>}
     <p className="agent-link-muted agent-link-reads">
