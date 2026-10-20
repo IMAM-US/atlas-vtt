@@ -71,7 +71,7 @@ export async function readOpenRigProcess(
   };
 }
 
-/** Current native generation metadata, joined to the same verified bound process. Reads no transcript bytes. */
+/** Exact generation read for explicit demand and actions. The native response may include a provider suffix. */
 export async function readOpenRigParticipant(
   source: OpenRigConnection, seat: OpenRigSeat, options?: HttpReadOptions,
 ): Promise<{ node: NativeObject; participant: OpenRigParticipant }> {

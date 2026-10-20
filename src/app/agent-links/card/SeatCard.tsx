@@ -8,14 +8,18 @@ import { useCard } from './cardContext';
 import { ConversationSection } from './ConversationSection';
 import { SourcesSection } from './SourcesSection';
 import { clock } from './timeLabels';
+import { activityLabel, freshnessLabel } from './freshnessLabels';
 import { useSeatReads } from './useSeatReads';
 import { WorkSection } from './WorkSection';
+import { useFactChange } from './useFactChange';
 
 /** One seat: identity and freshness first, then the four kinds of route. */
 export function SeatCard({ subject }: { subject: SeatSubject }): React.ReactElement {
   const { loaded, openSubject } = useCard();
   const mapWork = mapWorkOf(loaded.account, subject);
   const reads = useSeatReads(subject, mapWork);
+  const activity = activityLabel(subject, reads.snapshot?.inventory);
+  const activityChanged = useFactChange(reads.snapshot?.inventory.value ? activity ?? 'unknown' : null);
   const headline = headlineOf(subject, loaded.account.capturedAt, reads.seat, reads.owned, mapWork);
   const runtime = reads.seat?.state === 'current' ? reads.seat.process.runtime : subject.participant?.runtime ?? '';
   const groups = groupsContaining(loaded.account, subject.id);
@@ -31,13 +35,14 @@ export function SeatCard({ subject }: { subject: SeatSubject }): React.ReactElem
     <p className={`agent-link-headline agent-link-headline--${headline.tone}`}>{headline.identity}</p>
     {headline.work && <p className="agent-link-headline agent-link-headline--changed">● {headline.work}</p>}
     <p className="agent-link-muted agent-link-reads">
-      On map {clock(loaded.account.capturedAt)}{reads.seat ? ` · now ${clock(reads.seat.observedAt)}` : ' · checking…'}
+      On map {clock(loaded.account.capturedAt)} · {freshnessLabel(reads.snapshot?.process)}
       <Button variant="ghost" size="sm" onClick={reads.refresh}>Refresh</Button>
       {groups.map((group) => <Button key={group.id} variant="ghost" size="sm" onClick={() => openSubject(group.id)}>in {group.caption}</Button>)}
     </p>
-    <ConversationSection subject={subject} seat={reads.seat} />
-    <WorkSection subject={subject} owned={reads.owned} mapWork={mapWork} liveMapWork={reads.mapWork} />
+    <p className={`agent-link-muted${activityChanged ? ' agent-link-row--changed' : ''}`}>{reads.snapshot?.inventory.value ? activity ? `Activity: ${activity}` : 'Activity not confirmed' : 'Activity'} · {freshnessLabel(reads.snapshot?.inventory)}</p>
+    <ConversationSection subject={subject} seat={reads.seat} conversation={reads.snapshot?.conversation} recheck={reads.recheckConversation} />
+    <WorkSection subject={subject} owned={reads.owned} mapWork={mapWork} liveMapWork={reads.mapWork} observation={reads.snapshot?.owned} mapObservations={reads.snapshot?.mapWork} />
     <ArtifactSection groups={artifactGroups} />
-    <SourcesSection subject={subject} seat={reads.seat} />
+    <SourcesSection subject={subject} seat={reads.seat} snapshot={reads.snapshot} />
   </>;
 }

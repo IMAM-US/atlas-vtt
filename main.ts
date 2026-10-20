@@ -1,3 +1,4 @@
+import { NativeSources } from './src/app/agent-links/NativeSources';
 import { Plugin } from 'obsidian';
 // Tailwind first, so the custom SCSS can override it.
 import './styles/index.css';
@@ -119,6 +120,7 @@ export default class AtlasVTTPlugin extends Plugin {
   }
 
   onunload(): void {
+    NativeSources.release(this.app);
     this.changelogService?.destroy();
     void this.settingsService?.saveSettingsNow();
     this.widgetSyncService?.destroy();

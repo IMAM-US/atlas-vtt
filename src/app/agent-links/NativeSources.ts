@@ -10,10 +10,11 @@ import { focusHerdrView, returnToHerdrView } from './native/herdrFocus';
 import type { HerdrViewWitness } from './native/herdrViews';
 import { openLocalFile, type LocalOpen } from './native/desktopOpen';
 import {
-  NativeIdentityError, readOpenRigNode, readOpenRigParticipant, readOpenRigProcess, readOpenRigScreen, readOpenRigSeatScreen,
+  NativeIdentityError, readOpenRigParticipant, readOpenRigProcess, readOpenRigScreen, readOpenRigSeatScreen,
   sameOpenRigParticipant, sameOpenRigProcess, type OpenRigConnection, type OpenRigSeat,
 } from './native/openRigRead';
-import { readOpenRigOwnedWork, readOpenRigWork } from './native/openRigWork';
+import { LiveSources } from './live/LiveSources';
+import { readSeat, readOwnedWork, readWork, type SeatReadOptions } from './sourceReads';
 import { locateConversationRecord } from './native/providerRecordLocator';
 import { resolveNativeSeatViews, resolveNativeViews, type NativeViewConnections } from './native/viewResolution';
 import {
@@ -46,7 +47,23 @@ export class NativeSources {
     return instance;
   }
 
-  private constructor(private readonly app: App, private readonly settings: SettingsService) {}
+  static release(app: App): void {
+    const instance = NativeSources.instances.get(app);
+    instance?.live.dispose(); instance?.unsubscribeSettings();
+    NativeSources.instances.delete(app);
+  }
+
+  readonly live: LiveSources;
+  private readonly unsubscribeSettings: () => void;
+
+  private constructor(private readonly app: App, private readonly settings: SettingsService) {
+    this.live = new LiveSources((sourceKey) => ({ settings: this.source(sourceKey), backend: {
+      readSeat: (subject, signal) => this.readSeat(subject, { signal, includeParticipant: false }),
+      readOwned: (subject, signal) => this.readOwnedWork(subject, { signal }),
+      readWork: (key, qitemId, signal) => this.readWork(key, qitemId, { signal }),
+    } }));
+    this.unsubscribeSettings = settings.onChange(() => this.live.settingsChanged());
+  }
 
   source(key: string): AgentLinkSourceSettings {
     return this.settings.getAgentLinkSource(key);
@@ -64,53 +81,16 @@ export class NativeSources {
     return { source, seat: { rigId: subject.seat.rigId, nodeId: subject.seat.nodeId, logicalId: subject.seat.logicalId } };
   }
 
-  /** Identity first: the exact node, then its verified process, then its exact conversation where the runtime can qualify it. */
-  async readSeat(subject: SeatSubject, options: Options = {}): Promise<SeatRead> {
-    const bound = this.connection(subject);
-    if (typeof bound === 'string') return { state: 'unavailable', message: bound, observedAt: now() };
-    try {
-      const node = await readOpenRigNode(bound.source, bound.seat, options);
-      let process;
-      try {
-        process = (await readOpenRigProcess(bound.source, bound.seat, options)).process;
-      } catch (error) {
-        if (error instanceof NativeIdentityError && error.kind === 'unverified') return { state: 'unverified', node, message: error.message, observedAt: now() };
-        throw error;
-      }
-      let participant = null;
-      let participantMessage: string | null = null;
-      try {
-        participant = (await readOpenRigParticipant(bound.source, bound.seat, options)).participant;
-      } catch (error) {
-        participantMessage = error instanceof Error ? error.message : 'The exact conversation could not be qualified.';
-      }
-      return { state: 'current', node, process, participant, participantMessage, cwd: typeof node.cwd === 'string' ? node.cwd : null, observedAt: now() };
-    } catch (error) {
-      if (error instanceof NativeIdentityError && error.kind === 'seat') return { state: 'different-seat', message: error.message, observedAt: now() };
-      return failure(error, 'OpenRig did not answer.');
-    }
+  readSeat(subject: SeatSubject, options: SeatReadOptions = {}): Promise<SeatRead> {
+    return readSeat(this.source(subject.sourceKey), subject, options);
   }
 
-  async readOwnedWork(subject: SeatSubject, options: Options = {}): Promise<OwnedWork> {
-    const bound = this.connection(subject);
-    if (typeof bound === 'string') return { state: 'unavailable', message: bound, observedAt: now() };
-    try {
-      const owned = await readOpenRigOwnedWork(bound.source, bound.seat, options);
-      return { state: 'current', items: owned.items, truncated: owned.truncated, sessionName: owned.sessionName, observedAt: owned.observedAt };
-    } catch (error) {
-      return failure(error, 'OpenRig did not answer.');
-    }
+  readOwnedWork(subject: SeatSubject, options: Options = {}): Promise<OwnedWork> {
+    return readOwnedWork(this.source(subject.sourceKey), subject, options);
   }
 
-  async readWork(sourceKey: string, qitemId: string, options: Options = {}): Promise<Work> {
-    const source = openRigConnectionOf(this.source(sourceKey));
-    if (!source) return { state: 'unavailable', message: `No local source "${sourceKey}" is configured in Atlas settings.`, observedAt: now() };
-    try {
-      const record = await readOpenRigWork(source, qitemId, options);
-      return { state: 'current', item: record.item, transitions: record.transitions, observedAt: record.observedAt };
-    } catch (error) {
-      return failure(error, 'OpenRig did not answer.');
-    }
+  readWork(sourceKey: string, qitemId: string, options: Options = {}): Promise<Work> {
+    return readWork(this.source(sourceKey), qitemId, options);
   }
 
   /** Why a live action on `identity` would not reach the subject's pinned conversation, or null when it may proceed. */
