@@ -63,3 +63,16 @@ it('a refused process refresh is uncertainty, not evidence of a new conversation
   expect(seatWithConversation(handle.getSnapshot().value, exact.getSnapshot())).toMatchObject({ state: 'unverified' });
   exact.dispose(); handle.release();
 });
+
+it('retains an earlier exact observation when an explicit recheck is refused', async () => {
+  vi.useFakeTimers();
+  const cache = new ObservationCache('a', 1);
+  const handle = cache.observe('seat:a', false, async () => ({ kind: 'value', value: seat(1) }));
+  const read = vi.fn().mockResolvedValueOnce(seat(1, true)).mockResolvedValue({ ...seat(1), participantMessage: 'Native 409 refusal.' });
+  const exact = new ConversationObservation(handle, read);
+  cache.connect(1, new AbortController().signal, async () => {}); await vi.advanceTimersByTimeAsync(5);
+  exact.recheck(); await vi.advanceTimersByTimeAsync(5);
+  expect(exact.getSnapshot()).toMatchObject({ previous: { participant: { conversationId: 'native-thread-a' } },
+    value: { participant: null, participantMessage: 'Native 409 refusal.' }, needsRecheck: true });
+  exact.dispose(); handle.release();
+});

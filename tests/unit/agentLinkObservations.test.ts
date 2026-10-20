@@ -102,3 +102,16 @@ it('bounds distinct observations and coalesces invalidation bursts', async () =>
   expect(read).toHaveBeenCalledTimes(1);
   handle.release();
 });
+
+it('retains the dated list and native refusal metadata when a refresh is refused', async () => {
+  vi.useFakeTimers();
+  const cache = new ObservationCache('a', 1);
+  const refusal = { status: 409, code: 'identity_unverified', reason: 'The native seat could not be confirmed.' };
+  const reader = vi.fn().mockResolvedValueOnce({ kind: 'value', value: ['owned'] }).mockResolvedValue({ kind: 'refused', value: null, message: refusal.reason, refusal });
+  const handle = cache.observe<string[]>('owned:a', true, reader);
+  cache.connect(1, new AbortController().signal, async () => {}); await vi.advanceTimersByTimeAsync(2);
+  const observedAt = handle.getSnapshot().observedAt;
+  handle.refresh(); await vi.advanceTimersByTimeAsync(2);
+  expect(handle.getSnapshot()).toMatchObject({ freshness: 'refused', value: ['owned'], observedAt, refusal });
+  handle.release();
+});

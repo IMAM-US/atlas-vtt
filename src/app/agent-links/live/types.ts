@@ -1,6 +1,6 @@
 import type { SeatSubject } from '../account/accountSchema';
 import type { AgentLinkSourceSettings } from '../sourceSettings';
-import type { OwnedWork, SeatRead, Work } from '../reads';
+import type { NativeRefusal, OwnedWork, SeatRead, Work } from '../reads';
 
 export type Freshness = 'live' | 'read' | 'last-known' | 'refreshing' | 'refused' | 'unavailable';
 export interface Observation<T> {
@@ -12,6 +12,7 @@ export interface Observation<T> {
   value: T | null;
   observedAt: string | null;
   message: string | null;
+  refusal?: NativeRefusal;
 }
 export interface ObservationHandle<T> {
   getSnapshot: () => Observation<T>;
@@ -35,6 +36,6 @@ export interface LiveConfiguration { settings: AgentLinkSourceSettings; backend:
 export interface NativeEvent { type: string; seq: number; [key: string]: unknown }
 export interface Frontier { hostId: string; bootEpoch: string; seq: string }
 export interface EventSubscription { close: () => void }
-export interface ReadResult<T> { kind: 'value' | 'refused' | 'unavailable'; value: T | null; message?: string }
+export interface ReadResult<T> { kind: 'value' | 'refused' | 'unavailable'; value: T | null; message?: string; refusal?: NativeRefusal }
 
 export const seatKey = (subject: SeatSubject): string => JSON.stringify([subject.seat.rigId, subject.seat.nodeId, subject.seat.logicalId]);

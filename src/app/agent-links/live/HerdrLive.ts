@@ -74,6 +74,7 @@ export class HerdrLive {
     let starting = true;
     const subscription = await this.transport.subscribe(this.socketPath, before.panes.map((pane) => pane.pane_id), signal, () => {
       if (signal.aborted || epoch !== this.epoch) return;
+      this.attempt = 0;
       if (starting && ++events > 1024) { this.reconnect(epoch, new Error('Herdr bootstrap event buffer overflow.')); return; }
       this.cache.invalidate(() => true);
     }, (error) => this.reconnect(epoch, error));
@@ -82,7 +83,6 @@ export class HerdrLive {
     if (this.identity !== await this.transport.identity(this.socketPath)) throw new Error('The Herdr server changed.');
     if (signal.aborted) return;
     starting = false;
-    this.attempt = 0;
     this.update({ status: 'connected', since: new Date().toISOString(), message: 'Views are dated reads.', epoch });
     this.cache.connect(epoch, signal, async () => {
       if (this.identity !== await this.transport.identity(this.socketPath)) {

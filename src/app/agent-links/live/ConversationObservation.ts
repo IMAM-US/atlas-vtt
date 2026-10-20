@@ -17,6 +17,7 @@ export class ConversationObservation {
   private readonly listeners = new Set<() => void>();
   private state: ConversationObservationState = { value: null, previous: null, pending: false, applicable: false, needsRecheck: false, changedSince: null };
   private attempted = false;
+  private demandAfterProcessRead = false;
   private disposed = false;
   private controller: AbortController | null = null;
   private pinned: Observation<SeatRead> | null = null;
@@ -29,6 +30,13 @@ export class ConversationObservation {
 
   getSnapshot = (): ConversationObservationState => this.state;
   subscribe = (listener: () => void): (() => void) => { this.listeners.add(listener); return () => this.listeners.delete(listener); };
+
+  /** The card's explicit Refresh demand waits for its new process observation. */
+  refresh = (): void => {
+    this.demandAfterProcessRead = true;
+    this.controller?.abort();
+    this.process.refresh();
+  };
 
   /** An explicit recheck is the only repeat after the opening demand. */
   recheck = (): void => {
@@ -49,15 +57,28 @@ export class ConversationObservation {
         return;
       }
       const confirmed = value.state === 'current' && value.participant !== null;
-      this.update({ value, previous: confirmed ? null : this.state.value ?? this.state.previous, pending: false,
+      const previous = this.state.value?.state === 'current' && this.state.value.participant ? this.state.value : this.state.previous;
+      this.update({ value, previous: confirmed ? null : previous, pending: false,
         applicable: value.state === 'current', needsRecheck: !confirmed, changedSince: null });
     }).catch(() => {
       if (!controller.signal.aborted && !this.disposed) this.update({ ...this.state, pending: false, applicable: false, needsRecheck: true });
     });
   };
 
+  /** A settings replacement is not a new opening demand and cannot reuse an old exact read. */
+  sourceChanged(): void {
+    this.attempted = true; this.demandAfterProcessRead = false; this.controller?.abort(); this.pinned = null;
+    this.update({ value: null, previous: null, pending: false, applicable: false, needsRecheck: true, changedSince: null });
+  }
+
   private processChanged(): void {
     const fact = this.process.getSnapshot();
+    if (this.demandAfterProcessRead && fact.freshness !== 'refreshing') {
+      this.demandAfterProcessRead = false;
+      if (fact.value?.state === 'current' && fact.freshness === 'read') this.recheck();
+      else this.update({ ...this.state, pending: false, applicable: false, needsRecheck: true });
+      return;
+    }
     if (!this.attempted && fact.freshness !== 'refreshing' && fact.freshness !== 'unavailable') {
       this.attempted = true;
       if (fact.value?.state === 'current') this.recheck();
@@ -83,5 +104,6 @@ export function seatWithConversation(process: SeatRead | null, exact: Conversati
   if (process?.state !== 'current' || !exact?.applicable || exact.value?.state !== 'current'
     || !sameOpenRigProcess(process.process, exact.value.process)) return process;
   return { ...process, participant: exact.value.participant, participantMessage: exact.value.participantMessage,
+    ...(exact.value.participantRefusal ? { participantRefusal: exact.value.participantRefusal } : {}),
     observedAt: exact.value.observedAt };
 }

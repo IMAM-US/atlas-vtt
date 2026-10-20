@@ -138,3 +138,16 @@ it('bounds bootstrap arrivals and refuses to publish a source flooded before hyd
   expect(f.config.backend.readOwned).not.toHaveBeenCalled();
   handle.release();
 });
+
+it('backs off repeated connections that close before a valid event arrives', async () => {
+  vi.useFakeTimers();
+  const f = fixture(), handle = f.model.watchOwned(subject);
+  await vi.advanceTimersByTimeAsync(5);
+  f.disconnect(); await vi.advanceTimersByTimeAsync(510);
+  expect(f.wire.subscribe).toHaveBeenCalledTimes(2);
+  f.disconnect(); await vi.advanceTimersByTimeAsync(510);
+  expect(f.wire.subscribe).toHaveBeenCalledTimes(2);
+  await vi.advanceTimersByTimeAsync(500);
+  expect(f.wire.subscribe).toHaveBeenCalledTimes(3);
+  handle.release();
+});

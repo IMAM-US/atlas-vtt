@@ -33,6 +33,7 @@
 .agent-link-headline { font-weight: $font-weight-medium; }
 .agent-link-headline--changed { color: var(--text-warning, var(--color-orange)); }
 .agent-link-headline--unavailable { color: var(--text-error); }
+.agent-link-work--changed > h4 { color: var(--text-warning, var(--color-orange)); }
 .agent-link-muted { color: var(--text-muted); font-size: $font-ui-smaller; overflow-wrap: anywhere; }
 .agent-link-reads { display: flex; flex-wrap: wrap; align-items: center; gap: $spacing-xs; }
 .agent-link-inline { padding: 0; height: auto; font-size: inherit; }

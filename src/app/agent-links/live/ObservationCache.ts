@@ -113,13 +113,13 @@ export class ObservationCache {
       if (signal.aborted || this.context !== context || this.slots.get(key) !== slot || slot.version !== version) return;
       await context.verify();
       if (signal.aborted || this.context !== context || this.slots.get(key) !== slot || slot.version !== version) return;
-      const value = result.value ?? (result.kind === 'unavailable' ? slot.fact.value : null);
+      const value = result.value ?? (result.kind !== 'value' ? slot.fact.value : null);
       const observedAt = result.value && typeof result.value === 'object' && 'observedAt' in result.value
         && typeof result.value.observedAt === 'string' ? result.value.observedAt : new Date().toISOString();
       this.publish(slot, { sourceKey: this.sourceKey, epoch: context.epoch, revision: version, value,
         observedAt: result.kind === 'value' || result.value !== null ? observedAt : slot.fact.observedAt,
         freshness: result.kind === 'value' ? slot.covered ? 'live' : 'read' : result.kind === 'refused' ? 'refused' : value !== null ? 'last-known' : 'unavailable',
-        message: result.message ?? null });
+        message: result.message ?? null, ...(result.refusal ? { refusal: result.refusal } : {}) });
     } catch (error) {
       if (!signal.aborted && this.context === context && this.slots.get(key) === slot && slot.version === version) {
         this.publish(slot, { ...slot.fact, freshness: slot.fact.value !== null ? 'last-known' : 'unavailable',

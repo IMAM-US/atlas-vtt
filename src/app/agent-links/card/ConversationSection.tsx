@@ -10,6 +10,7 @@ import { ConversationRecords } from './ConversationRecords';
 import { RouteRow } from './RouteRow';
 import { clock } from './timeLabels';
 import { useActionSignal } from './useActionSignal';
+import type { ConversationObservationState } from '../live/ConversationObservation';
 
 const SCREEN_LINES = 40;
 type Choice = 'pinned' | 'current';
@@ -23,7 +24,9 @@ function viewLabel(view: ResolvedNativeView): string {
  * A subject that pins its captured conversation never reads or shows a successor as if it
  * were that conversation; the current occupant is offered only as a labelled other choice.
  */
-export function ConversationSection({ subject, seat }: { subject: SeatSubject; seat: SeatRead | null }): React.ReactElement {
+export function ConversationSection({ subject, seat, conversation, recheck }: {
+  subject: SeatSubject; seat: SeatRead | null; conversation?: ConversationObservationState | undefined; recheck?: () => void;
+}): React.ReactElement {
   const { sources } = useCard();
   const next = useActionSignal();
   const routeSource = sources.source(subject.sourceKey);
@@ -90,6 +93,17 @@ export function ConversationSection({ subject, seat }: { subject: SeatSubject; s
   const busyReason = busy === 'screen' ? 'Reading…' : busy === 'views' || busy === 'focus' ? 'Resolving…' : null;
   return <section className="agent-link-section" aria-label="Conversation">
     <h4>Conversation</h4>
+    {conversation && <div className="agent-link-list">
+      {conversation.pending && <p className="agent-link-muted">Refreshing exact conversation…</p>}
+      {conversation.value?.state === 'current' && <p className="agent-link-muted">
+        {conversation.value.participant ? `Exact conversation · Read ${clock(conversation.value.observedAt)}${conversation.applicable ? '' : ' · historical read'}`
+          : `Exact conversation not confirmed: ${conversation.value.participantMessage ?? 'native identity unavailable'}. Showing the seat's process. · Read ${clock(conversation.value.observedAt)}`}
+      </p>}
+      {conversation.value && conversation.value.state !== 'current' && <p className="agent-link-muted">Exact conversation not confirmed: {conversation.value.message} · Read {clock(conversation.value.observedAt)}</p>}
+      {conversation.changedSince && <p className="agent-link-muted agent-link-row--changed">Seat changed since {clock(conversation.changedSince)}</p>}
+      {conversation.needsRecheck && !conversation.changedSince && <p className="agent-link-muted">Exact conversation needs rechecking.</p>}
+      {conversation.needsRecheck && recheck && <Button variant="secondary" disabled={conversation.pending || !current} onClick={recheck}>Recheck conversation</Button>}
+    </div>}
     <RouteRow label="Read screen" onPress={() => { void readScreen('pinned'); }} disabledReason={liveReason ?? pinnedProblem ?? busyReason}
       detail={screen?.state === 'current' ? `last ${SCREEN_LINES} · ${clock(screen.capturedAt)}${screen.scope === 'seat-screen' ? ' · seat screen' : ''}${occupant}` : screen?.state === 'unavailable' ? `Unavailable: ${screen.message}` : `last ${SCREEN_LINES}`}
       route={screenRoute(routeSource, subject.seat)} tone={screen?.state === 'unavailable' ? 'unavailable' : undefined}>

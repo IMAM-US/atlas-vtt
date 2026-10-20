@@ -18,7 +18,8 @@ const transport: OpenRigTransport = { frontier: readFrontier, subscribe: subscri
 
 function result<T extends SeatRead | OwnedWork | Work>(value: T): ReadResult<T> {
   if (value.state === 'current') return { kind: 'value', value };
-  if (value.state === 'unavailable') return { kind: value.refusal ? 'refused' : 'unavailable', value: value.refusal ? value : null, message: value.message };
+  if (value.state === 'unavailable') return { kind: value.refusal ? 'refused' : 'unavailable', value: null, message: value.message,
+    ...(value.refusal ? { refusal: value.refusal } : {}) };
   return { kind: 'refused', value, message: value.message };
 }
 
@@ -138,6 +139,7 @@ export class OpenRigLive {
         this.disconnected(epoch, new Error('Native event continuity is unverified; reconciling.')); return;
       }
       cursor = event.seq;
+      this.attempt = 0;
       if (bootstrapping && ++buffered > 1024) {
         this.disconnected(epoch, new Error('Native bootstrap event buffer overflow.')); return;
       }
@@ -163,7 +165,6 @@ export class OpenRigLive {
     await verify();
     if (signal.aborted || epoch !== this.epoch) return;
     bootstrapping = false;
-    this.attempt = 0;
     this.update({ status: 'connected', since: new Date().toISOString(), message: null, epoch });
     this.cache.connect(epoch, signal, verify);
   }

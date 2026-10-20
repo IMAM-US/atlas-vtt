@@ -1,49 +1,47 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { AccountWork, SeatSubject } from '../account/accountSchema';
+import { SeatSubscription, type SeatSnapshot } from '../live/SeatSubscription';
 import type { OwnedWork, SeatRead, Work } from '../reads';
 import { useCard } from './cardContext';
 
 export interface SeatReads {
   seat: SeatRead | null;
   owned: OwnedWork | null;
-  /** Live state of the map's work rows, by account work id. */
   mapWork: ReadonlyMap<string, Work>;
+  snapshot: SeatSnapshot | null;
   refresh: () => void;
+  recheckConversation: () => void;
 }
 
-/**
- * The reads a card makes on open: identity, owned work and the map's work rows. All are
- * bounded, run together, and cancelled when the subject changes; late answers are dropped.
- * Screen, views, artifacts and records stay on demand.
- */
+/** Equal renders retain selectors; opening owns one dated exact read, background reads stop at process. */
 export function useSeatReads(subject: SeatSubject, mapWork: readonly AccountWork[]): SeatReads {
   const { sources } = useCard();
-  const [seat, setSeat] = useState<SeatRead | null>(null);
-  const [owned, setOwned] = useState<OwnedWork | null>(null);
-  const [work, setWork] = useState<ReadonlyMap<string, Work>>(new Map());
-  const [attempt, setAttempt] = useState(0);
-  // The reads key on the subject and work ids, so a re-render with equal rows does not re-read.
+  const registry = sources.live;
   const latest = useRef({ subject, mapWork });
   latest.current = { subject, mapWork };
-  const workKey = mapWork.map((entry) => `${entry.id}:${entry.qitemId}`).join('|');
-  const subjectKey = `${subject.id}:${subject.sourceKey}`;
+  const key = JSON.stringify([subject.id, subject.sourceKey, subject.seat, subject.policy, subject.participant,
+    mapWork.map(({ id, sourceKey, qitemId }) => [id, sourceKey, qitemId])]);
+  const selectionKey = key;
+  const [state, setState] = useState<{ key: string; value: SeatSnapshot | null; error?: SeatRead } | null>(null);
+  const subscription = useRef<SeatSubscription | null>(null);
   useEffect(() => {
-    const controller = new AbortController();
-    const live = (): boolean => !controller.signal.aborted;
     const current = latest.current;
-    setSeat(null);
-    setOwned(null);
-    setWork(new Map());
-    const options = { signal: controller.signal };
-    void sources.readSeat(current.subject, options).then((result) => { if (live()) setSeat(result); });
-    void sources.readOwnedWork(current.subject, options).then((result) => { if (live()) setOwned(result); });
-    for (const entry of current.mapWork) {
-      void sources.readWork(entry.sourceKey, entry.qitemId, options).then((result) => {
-        if (live()) setWork((previous) => new Map(previous).set(entry.id, result));
-      });
+    let selected: SeatSubscription;
+    try { selected = new SeatSubscription(registry, current.subject, current.mapWork,
+      (signal) => sources.readSeat(current.subject, { signal })); }
+    catch (error) {
+      setState({ key: selectionKey, value: null, error: { state: 'unavailable', observedAt: new Date().toISOString(),
+        message: error instanceof Error ? error.message : 'Native observations could not be opened.' } });
+      return;
     }
-    return () => controller.abort();
-  }, [sources, subjectKey, workKey, attempt]);
-  const refresh = useCallback((): void => setAttempt((count) => count + 1), []);
-  return { seat, owned, mapWork: work, refresh };
+    subscription.current = selected;
+    const update = (): void => setState({ key: selectionKey, value: selected.getSnapshot() });
+    const unsubscribe = selected.subscribe(update);
+    update();
+    return () => { unsubscribe(); selected.dispose(); if (subscription.current === selected) subscription.current = null; };
+  }, [sources, registry, selectionKey]);
+  const snapshot = state?.key === selectionKey ? state.value : null;
+  return { seat: snapshot?.seat ?? (state?.key === selectionKey ? state.error ?? null : null), owned: snapshot?.owned.value ?? null,
+    mapWork: new Map([...snapshot?.mapWork ?? []].flatMap(([id, fact]) => fact.value ? [[id, fact.value] as const] : [])), snapshot,
+    refresh: (): void => subscription.current?.refresh(), recheckConversation: (): void => subscription.current?.recheckConversation() };
 }

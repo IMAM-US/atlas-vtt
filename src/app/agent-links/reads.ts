@@ -9,9 +9,10 @@ import { NativeHttpError } from './native/httpRead';
  * Every native read the card shows is an observation with its own time and state. A failed
  * read never hides the captured account, and no read result is ever written into it.
  */
+export interface NativeRefusal { status: number; code: string | null; reason: string | null }
 export interface ReadFailure {
   state: 'unavailable'; message: string; observedAt: string;
-  refusal?: { status: number; code: string | null; reason: string | null };
+  refusal?: NativeRefusal;
 }
 
 export interface LoadedAccount { account: AccountDocument; path: string; sha256: string; loadedAt: string }
@@ -24,6 +25,7 @@ export interface CurrentSeat {
   /** Null when the runtime could not qualify the exact conversation; reads then carry `seat-process` scope. */
   participant: OpenRigParticipant | null;
   participantMessage: string | null;
+  participantRefusal?: NativeRefusal;
   cwd: string | null;
   observedAt: string;
 }
