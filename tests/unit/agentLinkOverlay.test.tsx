@@ -50,7 +50,7 @@ beforeEach(() => {
   cards.mounted.length = 0;
   cards.signals.clear();
   store = createStore<State>((set) => ({
-    objects: { tokens: { c8: bound('c8', 'Build: C8', 'seat:code.c8'), panel: bound('panel', 'Panel', 'group:panel') }, texts: {} },
+    objects: { tokens: { build: bound('build', 'Build A', 'seat:build-a'), panel: bound('panel', 'Panel', 'group:panel') }, texts: {} },
     selectedIds: [], clickedObjectId: null, isDragging: false, isGMView: true, isMapLoading: false, grid: { size: 70 },
     setClickedObjectId: (clickedObjectId) => set({ clickedObjectId }),
     setSelection: (selectedIds) => set({ selectedIds }),
@@ -75,31 +75,31 @@ const click = (id: string, shift = false): void => act(() => {
 describe('the account card overlay', () => {
   it('shows the chooser and starts no card for a Shift-selection, whichever bound object was clicked last', () => {
     render(<Overlays />);
-    click('c8');
-    expect(cards.mounted).toEqual(['seat:code.c8']);
+    click('build');
+    expect(cards.mounted).toEqual(['seat:build-a']);
     click('panel', true);
     expect(screen.getByRole('region', { name: 'Choose a subject' })).toBeTruthy();
     expect(screen.queryByRole('region', { name: 'Source account' })).toBeNull();
-    expect(cards.mounted).toEqual(['seat:code.c8']);
-    expect(cards.signals.get('seat:code.c8')?.aborted).toBe(true);
+    expect(cards.mounted).toEqual(['seat:build-a']);
+    expect(cards.signals.get('seat:build-a')?.aborted).toBe(true);
   });
 
   it('opens the card chosen in the chooser, and only for the selection it was chosen in', () => {
     render(<Overlays />);
-    click('c8');
+    click('build');
     click('panel', true);
     fireEvent.click(screen.getByRole('button', { name: /Panel/ }));
     expect(screen.getByRole('region', { name: 'Source account' }).textContent).toBe('group:panel');
-    act(() => store.setState({ selectedIds: ['c8'] }));
-    act(() => store.setState({ selectedIds: ['c8', 'panel'] }));
+    act(() => store.setState({ selectedIds: ['build'] }));
+    act(() => store.setState({ selectedIds: ['build', 'panel'] }));
     expect(screen.getByRole('region', { name: 'Choose a subject' })).toBeTruthy();
-    expect(cards.mounted).toEqual(['seat:code.c8', 'group:panel']);
+    expect(cards.mounted).toEqual(['seat:build-a', 'group:panel']);
   });
 
   it("unmounts in the DM's player preview, cancelling the card's pending action, and never mounts in player view", () => {
     const { unmount } = render(<Overlays />);
-    click('c8');
-    const pending = cards.signals.get('seat:code.c8');
+    click('build');
+    const pending = cards.signals.get('seat:build-a');
     expect(pending?.aborted).toBe(false);
     act(() => store.setState({ isGMView: false }));
     expect(pending?.aborted).toBe(true);
@@ -112,6 +112,6 @@ describe('the account card overlay', () => {
     render(<Overlays isPlayerView />);
     expect(screen.queryByRole('region', { name: 'Choose a subject' })).toBeNull();
     expect(screen.queryByRole('region', { name: 'Source account' })).toBeNull();
-    expect(cards.mounted).toEqual(['seat:code.c8']);
+    expect(cards.mounted).toEqual(['seat:build-a']);
   });
 });

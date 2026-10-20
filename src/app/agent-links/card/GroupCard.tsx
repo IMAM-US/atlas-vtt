@@ -18,8 +18,8 @@ function memberNow(state: MemberState | undefined): string {
   if (state.seat.state !== 'current') return state.seat.state === 'different-seat' ? 'different seat now' : state.seat.state === 'unverified' ? 'not verified' : 'unavailable';
   const activity = state.seat.node.agentActivity;
   const reported = typeof activity === 'object' && activity && 'state' in activity && typeof activity.state === 'string' ? activity.state : null;
-  // An "unknown" activity tells the reader nothing, so the row shows only what is known.
-  const word = reported === null ? 'live' : reported === 'unknown' ? '' : reported.replace(/_/g, ' ');
+  // A missing or "unknown" activity is not evidence of anything, so the row shows only what is known.
+  const word = reported === null || reported === 'unknown' ? '' : reported.replace(/_/g, ' ');
   const rows = state.owned?.state === 'current' ? `owns ${state.owned.items.length} row${state.owned.items.length === 1 ? '' : 's'}` : '';
   return [word, rows, clock(state.seat.observedAt)].filter(Boolean).join(' · ');
 }
