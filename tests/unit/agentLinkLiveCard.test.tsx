@@ -77,7 +77,8 @@ it('shows changed process as historical, never an exact successor until an expli
   f.process.mockResolvedValue(seat(20));
   await emit('binding.changed');
   expect(screen.getByText(/Seat changed since/)).toBeTruthy();
-  expect(screen.getByText(/historical read/)).toBeTruthy();
+  expect(screen.queryByText(/historical read/)).toBeNull();
+  expect(screen.queryByText('Exact conversation needs rechecking.')).toBeNull();
   expect(f.exact).toHaveBeenCalledTimes(1);
   f.exact.mockResolvedValue(seat(20, true));
   fireEvent.click(screen.getByRole('button', { name: 'Recheck conversation' })); await settle();
@@ -108,7 +109,7 @@ it('shares member oracle/custody reads and omits unknown activity and Live times
   expect(f.exact).not.toHaveBeenCalled();
   expect(f.process).toHaveBeenCalledTimes(1);
   expect(screen.getByText(/team.builder · owns 0 rows/)).toBeTruthy();
-  expect(screen.queryByText(/unknown|Activity not confirmed|Live ·/)).toBeNull();
+  expect(screen.queryByText(/unknown|Activity not confirmed|Live \d/)).toBeNull();
   inventory.display = 'working'; await emit('seat.activity_changed');
   expect(screen.getByText(/team.builder · working · owns 0 rows/)).toBeTruthy();
   expect(f.exact).not.toHaveBeenCalled();

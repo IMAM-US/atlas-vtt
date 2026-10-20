@@ -2,18 +2,24 @@ import type { InventoryRead } from '../live/OpenRigLive';
 import type { ConnectionState, Observation } from '../live/types';
 import type { SeatSubject } from '../account/accountSchema';
 import { clock } from './timeLabels';
+import type { ConversationObservationState } from '../live/ConversationObservation';
 
 export function freshnessLabel<T>(fact: Observation<T> | null | undefined, exceptionsOnly = false): string {
   if (!fact) return 'Refreshing…';
   const at = clock(fact.observedAt);
   switch (fact.freshness) {
-    case 'live': return exceptionsOnly ? '' : `Live · ${fact.observedAt ? new Date(fact.observedAt).toISOString().slice(11, 19) + 'Z' : ''}`;
+    case 'live': return exceptionsOnly ? '' : `Live ${fact.observedAt ? new Date(fact.observedAt).toISOString().slice(11, 19) + 'Z' : ''}`;
     case 'read': return exceptionsOnly ? '' : `Read ${at}`;
     case 'last-known': return `Last known ${at}${fact.message ? ` · ${fact.message}` : ''}`;
     case 'refreshing': return `Refreshing…${at ? ` · previous ${at}` : ''}`;
     case 'refused': return `Refused${fact.message ? `: ${fact.message}` : ''}${at ? ` · last known ${at}` : ''}`;
     case 'unavailable': return `Unavailable${fact.message ? `: ${fact.message}` : ''}`;
   }
+}
+
+export function conversationQualifier(state: ConversationObservationState | undefined): string | null {
+  if (state?.changedSince) return `Seat changed since ${clock(state.changedSince)}`;
+  return state && (state.needsRecheck || (state.value !== null && !state.applicable)) ? 'Exact conversation needs rechecking.' : null;
 }
 
 /** The oracle's display is authoritative; raw agentActivity does not substitute for it. */

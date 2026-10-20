@@ -53,8 +53,8 @@ export function WorkSection({ subject, owned, mapWork, liveMapWork, observation,
   };
   return <section className={`agent-link-section${changed ? ' agent-link-work--changed' : ''}`} aria-label="Work">
     <h4>Work</h4>
-    {observation && <p className="agent-link-muted">Current custody · {freshnessLabel(observation)}</p>}
-    {[...mapFreshness].map(([sourceKey, fact]) => <p key={sourceKey} className="agent-link-muted">Map work{sourceKey !== subject.sourceKey ? ` (${sourceKey})` : ''} · {freshnessLabel(fact)}</p>)}
+    {observation && <p className="agent-link-muted">Now · {freshnessLabel(observation)}</p>}
+    {[...mapFreshness].map(([sourceKey, fact]) => <p key={sourceKey} className="agent-link-muted">Map{sourceKey !== subject.sourceKey ? ` (${sourceKey})` : ''} · {freshnessLabel(fact)}</p>)}
     {owned?.state === 'unavailable' && <p className="agent-link-muted agent-link-row--unavailable">Now: unavailable, {owned.message}</p>}
     {owned?.state === 'current' && fresh.length === 0 && <p className="agent-link-muted">{owned.truncated ? "No work beyond the map's in the rows shown." : "Now: no work beyond the map's"}</p>}
     {fresh.map((item) => {

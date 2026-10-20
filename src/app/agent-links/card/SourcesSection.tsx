@@ -9,7 +9,7 @@ import { RouteRow } from './RouteRow';
 import { clock } from './timeLabels';
 import type { SeatSnapshot } from '../live/SeatSubscription';
 import type { ConnectionState, Observation } from '../live/types';
-import { connectionLabel } from './freshnessLabels';
+import { connectionLabel, conversationQualifier } from './freshnessLabels';
 
 /** The map note, the exact ids, the account's sources and each read's time: why the card says what it says. */
 export function SourcesSection({ subject, seat, snapshot, connections = snapshot?.connections, lastKnown }: {
@@ -21,7 +21,7 @@ export function SourcesSection({ subject, seat, snapshot, connections = snapshot
   const accountSources: AccountSource[] = loaded.account.sources.filter((source) => !subject.sourceIds || subject.sourceIds.includes(source.id));
   const routeSource = subject.kind === 'seat' ? sources.source(subject.sourceKey) : null;
   const observations: readonly (readonly [string, Observation<unknown>])[] = snapshot
-    ? [['Seat process', snapshot.process], ['Current custody', snapshot.owned], ['Activity', snapshot.inventory], ...snapshot.mapWork] : [];
+    ? [['Seat process', snapshot.process], ['Owned work', snapshot.owned], ['Activity', snapshot.inventory], ...snapshot.mapWork] : [];
   return <section className="agent-link-section" aria-label="Sources">
     <Button variant="ghost" className="agent-link-section__toggle" aria-expanded={open} onClick={() => setOpen(!open)}>
       <h4>Sources</h4><span className="agent-link-muted">{subject.notePath ? 'map note · ' : ''}{accountSources.length} read{accountSources.length === 1 ? '' : 's'} {open ? '▾' : '▸'}</span>
@@ -38,7 +38,7 @@ export function SourcesSection({ subject, seat, snapshot, connections = snapshot
         {subject.participant && <RouteRow label="Captured conversation" detail={`${subject.participant.runtime} ${subject.participant.conversationId}${subject.participant.generation ? ` · generation ${subject.participant.generation}` : ''} · ${clock(subject.participant.observedAt)}${subject.participant.evidence ? ` · ${subject.participant.evidence}` : ''}`} tone="muted" />}
         {seat?.state === 'current' && <RouteRow label="Now" detail={`${seat.participant ? `conversation ${seat.participant.conversationId}` : 'conversation not qualified'} · process ${seat.process.processId} in ${seat.process.tmuxPane} · ${clock(seat.observedAt)}${seat.participantMessage ? ` · ${seat.participantMessage}` : ''}`} tone="muted" />}
         {seat && seat.state !== 'current' && <RouteRow label="Now" detail={`${seat.state} · ${seat.message} · ${clock(seat.observedAt)}`} tone="muted" />}
-        {[snapshot?.conversation.previous, snapshot?.conversation.value].map((read, index) => read && <RouteRow key={index} label="Exact observation" detail={`${read.state === 'current' ? read.participant ? `${read.participant.runtime} ${read.participant.conversationId}` : read.participantMessage ?? 'not confirmed' : read.message} · Read ${clock(read.observedAt)}${read === snapshot?.conversation.value && snapshot.conversation.applicable ? '' : ' · historical read'}`} tone="muted" />)}
+        {[snapshot?.conversation.previous, snapshot?.conversation.value].map((read, index) => read && <RouteRow key={index} label="Exact observation" detail={`${read.state === 'current' ? read.participant ? `${read.participant.runtime} ${read.participant.conversationId}` : read.participantMessage ?? 'not confirmed' : read.message} · Read ${clock(read.observedAt)}${read === snapshot?.conversation.value && snapshot.conversation.applicable ? '' : ` · ${conversationQualifier(snapshot?.conversation) ?? 'Exact conversation needs rechecking.'}`}`} tone="muted" />)}
         {snapshot?.conversation.value?.state === 'current' && snapshot.conversation.value.participantRefusal && <RouteRow label="Native refusal" detail={`HTTP ${snapshot.conversation.value.participantRefusal.status}${snapshot.conversation.value.participantRefusal.code ? ` · ${snapshot.conversation.value.participantRefusal.code}` : ''} · ${snapshot.conversation.value.participantRefusal.reason ?? snapshot.conversation.value.participantMessage}`} tone="muted" />}
       </>}
       {accountSources.map((source) => <RouteRow key={source.id} label={source.description} detail={clock(source.observedAt)} route={source.command ? { label: source.id, text: source.command } : null} tone="muted" />)}

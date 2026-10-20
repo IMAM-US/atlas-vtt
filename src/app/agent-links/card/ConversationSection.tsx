@@ -11,6 +11,7 @@ import { RouteRow } from './RouteRow';
 import { clock } from './timeLabels';
 import { useActionSignal } from './useActionSignal';
 import type { ConversationObservationState } from '../live/ConversationObservation';
+import { conversationQualifier } from './freshnessLabels';
 
 const SCREEN_LINES = 40;
 type Choice = 'pinned' | 'current';
@@ -96,12 +97,11 @@ export function ConversationSection({ subject, seat, conversation, recheck }: {
     {conversation && <div className="agent-link-list">
       {conversation.pending && <p className="agent-link-muted">Refreshing exact conversation…</p>}
       {conversation.value?.state === 'current' && <p className="agent-link-muted">
-        {conversation.value.participant ? `Exact conversation · Read ${clock(conversation.value.observedAt)}${conversation.applicable ? '' : ' · historical read'}`
+        {conversation.value.participant ? `Exact conversation · Read ${clock(conversation.value.observedAt)}`
           : `Exact conversation not confirmed: ${conversation.value.participantMessage ?? 'native identity unavailable'}. Showing the seat's process. · Read ${clock(conversation.value.observedAt)}`}
       </p>}
       {conversation.value && conversation.value.state !== 'current' && <p className="agent-link-muted">Exact conversation not confirmed: {conversation.value.message} · Read {clock(conversation.value.observedAt)}</p>}
-      {conversation.changedSince && <p className="agent-link-muted agent-link-row--changed">Seat changed since {clock(conversation.changedSince)}</p>}
-      {conversation.needsRecheck && !conversation.changedSince && <p className="agent-link-muted">Exact conversation needs rechecking.</p>}
+      {conversationQualifier(conversation) && <p className={`agent-link-muted${conversation.changedSince ? ' agent-link-row--changed' : ''}`}>{conversationQualifier(conversation)}</p>}
       {conversation.needsRecheck && recheck && <Button variant="secondary" disabled={conversation.pending || !current} onClick={recheck}>Recheck conversation</Button>}
     </div>}
     <RouteRow label="Read screen" onPress={() => { void readScreen('pinned'); }} disabledReason={liveReason ?? pinnedProblem ?? busyReason}
