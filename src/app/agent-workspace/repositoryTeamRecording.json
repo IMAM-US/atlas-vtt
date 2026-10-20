@@ -21,8 +21,8 @@
       "model": "gpt-6.1-sol",
       "purpose": "Fits the integration into Atlas scenes, objects, editing, persistence and undo.",
       "nativeHarness": "Codex",
-      "repositoryPath": "/Users/farieds/Project/atlas-vtt",
-      "workingDirectory": "/Users/farieds/Project/atlas-recorded-agent-scene",
+      "repositoryPath": "~/Project/atlas-vtt",
+      "workingDirectory": "~/Project/atlas-recorded-agent-scene",
       "repositoryUrl": "https://github.com/fsafey/atlas-vtt",
       "projectBriefUrl": "https://github.com/fsafey/atlas-vtt/blob/main/docs/agent-workspace/WORKING.md",
       "openAgentInstructionsUrl": "https://github.com/fsafey/atlas-vtt/blob/28e9fb5f504205e7135a5db4e2f0ced6b768b051/docs/agent-workspace/integration-team/operations.md#open-agent-boundary"
@@ -34,8 +34,8 @@
       "model": "claude-opus-5-5",
       "purpose": "Keeps agent identity, coordination, continuity and evidence faithful to OpenRig.",
       "nativeHarness": "Claude Code",
-      "repositoryPath": "/Users/farieds/Project/openrig",
-      "workingDirectory": "/Users/farieds/Project/openrig",
+      "repositoryPath": "~/Project/openrig",
+      "workingDirectory": "~/Project/openrig",
       "repositoryUrl": "https://github.com/fsafey/openrig",
       "projectBriefUrl": "https://github.com/fsafey/atlas-vtt/blob/main/docs/agent-workspace/WORKING.md",
       "openAgentInstructionsUrl": "https://github.com/fsafey/atlas-vtt/blob/28e9fb5f504205e7135a5db4e2f0ced6b768b051/docs/agent-workspace/integration-team/operations.md#open-agent-boundary"
