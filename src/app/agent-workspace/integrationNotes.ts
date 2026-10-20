@@ -12,10 +12,10 @@ This editable scene represents the project building the Atlas/OpenRig integratio
 - Select a referenced token or text card to inspect recorded identity, work and evidence. Checkpoints change only the inspector.
 - Move objects, edit text and add annotations with normal Atlas tools. Save/reopen preserves spatial state; undo affects supported local edits only.
 
-Definitions and orientation: /Users/farieds/Project/atlas-openrig-integration-workspace/workspace/ENTRY.md
+Definitions and orientation: ~/Project/atlas-openrig-integration-workspace/workspace/ENTRY.md
 Repository-harness requalification: atlas-repository-requalification-20261018
 Historical mapping obligation: atlas-integration-mapping-20261018
-Agent-authored proposal and review: /Users/farieds/Project/atlas-openrig-integration-workspace/artifacts/
+Agent-authored proposal and review: ~/Project/atlas-openrig-integration-workspace/artifacts/
 
 Agents receive an explicit, timestamped snapshot exported by the coordinator. They do not subscribe to this scene. Placement and relationships may become useful context later, but have no execution or authorization effect in this milestone.
 
@@ -30,8 +30,8 @@ The image is one reusable map asset. Native scene objects have independent ident
 `,
   'Atlas repository': `# Atlas repository
 
-Repository: /Users/farieds/Project/atlas-vtt
-Assigned implementation worktree: /Users/farieds/Project/atlas-recorded-agent-scene
+Repository: ~/Project/atlas-vtt
+Assigned implementation worktree: ~/Project/atlas-recorded-agent-scene
 Representative: atlas-representative@atlas-integration-repos
 Stable OpenRig seat: 01M56CGCH9NACF766XDX1TF92N
 
@@ -39,7 +39,7 @@ Owns the fit with existing scene objects, asset-versus-placement identity, linke
 `,
   'OpenRig repository': `# OpenRig repository
 
-Repository: /Users/farieds/Project/openrig
+Repository: ~/Project/openrig
 Representative: openrig-representative@atlas-integration-repos
 Stable OpenRig seat: 01M56CGNJD6YPXS5STC2QHWVVB
 

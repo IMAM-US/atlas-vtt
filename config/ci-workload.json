@@ -11,7 +11,7 @@
   "artifacts": [
     "release"
   ],
-  "repository": "fsafey/atlas-vtt",
+  "repository": "IMAM-US/atlas-vtt",
   "checks": [
     {
       "name": "toolchain",
@@ -44,6 +44,10 @@
     {
       "name": "reporter-tests",
       "command": "uv run --no-project python -m unittest discover -s services/issue-reporter"
+    },
+    {
+      "name": "script-tests",
+      "command": "node --test scripts/testing/*.test.mjs"
     },
     {
       "name": "vitest",

@@ -55,6 +55,9 @@ jobs:
       - name: Test reporting service
         run: python3 -m unittest discover -s services/issue-reporter
 
+      - name: Test worktree pruning
+        run: node --test scripts/testing/*.test.mjs
+
       - name: Test
         run: npx vitest run
 
@@ -94,3 +97,21 @@ jobs:
         with:
           fail-on-severity: moderate
           comment-summary-in-pr: never
+
+  # The check main's ruleset requires: green only when every lane passed, so a
+  # failed, cancelled or skipped lane never lets a pull request merge.
+  gate:
+    needs: [build-plugin, dependency-review]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require every lane
+        env:
+          BUILD: ${{ needs.build-plugin.result }}
+          DEPENDENCIES: ${{ needs.dependency-review.result }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          echo "build-plugin: $BUILD, dependency-review: $DEPENDENCIES ($EVENT)"
+          test "$BUILD" = success
+          if [ "$EVENT" = pull_request ]; then test "$DEPENDENCIES" = success; fi

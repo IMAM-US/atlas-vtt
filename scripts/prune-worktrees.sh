@@ -110,7 +110,8 @@ archive_ignored() { # WORKTREE HEAD
   [[ ${#archive_paths[@]} -gt 0 ]] || return 0
   local archive_dir="$HOME/Project/_worktree-archive/${PWD##*/}" archive
   (umask 077; mkdir -p "$archive_dir") || return 1
-  [[ $(stat -f %Lp "$archive_dir") == 700 ]] || { echo "archive directory is not private: $archive_dir" >&2; return 1; }
+  # GNU stat uses -c; BSD stat uses -f. Unknown modes fail closed.
+  [[ $(stat -c %a "$archive_dir" 2>/dev/null || stat -f %Lp "$archive_dir" 2>/dev/null) == 700 ]] || { echo "archive directory is not private: $archive_dir" >&2; return 1; }
   archive=$(umask 077; mktemp "$archive_dir/${1##*/}-${2:0:12}.XXXXXX") || return 1
   if ! tar -czf "$archive" -C "$1" -- "${archive_paths[@]}"; then
     rm -f "$archive"

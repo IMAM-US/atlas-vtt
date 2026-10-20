@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitest/config';
+import { configDefaults, defineConfig } from 'vitest/config';
 
 export default defineConfig({
   // Dev tooling (e.g. disk-backed template loading) is enabled under test so
@@ -9,6 +9,8 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./tests/setup/obsidianDom.ts'],
+    // Script tests run under `node --test` (Plugin CI), not in jsdom.
+    exclude: [...configDefaults.exclude, 'scripts/**'],
   },
   resolve: {
     alias: {
