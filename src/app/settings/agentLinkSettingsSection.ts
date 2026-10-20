@@ -34,7 +34,7 @@ export function agentLinkSettingsSection(settingsService: SettingsService): Atla
   return {
     heading: 'Agent links',
     rows: [
-      textRow('OpenRig endpoint', 'Local daemon URL that seat and work reads use.', 'openRigEndpoint', 'http://127.0.0.1:18764'),
+      textRow('OpenRig endpoint', 'Local daemon URL that seat and work reads use.', 'openRigEndpoint', 'http://127.0.0.1:port'),
       textRow('OpenRig host id', 'The daemon\'s own host id; reads from another host are refused.', 'openRigHostId', 'host-…'),
       textRow('OpenRig token', 'Bearer token, if the daemon requires one. Stored only on this machine.', 'openRigToken', '', true),
       listRow('Herdr sockets', 'Herdr Unix sockets to find existing views on, one per line.', 'herdrSocketPaths', '~/.config/herdr/herdr.sock'),
