@@ -3,8 +3,9 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { appendFile, mkdir, mkdtemp, rename, rm, truncate, writeFile } from 'fs/promises';
 import { tmpdir } from 'os';
 import { join } from 'path';
-import { readRecordWindow, type RecordPin } from '../../src/app/agent-links/native/recordWindow';
+import { readRecordWindow, RECORD_SHOWN_LINES_MAX, withShownLines, type RecordPin } from '../../src/app/agent-links/native/recordWindow';
 import { recordPage } from '../../src/app/agent-links/records/recordPage';
+
 
 const roots: string[] = [];
 afterEach(async () => {
@@ -85,19 +86,41 @@ describe('reading a bounded window of an exact record', () => {
     await expect(readRecordWindow(providerRoots, location, { windowBytes: 8192, pin: first.pin })).rejects.toThrow('already shown changed');
   });
 
-  it('pages back with the same pin and refuses a rewrite of bytes it showed before', async () => {
-    const many = Array.from({ length: 3000 }, (_, index) => turn(index % 60));
-    const { roots: providerRoots, file } = await claudeRecord(many);
+  it('pages back within a small unchanged record, its identity prefix bounded by the read boundary', async () => {
+    const { roots: providerRoots } = await claudeRecord(Array.from({ length: 1000 }, (_, index) => turn(index % 60)));
+    const first = await readRecordWindow(providerRoots, location, { windowBytes: 2 * 1024 * 1024 });
+    expect(first.end).toBeLessThan(256 * 1024);
+    const page = recordPage(first, 600);
+    const cut = page.entries[page.entries.length - 200]!;
+    const earlier = await readRecordWindow(providerRoots, location, { windowBytes: 2 * 1024 * 1024, pin: first.pin, end: cut.lineEnd });
+    expect(recordPage(earlier, 600, { offset: cut.offset, ordinal: cut.ordinal }).entries).toHaveLength(600);
+  });
+
+  it('refuses paging back over a shown line whose bytes changed, cut at real line offsets', async () => {
+    const lines = Array.from({ length: 6000 }, (_, index) => turn(index % 60));
+    const { roots: providerRoots, file } = await claudeRecord(lines);
     const latest = await readRecordWindow(providerRoots, location, { windowBytes: 65536 });
     expect(latest.start).toBeGreaterThan(256 * 1024);
-    const end = latest.end - 32768;
-    const earlier = await readRecordWindow(providerRoots, location, { windowBytes: 65536, pin: latest.pin, end });
-    expect(earlier).toMatchObject({ end, start: end - 65536 });
-    expect(earlier.pin.boundary).toBe(latest.end);
-    const text = many.map((line) => `${line}\n`).join('');
-    const at = latest.start + 100;
+    const page = recordPage(latest, 600);
+    // Page back two lines from the end, as the view does at a line's start, and rewrite one byte of a shown line just before it.
+    const cut = page.entries[page.entries.length - 2]!;
+    const changed = page.entries[page.entries.length - 3]!;
+    const text = lines.map((line) => `${line}\n`).join('');
+    const at = changed.offset + 40;
+    expect(at).toBeGreaterThan(latest.end - 16384);
+    // The reader's own pin witnesses every complete line it returned; no page needs to add them.
+    const pin = latest.pin;
+    await expect(readRecordWindow(providerRoots, location, { windowBytes: 65536, pin, end: cut.offset })).resolves.toMatchObject({ end: cut.offset });
     await writeFile(file, `${text.slice(0, at)}${text[at] === 'x' ? 'y' : 'x'}${text.slice(at + 1)}`);
-    await expect(readRecordWindow(providerRoots, location, { windowBytes: 65536, pin: latest.pin, end })).rejects.toThrow('already shown changed');
+    await expect(readRecordWindow(providerRoots, location, { windowBytes: 65536, pin, end: cut.offset })).rejects.toThrow('already shown changed');
+  });
+
+  it('remembers a bounded number of shown lines, forgetting the oldest first', () => {
+    const many = new Map(Array.from({ length: RECORD_SHOWN_LINES_MAX + 10 }, (_, index) => [index * 10, { end: index * 10 + 9, sha256: 'x' }] as const));
+    const pin = withShownLines({ identity: { dev: 1, ino: 1 }, boundary: 1, prefixLength: 0, prefixSha256: '', shown: new Map() }, many);
+    expect(pin.shown.size).toBe(RECORD_SHOWN_LINES_MAX);
+    expect(pin.shown.has(0)).toBe(false);
+    expect(pin.shown.has((RECORD_SHOWN_LINES_MAX + 9) * 10)).toBe(true);
   });
 
   it('reads an earlier range only from a pinned read and never past its boundary', async () => {

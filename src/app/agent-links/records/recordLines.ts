@@ -55,7 +55,7 @@ export function recordLines(bytes: Buffer, start: number, startsAtLine: boolean)
       invalidText++;
       continue;
     }
-    if (text.trim()) lines.push({ text, offset });
+    if (text.trim()) lines.push({ text, offset, end: start + position });
   }
   return { lines, firstLineOffset, cutStart, incompleteEnd, oversized, invalidText };
 }

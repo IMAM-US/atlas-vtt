@@ -1,6 +1,6 @@
 import {
   argumentsText, asObject, asString, countNotShown, EntryCollector, jsonText, parseLine, RECORD_ENTRY_MAX, RecordIdentityError,
-  type JsonObject, type ParsedRecord, type RecordLine,
+  type JsonObject, type EntryCursor, type ParsedRecord, type RecordLine,
 } from './recordEntries';
 
 /** Claude Code entry types that carry no conversation text; `api-request-blob` repeats messages already shown as turns. */
@@ -32,13 +32,14 @@ function resultText(content: unknown): string {
  * with their call's name by id. Every entry that names a session must name this one, and
  * none may be a sidechain. Keeps the newest `limit` entries.
  */
-export function parseClaudeRecord(lines: readonly RecordLine[], conversationId: string, limit = RECORD_ENTRY_MAX): ParsedRecord {
-  const collected = new EntryCollector(limit);
+export function parseClaudeRecord(lines: readonly RecordLine[], conversationId: string, limit = RECORD_ENTRY_MAX, before: EntryCursor | null = null): ParsedRecord {
+  const collected = new EntryCollector(limit, before);
   const notShown = new Map<string, number>();
   const toolNames = new Map<string, string>();
   let malformed = 0;
-  for (const { text: line, offset } of lines) {
-    const entry = parseLine(line);
+  for (const line of lines) {
+    collected.line(line);
+    const entry = parseLine(line.text);
     if (!entry) {
       malformed++;
       continue;
@@ -51,8 +52,8 @@ export function parseClaudeRecord(lines: readonly RecordLine[], conversationId: 
     if ((type === 'user' || type === 'assistant') && content !== null) {
       const role = type === 'user' ? 'user' : 'assistant';
       const say = (text: string): void => collected.add(entry.isMeta === true
-        ? { kind: 'note', label: 'Injected context', at, text, offset }
-        : { kind: 'turn', role, label: null, at, text, offset });
+        ? { kind: 'note', label: 'Injected context', at, text }
+        : { kind: 'turn', role, label: null, at, text });
       if (typeof content === 'string') {
         say(content);
         continue;
@@ -78,25 +79,25 @@ export function parseClaudeRecord(lines: readonly RecordLine[], conversationId: 
           const name = asString(block?.name) ?? 'tool';
           const id = asString(block?.id);
           if (id) toolNames.set(id, name);
-          collected.add({ kind: 'tool-call', name, at, text: argumentsText(block?.input), offset });
+          collected.add({ kind: 'tool-call', name, at, text: argumentsText(block?.input) });
         } else if (blockType === 'tool_result' || (blockType?.endsWith('_tool_result') ?? false)) {
           const id = asString(block?.tool_use_id);
-          collected.add({ kind: 'tool-result', name: (id && toolNames.get(id)) || null, at, text: resultText(block?.content), isError: block?.is_error === true, offset });
+          collected.add({ kind: 'tool-result', name: (id && toolNames.get(id)) || null, at, text: resultText(block?.content), isError: block?.is_error === true });
         } else if (blockType === 'thinking' || blockType === 'redacted_thinking') {
-          collected.add({ kind: 'reasoning', at, text: asString(block?.thinking) ?? '', offset });
+          collected.add({ kind: 'reasoning', at, text: asString(block?.thinking) ?? '' });
         } else {
-          collected.add({ kind: 'raw', type: `${type} ${blockType ?? 'block'}`, at, text: jsonText(raw), offset });
+          collected.add({ kind: 'raw', type: `${type} ${blockType ?? 'block'}`, at, text: jsonText(raw) });
         }
       }
       flush();
     } else if (type === 'summary') {
-      collected.add({ kind: 'note', label: 'Summary', at, text: asString(entry.summary) ?? '', offset });
+      collected.add({ kind: 'note', label: 'Summary', at, text: asString(entry.summary) ?? '' });
     } else if (type === 'system') {
       countNotShown(notShown, `system ${asString(entry.subtype) ?? ''}`.trim());
     } else if (NOT_SHOWN.has(type)) {
       countNotShown(notShown, type);
     } else {
-      collected.add({ kind: 'raw', type, at, text: jsonText(entry), offset });
+      collected.add({ kind: 'raw', type, at, text: jsonText(entry) });
     }
   }
   return { entries: collected.entries(), total: collected.total, malformed, notShown };

@@ -17,35 +17,35 @@ function EntryText({ text, empty }: { text: string; empty?: string }): React.Rea
   </>;
 }
 
-function Collapsed({ title, at, tone, children }: { title: string; at: string | null; tone?: string | undefined; children: React.ReactNode }): React.ReactElement {
-  return <details className={`atlas-record-entry atlas-record-entry--collapsed${tone ? ` atlas-record-entry--${tone}` : ''}`}>
+function Collapsed({ title, at, tone, entryKey, children }: { title: string; at: string | null; tone?: string | undefined; entryKey: string; children: React.ReactNode }): React.ReactElement {
+  return <details data-entry-key={entryKey} className={`atlas-record-entry atlas-record-entry--collapsed${tone ? ` atlas-record-entry--${tone}` : ''}`}>
     <summary><span>{title}</span>{at && <time>{clock(at)}</time>}</summary>
     {children}
   </details>;
 }
 
 /** One entry: turns read openly, tools, reasoning and anything unknown stay collapsed with their name showing. */
-export function RecordEntryView({ entry }: { entry: RecordEntry }): React.ReactElement {
+export function RecordEntryView({ entry, entryKey }: { entry: RecordEntry; entryKey: string }): React.ReactElement {
   switch (entry.kind) {
     case 'turn': {
       const title = `${ROLE_LABEL[entry.role]}${entry.label ? ` · ${entry.label}` : ''}`;
-      if (entry.role === 'developer') return <Collapsed title={title} at={entry.at}><EntryText text={entry.text} /></Collapsed>;
-      return <article className={`atlas-record-entry atlas-record-entry--turn atlas-record-entry--${entry.role}`}>
+      if (entry.role === 'developer') return <Collapsed title={title} at={entry.at} entryKey={entryKey}><EntryText text={entry.text} /></Collapsed>;
+      return <article data-entry-key={entryKey} className={`atlas-record-entry atlas-record-entry--turn atlas-record-entry--${entry.role}`}>
         <header><strong>{title}</strong>{entry.at && <time>{clock(entry.at)}</time>}</header>
         <EntryText text={entry.text} />
       </article>;
     }
     case 'tool-call':
-      return <Collapsed title={`Tool call · ${entry.name}`} at={entry.at}><EntryText text={entry.text} /></Collapsed>;
+      return <Collapsed title={`Tool call · ${entry.name}`} at={entry.at} entryKey={entryKey}><EntryText text={entry.text} /></Collapsed>;
     case 'tool-result':
-      return <Collapsed title={`Tool result · ${entry.name ?? 'tool'}${entry.isError ? ' · error' : ''}`} at={entry.at} tone={entry.isError ? 'error' : undefined}>
+      return <Collapsed title={`Tool result · ${entry.name ?? 'tool'}${entry.isError ? ' · error' : ''}`} at={entry.at} entryKey={entryKey} tone={entry.isError ? 'error' : undefined}>
         <EntryText text={entry.text} />
       </Collapsed>;
     case 'reasoning':
-      return <Collapsed title="Reasoning" at={entry.at}><EntryText text={entry.text} empty="Not recorded in readable form." /></Collapsed>;
+      return <Collapsed title="Reasoning" at={entry.at} entryKey={entryKey}><EntryText text={entry.text} empty="Not recorded in readable form." /></Collapsed>;
     case 'note':
-      return <Collapsed title={entry.label} at={entry.at}><EntryText text={entry.text} /></Collapsed>;
+      return <Collapsed title={entry.label} at={entry.at} entryKey={entryKey}><EntryText text={entry.text} /></Collapsed>;
     case 'raw':
-      return <Collapsed title={`Entry · ${entry.type}`} at={entry.at} tone="raw"><EntryText text={entry.text} /></Collapsed>;
+      return <Collapsed title={`Entry · ${entry.type}`} at={entry.at} entryKey={entryKey} tone="raw"><EntryText text={entry.text} /></Collapsed>;
   }
 }

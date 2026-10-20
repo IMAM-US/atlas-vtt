@@ -1,6 +1,6 @@
 import {
   argumentsText, asObject, asString, countNotShown, EntryCollector, jsonText, parseLine, RECORD_ENTRY_MAX, RecordIdentityError,
-  type ParsedRecord, type RecordLine,
+  type EntryCursor, type ParsedRecord, type RecordLine,
 } from './recordEntries';
 
 /** Codex line types that carry no conversation text. */
@@ -36,13 +36,14 @@ function outputText(output: unknown): string {
  * runtime events, so they are counted and never shown as turns. A `session_meta` line must
  * name this conversation. Keeps the newest `limit` entries.
  */
-export function parseCodexRecord(lines: readonly RecordLine[], conversationId: string, limit = RECORD_ENTRY_MAX): ParsedRecord {
-  const collected = new EntryCollector(limit);
+export function parseCodexRecord(lines: readonly RecordLine[], conversationId: string, limit = RECORD_ENTRY_MAX, before: EntryCursor | null = null): ParsedRecord {
+  const collected = new EntryCollector(limit, before);
   const notShown = new Map<string, number>();
   const toolNames = new Map<string, string>();
   let malformed = 0;
-  for (const { text: line, offset } of lines) {
-    const entry = parseLine(line);
+  for (const line of lines) {
+    collected.line(line);
+    const entry = parseLine(line.text);
     if (!entry) {
       malformed++;
       continue;
@@ -56,7 +57,7 @@ export function parseCodexRecord(lines: readonly RecordLine[], conversationId: s
     } else if (type === 'event_msg') {
       countNotShown(notShown, `event_msg ${asString(payload?.type) ?? ''}`.trim());
     } else if (type === 'compacted') {
-      collected.add({ kind: 'note', label: 'Compacted history', at, text: asString(payload?.message) ?? '', offset });
+      collected.add({ kind: 'note', label: 'Compacted history', at, text: asString(payload?.message) ?? '' });
     } else if (NOT_SHOWN.has(type)) {
       countNotShown(notShown, type);
     } else if (type === 'response_item' && payload) {
@@ -65,26 +66,26 @@ export function parseCodexRecord(lines: readonly RecordLine[], conversationId: s
       if (itemType === 'message') {
         const role = asString(payload.role);
         const text = contentText(payload.content);
-        if (role === 'user' || role === 'assistant' || role === 'developer') collected.add({ kind: 'turn', role, label: null, at, text, offset });
-        else if (role === 'system') collected.add({ kind: 'turn', role: 'developer', label: 'system', at, text, offset });
-        else collected.add({ kind: 'raw', type: `message ${role ?? ''}`.trim(), at, text: jsonText(payload), offset });
+        if (role === 'user' || role === 'assistant' || role === 'developer') collected.add({ kind: 'turn', role, label: null, at, text });
+        else if (role === 'system') collected.add({ kind: 'turn', role: 'developer', label: 'system', at, text });
+        else collected.add({ kind: 'raw', type: `message ${role ?? ''}`.trim(), at, text: jsonText(payload) });
       } else if (itemType === 'agent_message') {
         const route = [asString(payload.author), asString(payload.recipient)].filter(Boolean).join(' → ');
-        collected.add({ kind: 'turn', role: 'agent', label: route || null, at, text: contentText(payload.content), offset });
+        collected.add({ kind: 'turn', role: 'agent', label: route || null, at, text: contentText(payload.content) });
       } else if (itemType === 'reasoning') {
-        collected.add({ kind: 'reasoning', at, text: Array.isArray(payload.summary) ? contentText(payload.summary) : '', offset });
+        collected.add({ kind: 'reasoning', at, text: Array.isArray(payload.summary) ? contentText(payload.summary) : '' });
       } else if (itemType === 'function_call' || itemType === 'custom_tool_call' || itemType === 'local_shell_call' || itemType === 'web_search_call') {
         const name = asString(payload.name) ?? itemType.replace(/_call$/, '');
         if (callId) toolNames.set(callId, name);
         const input = itemType === 'function_call' ? payload.arguments : itemType === 'custom_tool_call' ? payload.input : payload.action;
-        collected.add({ kind: 'tool-call', name, at, text: argumentsText(input), offset });
+        collected.add({ kind: 'tool-call', name, at, text: argumentsText(input) });
       } else if (itemType === 'function_call_output' || itemType === 'custom_tool_call_output' || itemType === 'local_shell_call_output') {
-        collected.add({ kind: 'tool-result', name: (callId && toolNames.get(callId)) || null, at, text: outputText(payload.output), isError: false, offset });
+        collected.add({ kind: 'tool-result', name: (callId && toolNames.get(callId)) || null, at, text: outputText(payload.output), isError: false });
       } else {
-        collected.add({ kind: 'raw', type: `response_item ${itemType ?? ''}`.trim(), at, text: jsonText(entry), offset });
+        collected.add({ kind: 'raw', type: `response_item ${itemType ?? ''}`.trim(), at, text: jsonText(entry) });
       }
     } else {
-      collected.add({ kind: 'raw', type, at, text: jsonText(entry), offset });
+      collected.add({ kind: 'raw', type, at, text: jsonText(entry) });
     }
   }
   return { entries: collected.entries(), total: collected.total, malformed, notShown };

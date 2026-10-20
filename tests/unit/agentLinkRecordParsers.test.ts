@@ -9,8 +9,8 @@ import { boundedText, recordPage, RECORD_ENTRY_TEXT_MAX } from '../../src/app/ag
 
 const ID = 'conversation-example-1';
 /** Complete lines at made-up offsets 100 bytes apart; parsers only carry offsets through. */
-const lines = (...entries: unknown[]): RecordLine[] => entries.map((entry, index) => ({ text: typeof entry === 'string' ? entry : JSON.stringify(entry), offset: index * 100 }));
-const bodies = (entries: RecordEntry[]): unknown[] => entries.map(({ offset: _offset, ...body }) => body);
+const lines = (...entries: unknown[]): RecordLine[] => entries.map((entry, index) => ({ text: typeof entry === 'string' ? entry : JSON.stringify(entry), offset: index * 100, end: index * 100 + 100 }));
+const bodies = (entries: RecordEntry[]): unknown[] => entries.map(({ offset: _offset, ordinal: _ordinal, lineEnd: _lineEnd, ...body }) => body);
 
 describe('Claude Code records', () => {
   const claude = (type: string, content: unknown, extra: Record<string, unknown> = {}): Record<string, unknown> =>
@@ -26,7 +26,7 @@ describe('Claude Code records', () => {
       { type: 'system', subtype: 'turn_duration', sessionId: ID },
       { type: 'summary', summary: 'Checked the brief.' },
     ), ID);
-    expect(parsed.entries.map((entry) => entry.offset)).toEqual([0, 100, 100, 100, 200, 300, 600]);
+    expect(parsed.entries.map((entry) => [entry.offset, entry.ordinal, entry.lineEnd])).toEqual([[0, 0, 100], [100, 0, 200], [100, 1, 200], [100, 2, 200], [200, 0, 300], [300, 0, 400], [600, 0, 700]]);
     expect(bodies(parsed.entries)).toEqual([
       { kind: 'turn', role: 'user', label: null, at: '2026-01-01T10:00:00Z', text: 'Please check the brief.' },
       { kind: 'reasoning', at: '2026-01-01T10:00:00Z', text: 'Plan the check.' },
@@ -49,6 +49,16 @@ describe('Claude Code records', () => {
     const parsed = parseClaudeRecord(lines(...Array.from({ length: 10 }, (_, index) => claude('user', `turn ${index}`))), ID, 3);
     expect(parsed.total).toBe(10);
     expect(parsed.entries.map((entry) => entry.kind === 'turn' && entry.text)).toEqual(['turn 7', 'turn 8', 'turn 9']);
+  });
+
+  it('reaches every entry of one line holding many, through a cursor inside that line', () => {
+    const blocks = Array.from({ length: 1000 }, (_, index) => ({ type: 'tool_use', id: `call-${index}`, name: `tool-${index}`, input: {} }));
+    const one = lines(claude('assistant', blocks));
+    const newest = parseClaudeRecord(one, ID, 600);
+    expect([newest.total, newest.entries[0]!.ordinal, newest.entries.at(-1)!.ordinal]).toEqual([1000, 400, 999]);
+    const earlier = parseClaudeRecord(one, ID, 600, { offset: 0, ordinal: 200 });
+    expect(earlier.total).toBe(200);
+    expect(earlier.entries.map((entry) => entry.ordinal)).toEqual(Array.from({ length: 200 }, (_, index) => index));
   });
 
   it('refuses another conversation or a sidechain rather than mixing it in', () => {
@@ -108,10 +118,10 @@ describe('record lines and pages', () => {
   it('separates a cut start and an unfinished end from malformed lines', () => {
     const bytes = Buffer.from('ut line"}\n{"a":1}\n\n{"b":2}\n{"c":');
     expect(recordLines(bytes, 1000, false)).toEqual({
-      lines: [{ text: '{"a":1}', offset: 1010 }, { text: '{"b":2}', offset: 1019 }], firstLineOffset: 1010,
+      lines: [{ text: '{"a":1}', offset: 1010, end: 1018 }, { text: '{"b":2}', offset: 1019, end: 1027 }], firstLineOffset: 1010,
       cutStart: true, incompleteEnd: true, oversized: 0, invalidText: 0,
     });
-    expect(recordLines(Buffer.from('{"a":1}\n'), 0, true)).toMatchObject({ lines: [{ text: '{"a":1}', offset: 0 }], firstLineOffset: 0, cutStart: false, incompleteEnd: false });
+    expect(recordLines(Buffer.from('{"a":1}\n'), 0, true)).toMatchObject({ lines: [{ text: '{"a":1}', offset: 0, end: 8 }], firstLineOffset: 0, cutStart: false, incompleteEnd: false });
   });
 
   it('counts oversized and invalid UTF-8 lines without parsing them', () => {

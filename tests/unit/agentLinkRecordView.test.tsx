@@ -9,9 +9,9 @@ afterEach(cleanup);
 
 const ID = 'conversation-example-1';
 const identity: RecordViewIdentity = { sourceKey: 'local', runtime: 'claude-code', conversationId: ID, cwd: '/work/example', seatCaption: 'Build A' };
-const pin = (start: number, boundary = 4096): RecordPin => ({
-  identity: { dev: 1, ino: 2 }, boundary, prefixLength: 10, prefixSha256: 'a', last: { start, end: boundary, sha256: 'b' }, chunks: new Map(),
-});
+const pin = (boundary = 4096): RecordPin => ({ identity: { dev: 1, ino: 2 }, boundary, prefixLength: 10, prefixSha256: 'a', shown: new Map() });
+/** The pin a later read gets back: the read's pin, with the lines the view showed added. */
+const samePin = (boundary: number): unknown => expect.objectContaining({ identity: { dev: 1, ino: 2 }, boundary, prefixSha256: 'a' });
 
 const turn = (text: string, sessionId = ID): string => JSON.stringify({ type: 'user', sessionId, timestamp: '2026-01-01T10:00:00Z', message: { role: 'user', content: text } });
 
@@ -19,7 +19,7 @@ function windowOf(lines: string[], start: number, end = 4096, fileSizeBytes = en
   return {
     path: '/records/-work-example/conversation-example-1.jsonl', runtime: 'claude-code', conversationId: ID,
     bytes: Buffer.from(lines.map((line) => `${line}\n`).join('')), start, end, startsAtLine: true, fileSizeBytes,
-    pin: pin(start, end), observedAt: '2026-01-01T11:00:00Z',
+    pin: pin(end), observedAt: '2026-01-01T11:00:00Z',
   };
 }
 
@@ -68,7 +68,8 @@ describe('the conversation record view', () => {
     render(<RecordViewContent identity={identity} sources={native.sources} />);
     await act(async () => native.reads[0]!.answer(windowOf([turn('latest')], 1024 * 1024)));
     fireEvent.click(screen.getByRole('button', { name: 'Load earlier' }));
-    expect(native.reads[1]!.options).toMatchObject({ windowBytes: 2 * RECORD_WINDOW_STEP, pin: pin(1024 * 1024) });
+    expect(native.reads[1]!.options).toMatchObject({ windowBytes: 2 * RECORD_WINDOW_STEP, pin: samePin(4096) });
+    expect((native.reads[1]!.options.pin!).shown.size).toBe(1);
     expect(native.reads[1]!.options.end).toBeUndefined();
     await act(async () => native.reads[1]!.answer(windowOf([turn('earlier'), turn('latest')], 0, 4096, 9000)));
     expect(screen.getByText('All 2 entries')).toBeTruthy();
@@ -117,10 +118,10 @@ describe('the conversation record view', () => {
     const { container } = render(<RecordViewContent identity={identity} sources={native.sources} />);
     const lines = Array.from({ length: 1000 }, (_, index) => `${turn(`entry ${index}`)}\n`);
     const all = lines.join('');
-    const offsets = lines.map((_, index) => lines.slice(0, index).join('').length);
+    const offsets = [...lines, ''].map((_, index) => lines.slice(0, index).join('').length);
     const answer = async (index: number): Promise<void> => {
       const end = native.reads[index]!.options.end ?? all.length;
-      const window = { ...windowOf([], 0, end), bytes: Buffer.from(all.slice(0, end)), pin: pin(0, all.length) };
+      const window = { ...windowOf([], 0, end), bytes: Buffer.from(all.slice(0, end)), pin: pin(all.length) };
       await act(async () => native.reads[index]!.answer(window));
     };
     const rendered = (): number => container.querySelectorAll('.atlas-record-entry').length;
@@ -133,15 +134,61 @@ describe('the conversation record view', () => {
     expect(rendered()).toBe(600);
     expect(screen.getByText(/At most 600 entries are shown at once/)).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Load earlier' }));
-    expect(native.reads[3]!.options.end).toBe(offsets[800]);
+    expect(native.reads[3]!.options.end).toBe(offsets[801]);
     await answer(3);
     expect(rendered()).toBe(600);
     expect(screen.getByText('entry 200')).toBeTruthy();
     expect(screen.queryByText('entry 800')).toBeNull();
     expect(screen.getByText(/^Showing entries from a bounded earlier range/)).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Back to latest' }));
-    expect(native.reads[4]!.options).toMatchObject({ windowBytes: RECORD_WINDOW_STEP, pin: pin(0, all.length) });
+    expect(native.reads[4]!.options).toMatchObject({ windowBytes: RECORD_WINDOW_STEP, pin: samePin(all.length) });
     expect(native.reads[4]!.options.end).toBeUndefined();
+  });
+
+  it('pages through every entry of one line that holds a thousand', async () => {
+    const native = deferredSources();
+    render(<RecordViewContent identity={identity} sources={native.sources} />);
+    const blocks = Array.from({ length: 1000 }, (_, index) => ({ type: 'tool_use', id: `call-${index}`, name: `tool-${index}`, input: {} }));
+    const line = JSON.stringify({ type: 'assistant', sessionId: ID, message: { role: 'assistant', content: blocks } });
+    const answer = async (index: number): Promise<void> => {
+      await act(async () => native.reads[index]!.answer({ ...windowOf([line], 0, line.length + 1), pin: pin(line.length + 1) }));
+    };
+    await answer(0);
+    for (let click = 1; click <= 4; click++) {
+      fireEvent.click(screen.getByRole('button', { name: 'Load earlier' }));
+      await answer(click);
+    }
+    expect(native.reads[4]!.options.end).toBe(line.length + 1);
+    // Four loads: 200, 400, 600, then two pages back to the first 600 of the line.
+    expect(screen.getByText('Tool call · tool-0')).toBeTruthy();
+    expect(screen.getByText('Tool call · tool-599')).toBeTruthy();
+    expect(screen.queryByText('Tool call · tool-600')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Load earlier' })).toBeNull();
+  });
+
+  it('opens at the newest entry and keeps the reader in place when loading earlier entries', async () => {
+    const native = deferredSources();
+    const { container } = render(<RecordViewContent identity={identity} sources={native.sources} />);
+    const view = container.querySelector<HTMLElement>('.atlas-record-view__content')!;
+    let scrollTop = 0;
+    Object.defineProperty(view, 'scrollHeight', { configurable: true, get: () => 5000 });
+    Object.defineProperty(view, 'scrollTop', { configurable: true, get: () => scrollTop, set: (value: number) => { scrollTop = value; } });
+    await act(async () => native.reads[0]!.answer(windowOf([turn('older'), turn('newest')], 1024 * 1024)));
+    expect(scrollTop).toBe(5000);
+    // Before the load the first entry sits 40px below the top; afterwards earlier entries above it push it to 640px.
+    const tops = new Map<string, number>();
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      const top = this === view ? 0 : tops.get(this.dataset.entryKey ?? '') ?? 0;
+      return { top, bottom: top, left: 0, right: 0, width: 0, height: 0, x: 0, y: top, toJSON: () => ({}) };
+    });
+    const firstKey = view.querySelector<HTMLElement>('[data-entry-key]')!.dataset.entryKey!;
+    tops.set(firstKey, 40);
+    scrollTop = 100;
+    fireEvent.click(screen.getByRole('button', { name: 'Load earlier' }));
+    tops.set(firstKey, 640);
+    await act(async () => native.reads[1]!.answer(windowOf([turn('earlier'), turn('older'), turn('newest')], 1024 * 1024 - turn('earlier').length - 1)));
+    expect(scrollTop).toBe(700);
+    vi.restoreAllMocks();
   });
 
   it('refuses a range that names another conversation instead of showing it', async () => {

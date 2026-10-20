@@ -1,13 +1,13 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Button } from '../../packages/components/primitives/button';
 import { copyText } from '../card/openNote';
 import { clock } from '../card/timeLabels';
 import { useActionSignal } from '../card/useActionSignal';
 import { fileManagerName } from '../native/desktopOpen';
-import { RECORD_WINDOW_MAX, RECORD_WINDOW_STEP, type RecordPin } from '../native/recordWindow';
+import { RECORD_WINDOW_MAX, RECORD_WINDOW_STEP, withShownLines, type RecordPin } from '../native/recordWindow';
 import type { NativeSources } from '../NativeSources';
 import { recordRoute } from '../nativeRoutes';
-import { RECORD_ENTRY_MAX } from './recordEntries';
+import { RECORD_ENTRY_MAX, type EntryCursor, type RecordEntry } from './recordEntries';
 import { RECORD_LINE_MAX_BYTES } from './recordLines';
 import { RecordEntryView } from './RecordEntryView';
 import { RECORD_ENTRY_STEP, recordPage, type RecordPage } from './recordPage';
@@ -15,15 +15,24 @@ import type { RecordViewIdentity } from './recordViewState';
 
 export type RecordSources = Pick<NativeSources, 'readRecordWindow' | 'revealConversationRecord' | 'watchSource'>;
 
-/** `end: null` reads up to the pin's boundary (or a new one without a pin). */
-interface ReadRequest { pin: RecordPin | null; end: number | null; windowBytes: number; entryLimit: number }
-const FIRST_READ: ReadRequest = { pin: null, end: null, windowBytes: RECORD_WINDOW_STEP, entryLimit: RECORD_ENTRY_STEP };
+/**
+ * `end: null` reads up to the pin's boundary (or a new one without a pin). A page that moved
+ * back ends at `before`, an entry inside the line that ends at `end`.
+ */
+interface ReadRequest { pin: RecordPin | null; end: number | null; before: EntryCursor | null; windowBytes: number; entryLimit: number }
+const FIRST_READ: ReadRequest = { pin: null, end: null, before: null, windowBytes: RECORD_WINDOW_STEP, entryLimit: RECORD_ENTRY_STEP };
 
 function size(bytes: number): string {
   return bytes >= 1024 * 1024 ? `${(bytes / (1024 * 1024)).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`;
 }
 
 const count = (n: number, one: string, many: string): string => `${n.toLocaleString()} ${n === 1 ? one : many}`;
+
+/** A key per entry that survives a re-read: its line's byte and its place among that line's entries. */
+const entryKey = (entry: RecordEntry): string => `${entry.offset}#${entry.ordinal}`;
+
+/** Where the view scrolls once a read is shown: to the newest entry, or so the anchored entry stays where it was. */
+type Scroll = { to: 'newest' } | { to: 'anchor'; key: string; top: number };
 
 /**
  * The next *Load earlier*: show more of the range already read, then read further back, and
@@ -37,9 +46,10 @@ function earlier(page: RecordPage, current: ReadRequest): ReadRequest | null {
     return { ...current, entryLimit, windowBytes: Math.min(current.windowBytes + RECORD_WINDOW_STEP, RECORD_WINDOW_MAX) };
   }
   if (page.complete && page.parsedEntries <= page.entries.length) return null;
-  const drop = Math.min(RECORD_ENTRY_STEP, Math.max(page.entries.length - 1, 0));
-  const end = drop > 0 ? page.entries[page.entries.length - drop]!.offset : page.entries[0]?.offset ?? page.firstLineOffset;
-  return end > 0 && end < page.end ? { ...current, end } : null;
+  // The new page ends just before the first dropped entry, even inside a line holding many.
+  const first = page.entries[page.entries.length - Math.min(RECORD_ENTRY_STEP, Math.max(page.entries.length - 1, 0))] ?? page.entries[0];
+  if (first) return { ...current, end: first.lineEnd, before: { offset: first.offset, ordinal: first.ordinal } };
+  return page.firstLineOffset > 0 && page.firstLineOffset < page.end ? { ...current, end: page.firstLineOffset, before: null } : null;
 }
 
 /** What the range covers: a total only when the read started at the record's first byte. */
@@ -73,9 +83,18 @@ export function RecordViewContent({ identity, sources }: { identity: RecordViewI
   const [busy, setBusy] = useState<'reading' | 'revealing' | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const request = useRef<ReadRequest>(FIRST_READ);
+  const scroller = useRef<HTMLDivElement | null>(null);
+  const scroll = useRef<Scroll | null>(null);
   const location = { runtime: identity.runtime, conversationId: identity.conversationId, ...(identity.cwd ? { cwd: identity.cwd } : {}) };
 
-  const read = async (wanted: ReadRequest): Promise<void> => {
+  /** The first entry on screen and its distance from the top of the view, so *Load earlier* keeps the reader's place. */
+  const anchor = (): Scroll => {
+    const view = scroller.current;
+    const first = view?.querySelector<HTMLElement>('[data-entry-key]');
+    if (!view || !first?.dataset.entryKey) return { to: 'newest' };
+    return { to: 'anchor', key: first.dataset.entryKey, top: first.getBoundingClientRect().top - view.getBoundingClientRect().top };
+  };
+  const read = async (wanted: ReadRequest, then: Scroll = { to: 'newest' }): Promise<void> => {
     const signal = next();
     setBusy('reading');
     setStatus(null);
@@ -84,8 +103,9 @@ export function RecordViewContent({ identity, sources }: { identity: RecordViewI
         windowBytes: wanted.windowBytes, pin: wanted.pin, ...(wanted.end !== null ? { end: wanted.end } : {}), signal,
       });
       if (signal.aborted) return;
-      const shown = recordPage(window, wanted.entryLimit);
-      request.current = { ...wanted, pin: window.pin };
+      const shown = recordPage(window, wanted.entryLimit, wanted.before);
+      request.current = { ...wanted, pin: withShownLines(window.pin, shown.shownLines) };
+      scroll.current = then;
       setPage(shown);
       setError(null);
     } catch (failure) {
@@ -122,8 +142,21 @@ export function RecordViewContent({ identity, sources }: { identity: RecordViewI
     setError('The source settings changed. Reload to read the record with them.');
   }), [sources, identity.sourceKey, next]);
 
+  useLayoutEffect(() => {
+    const view = scroller.current;
+    const wanted = scroll.current;
+    scroll.current = null;
+    if (!view || !wanted || !page) return;
+    if (wanted.to === 'newest') {
+      view.scrollTop = view.scrollHeight;
+      return;
+    }
+    const kept = view.querySelector<HTMLElement>(`[data-entry-key="${wanted.key}"]`);
+    if (kept) view.scrollTop += kept.getBoundingClientRect().top - view.getBoundingClientRect().top - wanted.top;
+  }, [page]);
+
   const before = page ? earlier(page, request.current) : null;
-  return <div className="atlas-record-view__content">
+  return <div ref={scroller} className="atlas-record-view__content">
     <header className="atlas-record-view__header">
       <h2>{identity.seatCaption || 'Conversation record'}</h2>
       <p className="atlas-record-view__identity">{identity.runtime === 'codex' ? 'Codex' : 'Claude Code'} · conversation <code>{identity.conversationId}</code></p>
@@ -140,8 +173,8 @@ export function RecordViewContent({ identity, sources }: { identity: RecordViewI
       {page && rangeNotes(page, request.current.entryLimit).map((note) => <p key={note} className="atlas-record-view__status">{note}</p>)}
     </header>
     {page && <section className="atlas-record-view__entries" aria-label="Record entries">
-      {before && <Button variant="secondary" disabled={busy === 'reading'} onClick={() => { void read(before); }}>Load earlier</Button>}
-      {page.entries.map((entry, index) => <RecordEntryView key={`${entry.offset}:${index}`} entry={entry} />)}
+      {before && <Button variant="secondary" disabled={busy === 'reading'} onClick={() => { void read(before, anchor()); }}>Load earlier</Button>}
+      {page.entries.map((entry) => <RecordEntryView key={entryKey(entry)} entryKey={entryKey(entry)} entry={entry} />)}
       {!page.latest && <Button variant="secondary" disabled={busy === 'reading'}
         onClick={() => { void read({ ...FIRST_READ, pin: request.current.pin }); }}>Back to latest</Button>}
       {page.notShown.length > 0 && <details className="atlas-record-view__not-shown">

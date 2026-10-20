@@ -8,8 +8,11 @@ export const RECORD_PREFIX_BYTES = 256 * 1024;
 export const RECORD_WINDOW_STEP = 2 * 1024 * 1024;
 /** The most one read takes; *Load earlier* pages back beyond it. */
 export const RECORD_WINDOW_MAX = 16 * 1024 * 1024;
-/** Bytes shown before are compared in chunks of this size, aligned back from the read boundary. */
-const SHOWN_CHUNK = 16 * 1024;
+/**
+ * Lines a pin remembers; the least recently read are forgotten first. 50,000 line hashes are
+ * a few megabytes, far more lines than the view's 600-entry cap can span.
+ */
+export const RECORD_SHOWN_LINES_MAX = 50_000;
 
 /**
  * What a later read of the same record must still find: the same file, at least as long as
@@ -22,10 +25,41 @@ export interface RecordPin {
   boundary: number;
   prefixLength: number;
   prefixSha256: string;
-  /** The last read's range, compared exactly when a later read covers all of it. */
-  last: { start: number; end: number; sha256: string };
-  /** Every whole chunk shown so far, by index back from the boundary. */
-  chunks: ReadonlyMap<number, string>;
+  /**
+   * The complete lines read so far, by the record byte where each begins: where it ends and
+   * the SHA-256 of its bytes. A later read compares every one it contains, exactly.
+   */
+  shown: ReadonlyMap<number, { end: number; sha256: string }>;
+}
+
+/** The complete lines of a range, by start byte, with their end and SHA-256. */
+function lineWitnesses(bytes: Buffer, start: number, startsAtLine: boolean): Map<number, { end: number; sha256: string }> {
+  const lines = new Map<number, { end: number; sha256: string }>();
+  let position = 0;
+  if (!startsAtLine) {
+    const first = bytes.indexOf(10);
+    if (first === -1) return lines;
+    position = first + 1;
+  }
+  for (let newline = bytes.indexOf(10, position); newline !== -1; newline = bytes.indexOf(10, position)) {
+    lines.set(start + position, { end: start + newline + 1, sha256: sha256(bytes.subarray(position, newline + 1)) });
+    position = newline + 1;
+  }
+  return lines;
+}
+
+/** Adds lines to a pin as the most recently read, keeping the newest `RECORD_SHOWN_LINES_MAX`. */
+export function withShownLines(pin: RecordPin, lines: ReadonlyMap<number, { end: number; sha256: string }>): RecordPin {
+  const shown = new Map(pin.shown);
+  for (const [offset, line] of lines) {
+    shown.delete(offset);
+    shown.set(offset, line);
+  }
+  for (const offset of shown.keys()) {
+    if (shown.size <= RECORD_SHOWN_LINES_MAX) break;
+    shown.delete(offset);
+  }
+  return { ...pin, shown };
 }
 
 /** A bounded byte range of one exact record, ending at its read boundary. */
@@ -53,19 +87,6 @@ export interface RecordWindowOptions {
   signal?: AbortSignal;
 }
 
-/** Hashes the whole chunks of `[start, start + bytes.length)`, indexed back from `boundary`. */
-function chunkHashes(bytes: Buffer, start: number, boundary: number): Map<number, string> {
-  // Chunk `index` covers `[boundary - (index + 1) * SHOWN_CHUNK, boundary - index * SHOWN_CHUNK)`.
-  const hashes = new Map<number, string>();
-  const first = Math.ceil((boundary - (start + bytes.length)) / SHOWN_CHUNK);
-  const last = Math.floor((boundary - start) / SHOWN_CHUNK) - 1;
-  for (let index = first; index <= last; index++) {
-    const from = boundary - (index + 1) * SHOWN_CHUNK - start;
-    hashes.set(index, sha256(bytes.subarray(from, from + SHOWN_CHUNK)));
-  }
-  return hashes;
-}
-
 /**
  * Reads the `windowBytes` before `end` (the read boundary when omitted) of a conversation's
  * exact record, located again now and checked against its own identity through the same file
@@ -88,34 +109,39 @@ export async function readRecordWindow(
     ...(pin ? { end: options.end ?? pin.boundary, expect: { identity: pin.identity, minSize: pin.boundary } } : {}),
   });
   options.signal?.throwIfAborted();
-  const head = read.prefix.subarray(0, Math.min(read.prefix.length, read.end));
-  const wholeHead = head.length === read.end && (read.end === 0 || head[read.end - 1] === 10);
+  // The identity prefix ends at the read boundary, wherever this range ends.
+  const boundary = pin?.boundary ?? read.end;
+  const head = read.prefix.subarray(0, Math.min(read.prefix.length, boundary));
+  const wholeHead = head.length === boundary && (boundary === 0 || head[boundary - 1] === 10);
   validateRecordPrefix(location.runtime, location.conversationId, head, wholeHead);
   const lead = read.bytes.length > windowBytes ? 1 : 0;
   const bytes = read.bytes.subarray(lead);
   const start = read.start + lead;
-  const boundary = pin?.boundary ?? read.end;
-  const chunks = chunkHashes(bytes, start, boundary);
+  const startsAtLine = start === 0 || read.bytes[0] === 10;
+  const witnesses = lineWitnesses(bytes, start, startsAtLine);
   if (pin) {
     if (head.length < pin.prefixLength || sha256(head.subarray(0, pin.prefixLength)) !== pin.prefixSha256) {
       throw new Error('The record\'s beginning changed since it was read. Reload it.');
     }
-    const coversLast = pin.last.start >= start && pin.last.end <= read.end;
-    const lastChanged = coversLast && sha256(bytes.subarray(pin.last.start - start, pin.last.end - start)) !== pin.last.sha256;
-    if (lastChanged || [...chunks].some(([index, hash]) => pin.chunks.has(index) && pin.chunks.get(index) !== hash)) {
-      throw new Error('Part of the record already shown changed since it was read. Reload it.');
+    for (const [offset, line] of pin.shown) {
+      if (offset < start || line.end > read.end) continue;
+      // A line that now ends elsewhere has changed too: its old newline moved or a new one appeared.
+      const now = witnesses.get(offset);
+      if (now ? now.end !== line.end || now.sha256 !== line.sha256 : sha256(bytes.subarray(offset - start, line.end - start)) !== line.sha256) {
+        throw new Error('Part of the record already shown changed since it was read. Reload it.');
+      }
     }
   }
+  const next: RecordPin = {
+    identity: read.identity, boundary,
+    prefixLength: pin?.prefixLength ?? head.length, prefixSha256: pin?.prefixSha256 ?? sha256(head),
+    shown: pin?.shown ?? new Map(),
+  };
   return {
     path: read.path, runtime: location.runtime, conversationId: location.conversationId,
-    bytes, start, end: read.end, startsAtLine: start === 0 || read.bytes[0] === 10,
+    bytes, start, end: read.end, startsAtLine,
     fileSizeBytes: read.fileSizeBytes,
-    pin: {
-      identity: read.identity, boundary,
-      prefixLength: pin?.prefixLength ?? head.length, prefixSha256: pin?.prefixSha256 ?? sha256(head),
-      last: { start, end: read.end, sha256: sha256(bytes) },
-      chunks: new Map([...(pin?.chunks ?? []), ...chunks]),
-    },
+    pin: withShownLines(next, witnesses),
     observedAt: read.observedAt,
   };
 }

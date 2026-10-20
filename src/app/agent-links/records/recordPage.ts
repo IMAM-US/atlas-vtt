@@ -1,7 +1,8 @@
+import { sha256 } from '../native/localFiles';
 import type { RecordWindow } from '../native/recordWindow';
 import { parseClaudeRecord } from './claudeRecord';
 import { parseCodexRecord } from './codexRecord';
-import { RECORD_ENTRY_MAX, type RecordEntry } from './recordEntries';
+import { RECORD_ENTRY_MAX, type EntryCursor, type RecordEntry } from './recordEntries';
 import { recordLines } from './recordLines';
 
 /** The view renders this many entries first, and each *Load earlier* adds as many again up to `RECORD_ENTRY_MAX`. */
@@ -13,13 +14,15 @@ export interface RecordPage {
   path: string;
   runtime: RecordWindow['runtime'];
   conversationId: string;
-  /** The newest entries of the range, oldest first, never more than `RECORD_ENTRY_MAX`. */
+  /** The newest entries of the range before the page's cursor, oldest first, never more than `RECORD_ENTRY_MAX`. */
   entries: RecordEntry[];
-  /** Entries parsed from the range, shown or not. */
+  /** Entries parsed from the range before the cursor, shown or not. */
   parsedEntries: number;
+  /** The lines the entries come from, by start byte: their end and the SHA-256 of their bytes, for the next read's check. */
+  shownLines: Map<number, { end: number; sha256: string }>;
   /** The range starts at the record's first byte, so `parsedEntries` is every entry up to its end. */
   complete: boolean;
-  /** The range ends at the read boundary: the newest entries this read covers. */
+  /** The range ends at the read boundary with no cursor: the newest entries this read covers. */
   latest: boolean;
   start: number;
   end: number;
@@ -35,17 +38,25 @@ export interface RecordPage {
   observedAt: string;
 }
 
-/** Parses a record window with its provider's parser and keeps the newest `entryLimit` entries. */
-export function recordPage(window: RecordWindow, entryLimit: number): RecordPage {
+/**
+ * Parses a record window with its provider's parser and keeps the newest `entryLimit`
+ * entries before `before`, which may lie inside the window's last line.
+ */
+export function recordPage(window: RecordWindow, entryLimit: number, before: EntryCursor | null = null): RecordPage {
   const limit = Math.min(Math.max(1, entryLimit), RECORD_ENTRY_MAX);
   const split = recordLines(window.bytes, window.start, window.startsAtLine);
   const parsed = window.runtime === 'codex'
-    ? parseCodexRecord(split.lines, window.conversationId, limit)
-    : parseClaudeRecord(split.lines, window.conversationId, limit);
+    ? parseCodexRecord(split.lines, window.conversationId, limit, before)
+    : parseClaudeRecord(split.lines, window.conversationId, limit, before);
+  const shownLines = new Map<number, { end: number; sha256: string }>();
+  for (const entry of parsed.entries) {
+    if (shownLines.has(entry.offset)) continue;
+    shownLines.set(entry.offset, { end: entry.lineEnd, sha256: sha256(window.bytes.subarray(entry.offset - window.start, entry.lineEnd - window.start)) });
+  }
   return {
     path: window.path, runtime: window.runtime, conversationId: window.conversationId,
-    entries: parsed.entries, parsedEntries: parsed.total,
-    complete: window.start === 0, latest: window.end === window.pin.boundary,
+    entries: parsed.entries, parsedEntries: parsed.total, shownLines,
+    complete: window.start === 0, latest: before === null && window.end === window.pin.boundary,
     start: window.start, end: window.end, boundary: window.pin.boundary, firstLineOffset: split.firstLineOffset,
     fileSizeBytes: window.fileSizeBytes,
     malformed: parsed.malformed + split.invalidText, oversized: split.oversized,
