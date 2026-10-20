@@ -1,6 +1,6 @@
 import { execFile } from 'child_process';
 import { realpath } from 'fs/promises';
-import { resolve } from 'path';
+import { relative, resolve } from 'path';
 import { promisify } from 'util';
 import {
   configuredRoot, fileReadLimit, readLocalFile, requireContained, sha256, validateRelativeFilePath,
@@ -56,7 +56,19 @@ async function repositoryRoot(rootPath: string, within?: string): Promise<string
   if (within !== undefined) requireContained(await configuredRoot(within), root, true);
   const top = (await git(root, ['rev-parse', '--show-toplevel'])).toString('utf8').trim();
   if (await realpath(top) !== root) throw new Error('Configured repository root does not match the Git worktree root');
+  await assertSameRoot(rootPath, root, within);
   return root;
+}
+
+/**
+ * The repository path must still resolve to the same real directory, inside the anchor,
+ * after every Git step: a path swapped for a link between two commands would otherwise
+ * point the next command at another repository with the same history.
+ */
+async function assertSameRoot(rootPath: string, root: string, within?: string): Promise<void> {
+  const current = await realpath(rootPath);
+  if (current !== root) throw new Error('Repository root changed during the read');
+  if (within !== undefined) requireContained(await configuredRoot(within), current, true);
 }
 
 function exitCode(error: unknown): number | undefined {
@@ -93,7 +105,10 @@ async function facts(root: string, comparedRevision?: string): Promise<CheckoutF
 
 export async function readCheckoutFacts(rootPath: string, comparedRevision?: string, options: GitReadOptions = {}): Promise<CheckoutFacts> {
   if (comparedRevision) validateCommit(comparedRevision);
-  return facts(await repositoryRoot(rootPath, options.within), comparedRevision?.toLowerCase());
+  const root = await repositoryRoot(rootPath, options.within);
+  const checkout = await facts(root, comparedRevision?.toLowerCase());
+  await assertSameRoot(rootPath, root, options.within);
+  return checkout;
 }
 
 export async function readGitFile(
@@ -118,21 +133,32 @@ export async function readGitFile(
   if (!Number.isSafeInteger(sizeBytes) || sizeBytes < 0 || sizeBytes > limit) throw new Error('Git file exceeds the read limit');
   const bytes = await git(root, ['cat-file', 'blob', blobId], limit + 1);
   if (bytes.length !== sizeBytes) throw new Error('Git artifact size changed during the read');
-  return {
-    repositoryPath: root, relativePath, revision: commit, blobId, bytes,
-    sha256: sha256(bytes), sizeBytes, checkout: await facts(root, commit),
-  };
+  const checkout = await facts(root, commit);
+  await assertSameRoot(rootPath, root, options.within);
+  return { repositoryPath: root, relativePath, revision: commit, blobId, bytes, sha256: sha256(bytes), sizeBytes, checkout };
 }
 
+/**
+ * The working bytes of a tracked path. With `within`, the file is read through that anchor
+ * (the whole path below it is resolved again by the reader) and the repository's real path
+ * is checked after each Git step, so a swap of the repository path cannot serve another
+ * repository's bytes even when its HEAD and branch match.
+ */
 export async function readWorkingGitFile(
   rootPath: string, relativePath: string, options: GitReadOptions = {},
 ): Promise<LocalFileRead & { checkout: CheckoutFacts }> {
+  validateRelativeFilePath(relativePath);
   const root = await repositoryRoot(rootPath, options.within);
   const before = await facts(root);
-  const file = await readLocalFile(root, relativePath, options);
+  await assertSameRoot(rootPath, root, options.within);
+  const anchor = options.within === undefined ? root : await configuredRoot(options.within);
+  const below = anchor === root ? relativePath : `${relative(anchor, root)}/${relativePath}`;
+  const file = await readLocalFile(anchor, below, options);
+  await assertSameRoot(rootPath, root, options.within);
   const checkout = await facts(root);
+  await assertSameRoot(rootPath, root, options.within);
   if (checkout.headCommit !== before.headCommit || checkout.branch !== before.branch) {
     throw new Error('Git checkout changed during the file read');
   }
-  return { ...file, checkout };
+  return { ...file, relativePath, checkout };
 }
