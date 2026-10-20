@@ -28,10 +28,10 @@ export function AgentLinkOverlay(): React.ReactElement | null {
     const label = 'text' in object ? object.text : 'name' in object && typeof object.name === 'string' && object.name ? object.name : object.sourceReference.subjectId;
     return [{ objectId: id, label, reference: object.sourceReference }];
   }), [selectedIds, tokens, texts]);
-  // A chooser pick holds only for the selection it was made in.
+  // A chooser pick holds only for the selection it was made in, and a drag spends it as it spends a click.
   const selection = selectedIds.join('\n');
   const [picked, setPicked] = useState<{ objectId: string; selection: string } | null>(null);
-  useEffect(() => setPicked((current) => (current && current.selection !== selection ? null : current)), [selection]);
+  useEffect(() => setPicked((current) => (current && (isDragging || current.selection !== selection) ? null : current)), [selection, isDragging]);
   const cardId = bound.length > 1 ? (picked?.selection === selection ? picked.objectId : null) : clickedObjectId;
   const chosen = bound.find((entry) => entry.objectId === cardId) ?? null;
   // A click is spent once its object leaves the selection: a later marquee reselect opens no card without a new click.

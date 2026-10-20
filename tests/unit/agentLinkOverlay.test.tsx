@@ -96,6 +96,20 @@ describe('the account card overlay', () => {
     expect(cards.mounted).toEqual(['seat:build-a', 'group:panel']);
   });
 
+  it('spends a chooser pick when the selection is dragged, so release shows the chooser and starts no card', () => {
+    render(<Overlays />);
+    click('build');
+    click('panel', true);
+    fireEvent.click(screen.getByRole('button', { name: /Panel/ }));
+    expect(cards.mounted).toEqual(['seat:build-a', 'group:panel']);
+    act(() => store.setState({ isDragging: true, clickedObjectId: null }));
+    expect(screen.queryByRole('region', { name: 'Source account' })).toBeNull();
+    act(() => store.setState({ isDragging: false, clickedObjectId: null }));
+    expect(screen.getByRole('region', { name: 'Choose a subject' })).toBeTruthy();
+    expect(screen.queryByRole('region', { name: 'Source account' })).toBeNull();
+    expect(cards.mounted).toEqual(['seat:build-a', 'group:panel']);
+  });
+
   it("unmounts in the DM's player preview, cancelling the card's pending action, and never mounts in player view", () => {
     const { unmount } = render(<Overlays />);
     click('build');
