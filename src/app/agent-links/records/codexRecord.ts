@@ -1,6 +1,6 @@
 import {
-  argumentsText, asObject, asString, countNotShown, jsonText, parseLine, RecordIdentityError,
-  type ParsedRecord, type RecordEntry,
+  argumentsText, asObject, asString, countNotShown, EntryCollector, jsonText, parseLine, RECORD_ENTRY_MAX, RecordIdentityError,
+  type ParsedRecord, type RecordLine,
 } from './recordEntries';
 
 /** Codex line types that carry no conversation text. */
@@ -34,14 +34,14 @@ function outputText(output: unknown): string {
  * Reads a Codex rollout: each line is `{ timestamp, type, payload }`. Conversation turns and
  * tool calls are `response_item` payloads. `event_msg` lines mirror those items or report
  * runtime events, so they are counted and never shown as turns. A `session_meta` line must
- * name this conversation.
+ * name this conversation. Keeps the newest `limit` entries.
  */
-export function parseCodexRecord(lines: readonly string[], conversationId: string): ParsedRecord {
-  const entries: RecordEntry[] = [];
+export function parseCodexRecord(lines: readonly RecordLine[], conversationId: string, limit = RECORD_ENTRY_MAX): ParsedRecord {
+  const collected = new EntryCollector(limit);
   const notShown = new Map<string, number>();
   const toolNames = new Map<string, string>();
   let malformed = 0;
-  for (const line of lines) {
+  for (const { text: line, offset } of lines) {
     const entry = parseLine(line);
     if (!entry) {
       malformed++;
@@ -56,7 +56,7 @@ export function parseCodexRecord(lines: readonly string[], conversationId: strin
     } else if (type === 'event_msg') {
       countNotShown(notShown, `event_msg ${asString(payload?.type) ?? ''}`.trim());
     } else if (type === 'compacted') {
-      entries.push({ kind: 'note', label: 'Compacted history', at, text: asString(payload?.message) ?? '' });
+      collected.add({ kind: 'note', label: 'Compacted history', at, text: asString(payload?.message) ?? '', offset });
     } else if (NOT_SHOWN.has(type)) {
       countNotShown(notShown, type);
     } else if (type === 'response_item' && payload) {
@@ -65,27 +65,27 @@ export function parseCodexRecord(lines: readonly string[], conversationId: strin
       if (itemType === 'message') {
         const role = asString(payload.role);
         const text = contentText(payload.content);
-        if (role === 'user' || role === 'assistant' || role === 'developer') entries.push({ kind: 'turn', role, label: null, at, text });
-        else if (role === 'system') entries.push({ kind: 'turn', role: 'developer', label: 'system', at, text });
-        else entries.push({ kind: 'raw', type: `message ${role ?? ''}`.trim(), at, text: jsonText(payload) });
+        if (role === 'user' || role === 'assistant' || role === 'developer') collected.add({ kind: 'turn', role, label: null, at, text, offset });
+        else if (role === 'system') collected.add({ kind: 'turn', role: 'developer', label: 'system', at, text, offset });
+        else collected.add({ kind: 'raw', type: `message ${role ?? ''}`.trim(), at, text: jsonText(payload), offset });
       } else if (itemType === 'agent_message') {
         const route = [asString(payload.author), asString(payload.recipient)].filter(Boolean).join(' → ');
-        entries.push({ kind: 'turn', role: 'agent', label: route || null, at, text: contentText(payload.content) });
+        collected.add({ kind: 'turn', role: 'agent', label: route || null, at, text: contentText(payload.content), offset });
       } else if (itemType === 'reasoning') {
-        entries.push({ kind: 'reasoning', at, text: Array.isArray(payload.summary) ? contentText(payload.summary) : '' });
+        collected.add({ kind: 'reasoning', at, text: Array.isArray(payload.summary) ? contentText(payload.summary) : '', offset });
       } else if (itemType === 'function_call' || itemType === 'custom_tool_call' || itemType === 'local_shell_call' || itemType === 'web_search_call') {
         const name = asString(payload.name) ?? itemType.replace(/_call$/, '');
         if (callId) toolNames.set(callId, name);
         const input = itemType === 'function_call' ? payload.arguments : itemType === 'custom_tool_call' ? payload.input : payload.action;
-        entries.push({ kind: 'tool-call', name, at, text: argumentsText(input) });
+        collected.add({ kind: 'tool-call', name, at, text: argumentsText(input), offset });
       } else if (itemType === 'function_call_output' || itemType === 'custom_tool_call_output' || itemType === 'local_shell_call_output') {
-        entries.push({ kind: 'tool-result', name: (callId && toolNames.get(callId)) || null, at, text: outputText(payload.output), isError: false });
+        collected.add({ kind: 'tool-result', name: (callId && toolNames.get(callId)) || null, at, text: outputText(payload.output), isError: false, offset });
       } else {
-        entries.push({ kind: 'raw', type: `response_item ${itemType ?? ''}`.trim(), at, text: jsonText(entry) });
+        collected.add({ kind: 'raw', type: `response_item ${itemType ?? ''}`.trim(), at, text: jsonText(entry), offset });
       }
     } else {
-      entries.push({ kind: 'raw', type, at, text: jsonText(entry) });
+      collected.add({ kind: 'raw', type, at, text: jsonText(entry), offset });
     }
   }
-  return { entries, malformed, notShown };
+  return { entries: collected.entries(), total: collected.total, malformed, notShown };
 }

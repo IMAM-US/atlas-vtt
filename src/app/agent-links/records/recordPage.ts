@@ -1,10 +1,10 @@
 import type { RecordWindow } from '../native/recordWindow';
 import { parseClaudeRecord } from './claudeRecord';
 import { parseCodexRecord } from './codexRecord';
-import type { RecordEntry } from './recordEntries';
+import { RECORD_ENTRY_MAX, type RecordEntry } from './recordEntries';
 import { recordLines } from './recordLines';
 
-/** The view renders at most this many entries, and *Load earlier* adds as many again. */
+/** The view renders this many entries first, and each *Load earlier* adds as many again up to `RECORD_ENTRY_MAX`. */
 export const RECORD_ENTRY_STEP = 200;
 /** Characters of one entry rendered before the rest is cut. */
 export const RECORD_ENTRY_TEXT_MAX = 20_000;
@@ -13,14 +13,19 @@ export interface RecordPage {
   path: string;
   runtime: RecordWindow['runtime'];
   conversationId: string;
-  /** The newest entries of the range, oldest first. */
+  /** The newest entries of the range, oldest first, never more than `RECORD_ENTRY_MAX`. */
   entries: RecordEntry[];
   /** Entries parsed from the range, shown or not. */
   parsedEntries: number;
-  /** The range starts at the record's first byte, so `parsedEntries` is every entry up to the read boundary. */
+  /** The range starts at the record's first byte, so `parsedEntries` is every entry up to its end. */
   complete: boolean;
+  /** The range ends at the read boundary: the newest entries this read covers. */
+  latest: boolean;
   start: number;
   end: number;
+  boundary: number;
+  /** Where the range's first whole line begins. */
+  firstLineOffset: number;
   fileSizeBytes: number;
   malformed: number;
   oversized: number;
@@ -32,16 +37,17 @@ export interface RecordPage {
 
 /** Parses a record window with its provider's parser and keeps the newest `entryLimit` entries. */
 export function recordPage(window: RecordWindow, entryLimit: number): RecordPage {
-  const split = recordLines(window.bytes, window.startsAtLine);
+  const limit = Math.min(Math.max(1, entryLimit), RECORD_ENTRY_MAX);
+  const split = recordLines(window.bytes, window.start, window.startsAtLine);
   const parsed = window.runtime === 'codex'
-    ? parseCodexRecord(split.lines, window.conversationId)
-    : parseClaudeRecord(split.lines, window.conversationId);
+    ? parseCodexRecord(split.lines, window.conversationId, limit)
+    : parseClaudeRecord(split.lines, window.conversationId, limit);
   return {
     path: window.path, runtime: window.runtime, conversationId: window.conversationId,
-    entries: parsed.entries.slice(-Math.max(1, entryLimit)),
-    parsedEntries: parsed.entries.length,
-    complete: window.start === 0,
-    start: window.start, end: window.end, fileSizeBytes: window.fileSizeBytes,
+    entries: parsed.entries, parsedEntries: parsed.total,
+    complete: window.start === 0, latest: window.end === window.pin.boundary,
+    start: window.start, end: window.end, boundary: window.pin.boundary, firstLineOffset: split.firstLineOffset,
+    fileSizeBytes: window.fileSizeBytes,
     malformed: parsed.malformed + split.invalidText, oversized: split.oversized,
     cutStart: split.cutStart, incompleteEnd: split.incompleteEnd,
     notShown: [...parsed.notShown].sort((a, b) => b[1] - a[1]),

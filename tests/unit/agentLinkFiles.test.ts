@@ -184,8 +184,10 @@ describe('explicit provider record identity', () => {
     await expect(locateProviderRecord(request)).rejects.toThrow('ID mismatch');
     await writeFile(join(root, request.relativePath), JSON.stringify({ sessionId: request.conversationId, isSidechain: true }));
     await expect(locateProviderRecord(request)).rejects.toThrow('sidechain');
-    await writeFile(join(root, request.relativePath), '{broken');
-    await expect(locateProviderRecord(request)).rejects.toThrow('invalid JSON');
+    await writeFile(join(root, request.relativePath), `${JSON.stringify({ sessionId: request.conversationId })}\n{broken\n${JSON.stringify({ sessionId: request.conversationId })}\n`);
+    expect((await locateProviderRecord(request)).validatedRecords).toBe(2);
+    await writeFile(join(root, request.relativePath), '{broken\n');
+    await expect(locateProviderRecord(request)).rejects.toThrow('identity was not found');
   });
 });
 

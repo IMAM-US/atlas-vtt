@@ -1,8 +1,12 @@
+import type { RecordLine } from './recordEntries';
+
 /** A complete line longer than this is counted and skipped rather than parsed. */
 export const RECORD_LINE_MAX_BYTES = 1024 * 1024;
 
 export interface RecordLines {
-  lines: string[];
+  lines: RecordLine[];
+  /** Where the range's first whole line begins; a read that pages back ends here at the latest. */
+  firstLineOffset: number;
   /** The range began inside a line, so its first fragment was left out. */
   cutStart: boolean;
   /** The last bytes before the read boundary are a line still being written. */
@@ -13,12 +17,13 @@ export interface RecordLines {
 }
 
 /**
- * Splits a byte range of a JSONL record into its complete lines. A fragment cut at the
- * range start and an unterminated final line are reported, never counted as malformed.
+ * Splits the byte range starting at record byte `start` into its complete lines. A fragment
+ * cut at the range start and an unterminated final line are reported, never counted as
+ * malformed.
  */
-export function recordLines(bytes: Buffer, startsAtLine: boolean): RecordLines {
+export function recordLines(bytes: Buffer, start: number, startsAtLine: boolean): RecordLines {
   const decoder = new TextDecoder('utf-8', { fatal: true });
-  const lines: string[] = [];
+  const lines: RecordLine[] = [];
   let oversized = 0;
   let invalidText = 0;
   let position = 0;
@@ -28,6 +33,7 @@ export function recordLines(bytes: Buffer, startsAtLine: boolean): RecordLines {
     cutStart = true;
     position = first === -1 ? bytes.length : first + 1;
   }
+  const firstLineOffset = start + position;
   let incompleteEnd = false;
   while (position < bytes.length) {
     const newline = bytes.indexOf(10, position);
@@ -36,6 +42,7 @@ export function recordLines(bytes: Buffer, startsAtLine: boolean): RecordLines {
       break;
     }
     const line = bytes.subarray(position, newline);
+    const offset = start + position;
     position = newline + 1;
     if (line.length > RECORD_LINE_MAX_BYTES) {
       oversized++;
@@ -48,7 +55,7 @@ export function recordLines(bytes: Buffer, startsAtLine: boolean): RecordLines {
       invalidText++;
       continue;
     }
-    if (text.trim()) lines.push(text);
+    if (text.trim()) lines.push({ text, offset });
   }
-  return { lines, cutStart, incompleteEnd, oversized, invalidText };
+  return { lines, firstLineOffset, cutStart, incompleteEnd, oversized, invalidText };
 }

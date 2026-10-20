@@ -70,6 +70,20 @@ export class NativeSources {
     return this.settings.getAgentLinkSource(key);
   }
 
+  /**
+   * Calls `changed` whenever the settings of source `key` change, whether or not a live model
+   * watches that source. It only listens to the settings; it opens no connection.
+   */
+  watchSource(key: string, changed: () => void): () => void {
+    let fingerprint = JSON.stringify(this.source(key));
+    return this.settings.onChange(() => {
+      const next = JSON.stringify(this.source(key));
+      if (next === fingerprint) return;
+      fingerprint = next;
+      changed();
+    });
+  }
+
   /** The authored document, validated; a schema problem is an error the card shows, never a guess. */
   async loadAccount(path: string, options: Options = {}): Promise<LoadedAccount> {
     const loaded = await loadAccountJson(this.app, path, options.signal);

@@ -4,6 +4,7 @@ import { appendFile, mkdir, mkdtemp, rename, rm, truncate, writeFile } from 'fs/
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { readRecordWindow, type RecordPin } from '../../src/app/agent-links/native/recordWindow';
+import { recordPage } from '../../src/app/agent-links/records/recordPage';
 
 const roots: string[] = [];
 afterEach(async () => {
@@ -82,6 +83,34 @@ describe('reading a bounded window of an exact record', () => {
     const rewritten = [...many.slice(0, -1), many[many.length - 1]!.replace('"turn', '"TURN')];
     await writeFile(file, rewritten.map((line) => `${line}\n`).join(''));
     await expect(readRecordWindow(providerRoots, location, { windowBytes: 8192, pin: first.pin })).rejects.toThrow('already shown changed');
+  });
+
+  it('pages back with the same pin and refuses a rewrite of bytes it showed before', async () => {
+    const many = Array.from({ length: 3000 }, (_, index) => turn(index % 60));
+    const { roots: providerRoots, file } = await claudeRecord(many);
+    const latest = await readRecordWindow(providerRoots, location, { windowBytes: 65536 });
+    expect(latest.start).toBeGreaterThan(256 * 1024);
+    const end = latest.end - 32768;
+    const earlier = await readRecordWindow(providerRoots, location, { windowBytes: 65536, pin: latest.pin, end });
+    expect(earlier).toMatchObject({ end, start: end - 65536 });
+    expect(earlier.pin.boundary).toBe(latest.end);
+    const text = many.map((line) => `${line}\n`).join('');
+    const at = latest.start + 100;
+    await writeFile(file, `${text.slice(0, at)}${text[at] === 'x' ? 'y' : 'x'}${text.slice(at + 1)}`);
+    await expect(readRecordWindow(providerRoots, location, { windowBytes: 65536, pin: latest.pin, end })).rejects.toThrow('already shown changed');
+  });
+
+  it('reads an earlier range only from a pinned read and never past its boundary', async () => {
+    const { roots: providerRoots } = await claudeRecord([turn(1), turn(2)]);
+    const first = await readRecordWindow(providerRoots, location, { windowBytes: 1024 });
+    await expect(readRecordWindow(providerRoots, location, { windowBytes: 1024, end: 10 })).rejects.toThrow('pin');
+    await expect(readRecordWindow(providerRoots, location, { windowBytes: 1024, pin: first.pin, end: first.end + 1 })).rejects.toThrow('pin');
+  });
+
+  it('counts a malformed complete line after a verified Claude identity instead of refusing the record', async () => {
+    const { roots: providerRoots } = await claudeRecord([turn(1), 'not json', turn(2)]);
+    const window = await readRecordWindow(providerRoots, location, { windowBytes: 4096 });
+    expect(recordPage(window, 200)).toMatchObject({ malformed: 1, parsedEntries: 2 });
   });
 
   it("refuses a record whose own entries name another conversation or a sidechain", async () => {

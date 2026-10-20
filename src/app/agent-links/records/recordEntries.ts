@@ -1,5 +1,7 @@
-/** One readable entry of a conversation record. Text is shown as text only, never as markup. */
-export type RecordEntry =
+/** Entries a parser keeps: the newest this many, while it counts all of them. */
+export const RECORD_ENTRY_MAX = 600;
+
+type EntryBody =
   | { kind: 'turn'; role: 'user' | 'assistant' | 'developer' | 'agent'; label: string | null; at: string | null; text: string }
   | { kind: 'tool-call'; name: string; at: string | null; text: string }
   | { kind: 'tool-result'; name: string | null; at: string | null; text: string; isError: boolean }
@@ -8,9 +10,18 @@ export type RecordEntry =
   /** An entry type this view does not know, kept as escaped raw JSON. */
   | { kind: 'raw'; type: string; at: string | null; text: string };
 
+/** One readable entry of a conversation record, at the byte where its line begins. Text is shown as text only, never as markup. */
+export type RecordEntry = EntryBody & { offset: number };
+
+/** A complete record line and the record byte where it begins. */
+export interface RecordLine { text: string; offset: number }
+
 /** What one provider parser made of a record's complete lines. */
 export interface ParsedRecord {
+  /** The newest entries, at most the parser's limit, oldest first. */
   entries: RecordEntry[];
+  /** Every entry parsed, kept or not. */
+  total: number;
   /** Complete lines that are not a JSON object. */
   malformed: number;
   /** Known entry types that carry no conversation text (runtime events, usage, settings), by type. */
@@ -61,4 +72,22 @@ export function argumentsText(value: unknown): string {
 
 export function countNotShown(notShown: Map<string, number>, type: string): void {
   notShown.set(type, (notShown.get(type) ?? 0) + 1);
+}
+
+/** Keeps the newest `limit` entries in bounded memory while counting every entry. */
+export class EntryCollector {
+  private items: RecordEntry[] = [];
+  total = 0;
+
+  constructor(private readonly limit: number) {}
+
+  add(entry: RecordEntry): void {
+    this.total++;
+    this.items.push(entry);
+    if (this.items.length >= this.limit * 2) this.items.splice(0, this.items.length - this.limit);
+  }
+
+  entries(): RecordEntry[] {
+    return this.items.slice(-this.limit);
+  }
 }

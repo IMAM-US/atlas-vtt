@@ -29,8 +29,9 @@ function parseRecord(line: string): Record<string, unknown> {
 /**
  * Checks a record's own identity in its first bytes: Codex names the conversation in its
  * first `session_meta`; every Claude Code entry that names a session must name this one and
- * none may be a sidechain. `complete` says the bytes are the whole file. Returns how many
- * entries carried the identity.
+ * none may be a sidechain. A complete Claude Code line that is not a JSON object carries no
+ * identity and is passed over here; the record view counts it. `complete` says the bytes
+ * are the whole file. Returns how many entries carried the identity.
  */
 export function validateRecordPrefix(runtime: ProviderRecordRequest['runtime'], conversationId: string, bytes: Buffer, complete: boolean): number {
   if (runtime !== 'codex' && runtime !== 'claude-code') throw new Error('Unsupported provider record runtime');
@@ -52,7 +53,8 @@ export function validateRecordPrefix(runtime: ProviderRecordRequest['runtime'], 
   }
   let validatedRecords = 0;
   for (const line of lines) {
-    const record = parseRecord(line);
+    let record: Record<string, unknown>;
+    try { record = parseRecord(line); } catch { continue; }
     if (record.isSidechain === true) throw new Error('Claude sidechain record is not a main conversation record');
     if (record.sessionId === undefined) continue;
     if (record.sessionId !== conversationId) throw new Error('Claude record conversation ID mismatch');

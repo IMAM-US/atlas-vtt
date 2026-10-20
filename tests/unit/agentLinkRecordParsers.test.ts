@@ -3,11 +3,14 @@ import { describe, expect, it } from 'vitest';
 import type { RecordWindow } from '../../src/app/agent-links/native/recordWindow';
 import { parseClaudeRecord } from '../../src/app/agent-links/records/claudeRecord';
 import { parseCodexRecord } from '../../src/app/agent-links/records/codexRecord';
+import type { RecordEntry, RecordLine } from '../../src/app/agent-links/records/recordEntries';
 import { recordLines, RECORD_LINE_MAX_BYTES } from '../../src/app/agent-links/records/recordLines';
 import { boundedText, recordPage, RECORD_ENTRY_TEXT_MAX } from '../../src/app/agent-links/records/recordPage';
 
 const ID = 'conversation-example-1';
-const lines = (...entries: unknown[]): string[] => entries.map((entry) => (typeof entry === 'string' ? entry : JSON.stringify(entry)));
+/** Complete lines at made-up offsets 100 bytes apart; parsers only carry offsets through. */
+const lines = (...entries: unknown[]): RecordLine[] => entries.map((entry, index) => ({ text: typeof entry === 'string' ? entry : JSON.stringify(entry), offset: index * 100 }));
+const bodies = (entries: RecordEntry[]): unknown[] => entries.map(({ offset: _offset, ...body }) => body);
 
 describe('Claude Code records', () => {
   const claude = (type: string, content: unknown, extra: Record<string, unknown> = {}): Record<string, unknown> =>
@@ -23,7 +26,8 @@ describe('Claude Code records', () => {
       { type: 'system', subtype: 'turn_duration', sessionId: ID },
       { type: 'summary', summary: 'Checked the brief.' },
     ), ID);
-    expect(parsed.entries).toEqual([
+    expect(parsed.entries.map((entry) => entry.offset)).toEqual([0, 100, 100, 100, 200, 300, 600]);
+    expect(bodies(parsed.entries)).toEqual([
       { kind: 'turn', role: 'user', label: null, at: '2026-01-01T10:00:00Z', text: 'Please check the brief.' },
       { kind: 'reasoning', at: '2026-01-01T10:00:00Z', text: 'Plan the check.' },
       { kind: 'turn', role: 'assistant', label: null, at: '2026-01-01T10:00:00Z', text: 'Checking it.' },
@@ -38,7 +42,13 @@ describe('Claude Code records', () => {
   it('keeps unknown entries as raw JSON text and counts malformed complete lines', () => {
     const parsed = parseClaudeRecord(lines({ type: 'future-entry', sessionId: ID, value: '<b>bold</b>' }, '{"type":', '[1,2]'), ID);
     expect(parsed.malformed).toBe(2);
-    expect(parsed.entries).toEqual([{ kind: 'raw', type: 'future-entry', at: null, text: expect.stringContaining('"value": "<b>bold</b>"') }]);
+    expect(bodies(parsed.entries)).toEqual([{ kind: 'raw', type: 'future-entry', at: null, text: expect.stringContaining('"value": "<b>bold</b>"') }]);
+  });
+
+  it('keeps only the newest entries up to its limit while counting all of them', () => {
+    const parsed = parseClaudeRecord(lines(...Array.from({ length: 10 }, (_, index) => claude('user', `turn ${index}`))), ID, 3);
+    expect(parsed.total).toBe(10);
+    expect(parsed.entries.map((entry) => entry.kind === 'turn' && entry.text)).toEqual(['turn 7', 'turn 8', 'turn 9']);
   });
 
   it('refuses another conversation or a sidechain rather than mixing it in', () => {
@@ -97,24 +107,28 @@ describe('Codex records', () => {
 describe('record lines and pages', () => {
   it('separates a cut start and an unfinished end from malformed lines', () => {
     const bytes = Buffer.from('ut line"}\n{"a":1}\n\n{"b":2}\n{"c":');
-    expect(recordLines(bytes, false)).toEqual({ lines: ['{"a":1}', '{"b":2}'], cutStart: true, incompleteEnd: true, oversized: 0, invalidText: 0 });
-    expect(recordLines(Buffer.from('{"a":1}\n'), true)).toMatchObject({ lines: ['{"a":1}'], cutStart: false, incompleteEnd: false });
+    expect(recordLines(bytes, 1000, false)).toEqual({
+      lines: [{ text: '{"a":1}', offset: 1010 }, { text: '{"b":2}', offset: 1019 }], firstLineOffset: 1010,
+      cutStart: true, incompleteEnd: true, oversized: 0, invalidText: 0,
+    });
+    expect(recordLines(Buffer.from('{"a":1}\n'), 0, true)).toMatchObject({ lines: [{ text: '{"a":1}', offset: 0 }], firstLineOffset: 0, cutStart: false, incompleteEnd: false });
   });
 
   it('counts oversized and invalid UTF-8 lines without parsing them', () => {
     const big = Buffer.alloc(RECORD_LINE_MAX_BYTES + 1, 0x61);
     const bytes = Buffer.concat([big, Buffer.from('\n'), Buffer.from([0xff, 0xfe, 0x0a]), Buffer.from('{"a":1}\n')]);
-    expect(recordLines(bytes, true)).toMatchObject({ lines: ['{"a":1}'], oversized: 1, invalidText: 1 });
+    expect(recordLines(bytes, 0, true)).toMatchObject({ lines: [{ text: '{"a":1}' }], oversized: 1, invalidText: 1 });
   });
 
   it('keeps the newest entries, says whether the range covers the whole record, and bounds text', () => {
     const content = Array.from({ length: 5 }, (_, index) => `${JSON.stringify({ type: 'user', sessionId: ID, message: { role: 'user', content: `turn ${index}` } })}\n`).join('');
     const window = { path: '/records/example.jsonl', runtime: 'claude-code', conversationId: ID, bytes: Buffer.from(content), start: 0, end: content.length,
-      startsAtLine: true, fileSizeBytes: content.length, observedAt: '2026-01-01T11:00:00Z' } as unknown as RecordWindow;
+      startsAtLine: true, fileSizeBytes: content.length, pin: { boundary: content.length }, observedAt: '2026-01-01T11:00:00Z' } as unknown as RecordWindow;
     const page = recordPage(window, 2);
-    expect(page).toMatchObject({ parsedEntries: 5, complete: true, malformed: 0 });
+    expect(page).toMatchObject({ parsedEntries: 5, complete: true, latest: true, malformed: 0 });
+    expect(recordPage({ ...window, end: content.length - 1 }, 2).latest).toBe(false);
     expect(page.entries.map((entry) => entry.kind === 'turn' && entry.text)).toEqual(['turn 3', 'turn 4']);
-    expect(recordPage({ ...window, start: 10 } as RecordWindow, 2).complete).toBe(false);
+    expect(recordPage({ ...window, start: 10 }, 2).complete).toBe(false);
     expect(boundedText('x'.repeat(RECORD_ENTRY_TEXT_MAX + 5))).toMatchObject({ omitted: 5 });
   });
 });

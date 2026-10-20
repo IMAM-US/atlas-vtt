@@ -9,7 +9,9 @@ afterEach(cleanup);
 
 const ID = 'conversation-example-1';
 const identity: RecordViewIdentity = { sourceKey: 'local', runtime: 'claude-code', conversationId: ID, cwd: '/work/example', seatCaption: 'Build A' };
-const pin = (shownStart: number): RecordPin => ({ identity: { dev: 1, ino: 2 }, boundary: 4096, prefixLength: 10, prefixSha256: 'a', shownStart, shownSha256: 'b' });
+const pin = (start: number, boundary = 4096): RecordPin => ({
+  identity: { dev: 1, ino: 2 }, boundary, prefixLength: 10, prefixSha256: 'a', last: { start, end: boundary, sha256: 'b' }, chunks: new Map(),
+});
 
 const turn = (text: string, sessionId = ID): string => JSON.stringify({ type: 'user', sessionId, timestamp: '2026-01-01T10:00:00Z', message: { role: 'user', content: text } });
 
@@ -17,20 +19,24 @@ function windowOf(lines: string[], start: number, end = 4096, fileSizeBytes = en
   return {
     path: '/records/-work-example/conversation-example-1.jsonl', runtime: 'claude-code', conversationId: ID,
     bytes: Buffer.from(lines.map((line) => `${line}\n`).join('')), start, end, startsAtLine: true, fileSizeBytes,
-    pin: pin(start), observedAt: '2026-01-01T11:00:00Z',
+    pin: pin(start, end), observedAt: '2026-01-01T11:00:00Z',
   };
 }
 
 /** Reads stay pending until the test answers them, so ordering and cancellation are visible. */
-function deferredSources(): { sources: RecordSources; reads: Array<{ options: { windowBytes: number; pin?: RecordPin | null; signal?: AbortSignal }; answer: (window: RecordWindow) => void }>; reveal: ReturnType<typeof vi.fn> } {
-  const reads: Array<{ options: { windowBytes: number; pin?: RecordPin | null; signal?: AbortSignal }; answer: (window: RecordWindow) => void }> = [];
+interface ReadOptions { windowBytes: number; pin?: RecordPin | null; end?: number; signal?: AbortSignal }
+
+function deferredSources(): { sources: RecordSources; reads: Array<{ options: ReadOptions; answer: (window: RecordWindow) => void }>; reveal: ReturnType<typeof vi.fn>; changeSettings: () => void } {
+  const reads: Array<{ options: ReadOptions; answer: (window: RecordWindow) => void }> = [];
   const reveal = vi.fn(async () => 'Finder');
+  const watchers = new Set<() => void>();
   const sources = {
-    readRecordWindow: (_sourceKey: string, _location: unknown, options: { windowBytes: number; pin?: RecordPin | null; signal?: AbortSignal }) =>
+    readRecordWindow: (_sourceKey: string, _location: unknown, options: ReadOptions) =>
       new Promise<RecordWindow>((resolve) => reads.push({ options, answer: resolve })),
     revealConversationRecord: reveal,
+    watchSource: (_sourceKey: string, changed: () => void) => { watchers.add(changed); return () => watchers.delete(changed); },
   } as unknown as RecordSources;
-  return { sources, reads, reveal };
+  return { sources, reads, reveal, changeSettings: () => watchers.forEach((changed) => changed()) };
 }
 
 describe('the conversation record view', () => {
@@ -63,6 +69,7 @@ describe('the conversation record view', () => {
     await act(async () => native.reads[0]!.answer(windowOf([turn('latest')], 1024 * 1024)));
     fireEvent.click(screen.getByRole('button', { name: 'Load earlier' }));
     expect(native.reads[1]!.options).toMatchObject({ windowBytes: 2 * RECORD_WINDOW_STEP, pin: pin(1024 * 1024) });
+    expect(native.reads[1]!.options.end).toBeUndefined();
     await act(async () => native.reads[1]!.answer(windowOf([turn('earlier'), turn('latest')], 0, 4096, 9000)));
     expect(screen.getByText('All 2 entries')).toBeTruthy();
     expect(screen.getByText('The record has grown by 5 KB since this read. Reload to read it.')).toBeTruthy();
@@ -89,6 +96,52 @@ describe('the conversation record view', () => {
     expect(pending.options.signal?.aborted).toBe(true);
     await act(async () => pending.answer(windowOf([turn('late')], 0)));
     expect(screen.queryByText('late')).toBeNull();
+  });
+
+  it('drops a pending read and the record when the source settings change, and waits for Reload', async () => {
+    const native = deferredSources();
+    render(<RecordViewContent identity={identity} sources={native.sources} />);
+    const pending = native.reads[0]!;
+    act(() => native.changeSettings());
+    expect(pending.options.signal?.aborted).toBe(true);
+    await act(async () => pending.answer(windowOf([turn('read with the old settings')], 0)));
+    expect(screen.queryByText('read with the old settings')).toBeNull();
+    expect(screen.getByText('The source settings changed. Reload to read the record with them.')).toBeTruthy();
+    expect(native.reads).toHaveLength(1);
+    fireEvent.click(screen.getByRole('button', { name: 'Reload' }));
+    expect(native.reads[1]!.options).toMatchObject({ windowBytes: RECORD_WINDOW_STEP, pin: null });
+  });
+
+  it('never renders more than the entry cap and pages back past it, then returns to the latest entries', async () => {
+    const native = deferredSources();
+    const { container } = render(<RecordViewContent identity={identity} sources={native.sources} />);
+    const lines = Array.from({ length: 1000 }, (_, index) => `${turn(`entry ${index}`)}\n`);
+    const all = lines.join('');
+    const offsets = lines.map((_, index) => lines.slice(0, index).join('').length);
+    const answer = async (index: number): Promise<void> => {
+      const end = native.reads[index]!.options.end ?? all.length;
+      const window = { ...windowOf([], 0, end), bytes: Buffer.from(all.slice(0, end)), pin: pin(0, all.length) };
+      await act(async () => native.reads[index]!.answer(window));
+    };
+    const rendered = (): number => container.querySelectorAll('.atlas-record-entry').length;
+    await answer(0);
+    expect(rendered()).toBe(200);
+    for (const index of [1, 2]) {
+      fireEvent.click(screen.getByRole('button', { name: 'Load earlier' }));
+      await answer(index);
+    }
+    expect(rendered()).toBe(600);
+    expect(screen.getByText(/At most 600 entries are shown at once/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Load earlier' }));
+    expect(native.reads[3]!.options.end).toBe(offsets[800]);
+    await answer(3);
+    expect(rendered()).toBe(600);
+    expect(screen.getByText('entry 200')).toBeTruthy();
+    expect(screen.queryByText('entry 800')).toBeNull();
+    expect(screen.getByText(/^Showing entries from a bounded earlier range/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Back to latest' }));
+    expect(native.reads[4]!.options).toMatchObject({ windowBytes: RECORD_WINDOW_STEP, pin: pin(0, all.length) });
+    expect(native.reads[4]!.options.end).toBeUndefined();
   });
 
   it('refuses a range that names another conversation instead of showing it', async () => {
