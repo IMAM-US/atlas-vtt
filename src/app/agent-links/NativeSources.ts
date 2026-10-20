@@ -8,7 +8,7 @@ import { anchoredPath, confinedRoot } from './sourceSettings';
 import { readLocalFilePrefix } from './native/localFiles';
 import { focusHerdrView, returnToHerdrView } from './native/herdrFocus';
 import type { HerdrViewWitness } from './native/herdrViews';
-import { openLocalFile } from './native/desktopOpen';
+import { openLocalFile, type LocalOpen } from './native/desktopOpen';
 import {
   NativeIdentityError, readOpenRigNode, readOpenRigParticipant, readOpenRigProcess, readOpenRigScreen, readOpenRigSeatScreen,
   sameOpenRigParticipant, sameOpenRigProcess, type OpenRigConnection, type OpenRigSeat,
@@ -20,7 +20,6 @@ import {
   failure, now, type ConversationRecord, type CurrentSeat, type Focus, type LoadedAccount, type OwnedWork, type Screen, type SeatRead, type Views, type Work,
 } from './reads';
 import { expandRoot, openRigConnectionOf, viewConnectionsOf, type AgentLinkSourceSettings } from './sourceSettings';
-import type { ProviderRecord } from './native/providerRecord';
 
 interface Options { signal?: AbortSignal }
 /**
@@ -210,29 +209,32 @@ export class NativeSources {
   }
 
   /**
-   * Opens an artifact's working file with the system's default application after confining
-   * and reading it again now; a path retained from an earlier read is never opened as is.
+   * Opens an artifact's working file with the system's default application, confining and
+   * reading it again now; a path retained from an earlier read is never opened as is.
    */
-  async openArtifactWorkingFile(sourceKey: string, artifact: AccountArtifact, options: Options = {}): Promise<void> {
+  openArtifactWorkingFile(sourceKey: string, artifact: AccountArtifact, options: Options = {}): Promise<LocalOpen> {
     const locator = artifact.working;
-    if (!locator) throw new Error('This artifact has no working file.');
-    options.signal?.throwIfAborted();
-    const confined = await confinedRoot(this.source(sourceKey), locator.root);
-    if (!confined) throw new Error('This path is outside the allowed roots in Atlas settings.');
-    const file = await readLocalFilePrefix(confined.anchor, anchoredPath(confined, locator.path), { maxBytes: 1 });
-    options.signal?.throwIfAborted();
-    await openLocalFile(file.path);
+    if (!locator) return Promise.reject(new Error('This artifact has no working file.'));
+    const source = this.source(sourceKey);
+    return openLocalFile(async () => {
+      const confined = await confinedRoot(source, locator.root);
+      if (!confined) throw new Error('This path is outside the allowed roots in Atlas settings.');
+      return (await readLocalFilePrefix(confined.anchor, anchoredPath(confined, locator.path), { maxBytes: 1 })).path;
+    }, options.signal);
   }
 
-  /** Opens the exact provider record after locating and validating it again now; a cancelled open never reaches the desktop. */
-  async openConversationRecord(
+  /**
+   * Opens the exact provider record, located and validated again now; a cancelled open never reaches the desktop.
+   * When no application opens it, the record itself is shown in its folder; the seat's aggregate transcript never stands in.
+   */
+  openConversationRecord(
     sourceKey: string, participant: Pick<CapturedParticipant, 'runtime' | 'conversationId'> & { cwd?: string | null }, options: Options = {},
-  ): Promise<ProviderRecord> {
-    const located = await this.locateRecord(sourceKey, participant, options);
-    if (located.state === 'unavailable') throw new Error(located.message);
-    options.signal?.throwIfAborted();
-    await openLocalFile(located.record.path);
-    return located.record;
+  ): Promise<LocalOpen> {
+    return openLocalFile(async () => {
+      const located = await this.locateRecord(sourceKey, participant, options);
+      if (located.state === 'unavailable') throw new Error(located.message);
+      return located.record.path;
+    }, options.signal);
   }
 
   /** The exact provider record of a conversation, validated by its own header; never the seat's aggregate transcript. */

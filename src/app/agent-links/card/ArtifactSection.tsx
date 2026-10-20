@@ -3,6 +3,7 @@ import { Notice } from 'obsidian';
 import type { AccountArtifact, AccountWork } from '../account/accountSchema';
 import { subjectOf } from '../account/accountQueries';
 import { compareArtifact, type ArtifactFile, type ArtifactRead, type ArtifactSource } from '../artifactReads';
+import type { LocalOpen } from '../native/desktopOpen';
 import { capturedFileRoute, reviewedFileRoute, workingFileRoute, type NativeRoute } from '../nativeRoutes';
 import { useCard } from './cardContext';
 import { RouteRow } from './RouteRow';
@@ -32,6 +33,7 @@ function ArtifactRows({ heading, work, artifact }: { heading: string; work: Acco
   const [read, setRead] = useState<ArtifactRead | null>(null);
   const [busy, setBusy] = useState(false);
   const [viewing, setViewing] = useState<ArtifactFile['source'] | null>(null);
+  const [opened, setOpened] = useState<LocalOpen | null>(null);
   const sourceKey = artifact.sourceKey;
   const inspect = async (): Promise<void> => {
     const signal = next();
@@ -40,6 +42,7 @@ function ArtifactRows({ heading, work, artifact }: { heading: string; work: Acco
       const result = await sources.inspectArtifact(sourceKey, artifact, { signal });
       if (signal.aborted) return;
       setRead(result);
+      setOpened(null);
     } catch {
       if (signal.aborted) return;
     }
@@ -52,7 +55,8 @@ function ArtifactRows({ heading, work, artifact }: { heading: string; work: Acco
     if (file.source !== 'working') { setViewing((current) => (current === file.source ? null : file.source)); return; }
     const signal = next();
     try {
-      await sources.openArtifactWorkingFile(sourceKey, artifact, { signal });
+      const result = await sources.openArtifactWorkingFile(sourceKey, artifact, { signal });
+      if (!signal.aborted) setOpened(result);
     } catch (error) {
       if (!signal.aborted) new Notice(error instanceof Error ? error.message : 'The file could not be opened.');
     }
@@ -76,6 +80,7 @@ function ArtifactRows({ heading, work, artifact }: { heading: string; work: Acco
         ? <>{file.label} · {short(file.sha256)}… · {file.checkout ? `${file.checkout.branch ?? 'detached'} ${short(file.checkout.headCommit)}` : `${Math.round(file.sizeBytes / 1024)} KB`}{source === 'reviewed' && reviewNote ? ` · ${reviewNote}` : ''}{comparison?.kind === 'split' && source === 'working' ? ' · changed' : ''}</>
         : `${file.state === 'unavailable' ? 'Unavailable' : ''}: ${file.message}`}
       route={routeFor(artifact, source)} tone={file.state === 'unavailable' ? 'unavailable' : undefined}>
+      {source === 'working' && opened?.state === 'revealed' && <p className="agent-link-muted">Couldn't open the file ({opened.reason}). Shown in {opened.shownIn}.</p>}
       {viewing === source && file.state === 'current' && (file.text !== null ? <pre className="agent-link-body">{file.text}</pre> : <p className="agent-link-muted">Not text, or too large to show here.</p>)}
     </RouteRow>)}
     {read && <p className="agent-link-muted">Read {clock(read.observedAt)}{reviewNote && comparison?.kind === 'equal' ? ` · ${reviewNote} (the reviewed bytes only)` : ''}</p>}

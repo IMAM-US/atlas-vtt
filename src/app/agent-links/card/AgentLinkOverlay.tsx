@@ -10,8 +10,10 @@ interface Bound { objectId: string; label: string; reference: SourceReference }
 
 /**
  * Shows the account card for the bound object a completed click landed on, or a chooser
- * when several bound objects are selected. Hidden during drags and while nothing bound is
- * selected; mounted only outside player view and loading, like the recorded inspector.
+ * when several bound objects are selected: then only a choice made in the chooser opens a
+ * card, whichever object was clicked last, so Shift-selecting tokens to move them reads
+ * nothing. Hidden during drags and while nothing bound is selected; mounted only in the
+ * DM's own view (not player view or its preview) and outside loading.
  */
 export function AgentLinkOverlay(): React.ReactElement | null {
   const store = useViewStoreHook();
@@ -26,7 +28,12 @@ export function AgentLinkOverlay(): React.ReactElement | null {
     const label = 'text' in object ? object.text : 'name' in object && typeof object.name === 'string' && object.name ? object.name : object.sourceReference.subjectId;
     return [{ objectId: id, label, reference: object.sourceReference }];
   }), [selectedIds, tokens, texts]);
-  const chosen = bound.find((entry) => entry.objectId === clickedObjectId) ?? null;
+  // A chooser pick holds only for the selection it was made in.
+  const selection = selectedIds.join('\n');
+  const [picked, setPicked] = useState<{ objectId: string; selection: string } | null>(null);
+  useEffect(() => setPicked((current) => (current && current.selection !== selection ? null : current)), [selection]);
+  const cardId = bound.length > 1 ? (picked?.selection === selection ? picked.objectId : null) : clickedObjectId;
+  const chosen = bound.find((entry) => entry.objectId === cardId) ?? null;
   // A click is spent once its object leaves the selection: a later marquee reselect opens no card without a new click.
   useEffect(() => {
     if (clickedObjectId && !selectedIds.includes(clickedObjectId)) store.getState().setClickedObjectId(null);
@@ -57,13 +64,16 @@ export function AgentLinkOverlay(): React.ReactElement | null {
     for (const bar of parent.querySelectorAll('.atlas-top-bar-row, .atlas-bottom-toolbar-row')) observer.observe(bar);
     return () => observer.disconnect();
   }, [anchorId]);
-  const close = (): void => store.getState().setClickedObjectId(null);
+  const close = (): void => {
+    setPicked(null);
+    store.getState().setClickedObjectId(null);
+  };
   if (isDragging || bound.length === 0 || !anchor) return <div ref={container} hidden />;
   const box = cardPlacement(anchor, size.width && size.height ? size : { width: CARD_WIDTH + 32, height: 600 }, insets);
   const style: React.CSSProperties = { left: box.left, top: box.top, maxHeight: box.maxHeight, width: CARD_WIDTH };
   return <div ref={container} className="agent-link-overlay">
     {chosen
       ? <AgentLinkCard key={chosen.objectId} reference={chosen.reference} authoredLabel={chosen.label} style={style} onClose={close} />
-      : bound.length > 1 ? <ChooserCard entries={bound} style={style} onChoose={(id) => store.getState().setClickedObjectId(id)} onClose={() => store.getState().setSelection([])} /> : null}
+      : bound.length > 1 ? <ChooserCard entries={bound} style={style} onChoose={(id) => setPicked({ objectId: id, selection })} onClose={() => store.getState().setSelection([])} /> : null}
   </div>;
 }
