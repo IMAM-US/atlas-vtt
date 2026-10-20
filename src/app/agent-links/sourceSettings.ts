@@ -72,20 +72,30 @@ async function realRoot(path: string): Promise<string | null> {
   try { return await realpath(expanded); } catch { return null; }
 }
 
+/** A confined location: the configured allowed root's real path and the relative path below it that an account named. */
+export interface ConfinedRoot { anchor: string; relative: string }
+
 /**
- * The real path of `root` when it lies within an allowed root, or null. Both sides are
+ * Where an account's root lies within a configured allowed root, or null. Both sides are
  * resolved through symlinks first, so an account cannot name a link that escapes the
- * configured roots; reads anchor to the returned path, never to the account's spelling.
+ * configured roots, and every read anchors at the configured root itself: the reader
+ * resolves the whole relative path again at read time, so a later swap below the anchor
+ * cannot redirect it outside.
  */
-export async function confinedRoot(source: AgentLinkSourceSettings, root: string): Promise<string | null> {
+export async function confinedRoot(source: AgentLinkSourceSettings, root: string): Promise<ConfinedRoot | null> {
   const target = await realRoot(root);
   if (!target) return null;
   for (const allowed of source.allowedRoots) {
     const anchor = await realRoot(allowed);
-    if (anchor && (target === anchor || target.startsWith(`${anchor}/`))) return target;
+    if (!anchor) continue;
+    if (target === anchor) return { anchor, relative: '' };
+    if (target.startsWith(`${anchor}/`)) return { anchor, relative: target.slice(anchor.length + 1) };
   }
   return null;
 }
+
+/** `path` below the account root, expressed below the configured anchor. */
+export const anchoredPath = (confined: ConfinedRoot, path: string): string => (confined.relative ? `${confined.relative}/${path}` : path);
 
 export function openRigConnectionOf(source: AgentLinkSourceSettings): OpenRigConnection | null {
   if (!source.openRigEndpoint || !source.openRigHostId) return null;

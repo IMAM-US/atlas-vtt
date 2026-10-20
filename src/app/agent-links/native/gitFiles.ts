@@ -3,12 +3,15 @@ import { realpath } from 'fs/promises';
 import { resolve } from 'path';
 import { promisify } from 'util';
 import {
-  configuredRoot, fileReadLimit, readLocalFile, sha256, validateRelativeFilePath,
+  configuredRoot, fileReadLimit, readLocalFile, requireContained, sha256, validateRelativeFilePath,
   type FileReadOptions, type LocalFileRead,
 } from './localFiles';
 
 const execute = promisify(execFile);
 const GIT_TIMEOUT_MS = 5000;
+
+/** `within`: a configured anchor the repository root must lie inside, checked on the real path at read time. */
+export interface GitReadOptions extends FileReadOptions { within?: string }
 
 export interface CheckoutFacts {
   repositoryPath: string;
@@ -48,8 +51,9 @@ async function git(root: string, args: string[], maxBytes = 64 * 1024): Promise<
   return stdout;
 }
 
-async function repositoryRoot(rootPath: string): Promise<string> {
+async function repositoryRoot(rootPath: string, within?: string): Promise<string> {
   const root = await configuredRoot(rootPath);
+  if (within !== undefined) requireContained(await configuredRoot(within), root, true);
   const top = (await git(root, ['rev-parse', '--show-toplevel'])).toString('utf8').trim();
   if (await realpath(top) !== root) throw new Error('Configured repository root does not match the Git worktree root');
   return root;
@@ -87,19 +91,19 @@ async function facts(root: string, comparedRevision?: string): Promise<CheckoutF
   return { repositoryPath: root, commonGitDirectory, headCommit, branch, comparedRevisionIsAncestor, observedAt: new Date().toISOString() };
 }
 
-export async function readCheckoutFacts(rootPath: string, comparedRevision?: string): Promise<CheckoutFacts> {
+export async function readCheckoutFacts(rootPath: string, comparedRevision?: string, options: GitReadOptions = {}): Promise<CheckoutFacts> {
   if (comparedRevision) validateCommit(comparedRevision);
-  return facts(await repositoryRoot(rootPath), comparedRevision?.toLowerCase());
+  return facts(await repositoryRoot(rootPath, options.within), comparedRevision?.toLowerCase());
 }
 
 export async function readGitFile(
-  rootPath: string, relativePath: string, revision: string, options: FileReadOptions = {},
+  rootPath: string, relativePath: string, revision: string, options: GitReadOptions = {},
 ): Promise<GitFileRead> {
   validateRelativeFilePath(relativePath);
   validateCommit(revision);
   const commit = revision.toLowerCase();
   const limit = fileReadLimit(options);
-  const root = await repositoryRoot(rootPath);
+  const root = await repositoryRoot(rootPath, options.within);
   if ((await git(root, ['cat-file', '-t', commit])).toString('utf8').trim() !== 'commit') {
     throw new Error('Git revision is not a commit');
   }
@@ -121,9 +125,9 @@ export async function readGitFile(
 }
 
 export async function readWorkingGitFile(
-  rootPath: string, relativePath: string, options: FileReadOptions = {},
+  rootPath: string, relativePath: string, options: GitReadOptions = {},
 ): Promise<LocalFileRead & { checkout: CheckoutFacts }> {
-  const root = await repositoryRoot(rootPath);
+  const root = await repositoryRoot(rootPath, options.within);
   const before = await facts(root);
   const file = await readLocalFile(root, relativePath, options);
   const checkout = await facts(root);

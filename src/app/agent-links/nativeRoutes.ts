@@ -1,45 +1,49 @@
 import type { AccountArtifact, SeatSubject } from './account/accountSchema';
+import type { AgentLinkSourceSettings } from './sourceSettings';
 
 /**
- * The native route behind each card row, for *Copy native route*: a real CLI command where
- * one exists, otherwise a labelled locator or typed API request. Values are quoted for a
- * POSIX shell. No exact-pane CLI command is invented: pane focus is a socket request.
+ * The native route behind each card row, for *Copy native route*: a typed request against
+ * the source's configured endpoint or socket, so the copied text names where it goes. A
+ * bare `rig` command is never offered: nothing qualifies which daemon the CLI on this
+ * machine reaches, and the account's source may be another. Pane focus is a socket request,
+ * never an invented CLI command.
  */
 export interface NativeRoute { label: string; text: string }
 
+/** The source a route belongs to; its endpoint is part of the copied text. */
+export type RouteSource = Pick<AgentLinkSourceSettings, 'key' | 'openRigEndpoint'>;
+const sourced = (label: string, source: RouteSource): string => `${label} · source ${source.key}`;
+const endpoint = (source: RouteSource): string => source.openRigEndpoint.replace(/\/$/, '') || `<endpoint of source ${source.key}>`;
+const get = (source: RouteSource, route: string): string => `GET ${endpoint(source)}${route}  # source ${source.key}`;
+const nodePath = (seat: SeatSubject['seat']): string => `/api/rigs/${encodeURIComponent(seat.rigId)}/nodes/${encodeURIComponent(seat.logicalId)}`;
+
+export function screenRoute(source: RouteSource, seat: SeatSubject['seat']): NativeRoute {
+  return { label: sourced('OpenRig screen read', source), text: get(source, `${nodePath(seat)}/preview?lines=40`) };
+}
+
+export function workRoute(source: RouteSource, qitemId: string): NativeRoute {
+  return { label: sourced('OpenRig work read', source), text: get(source, `/api/queue/${encodeURIComponent(qitemId)}`) };
+}
+
+export function transitionsRoute(source: RouteSource, qitemId: string): NativeRoute {
+  return { label: sourced('OpenRig transitions read', source), text: get(source, `/api/queue/${encodeURIComponent(qitemId)}/transitions`) };
+}
+
+export function ownedWorkRoute(source: RouteSource, sessionAddress: string): NativeRoute {
+  const query = new URLSearchParams({ destinationSession: sessionAddress, state: 'pending,in-progress,blocked' });
+  return { label: sourced('OpenRig work list', source), text: get(source, `/api/queue/list?${query}`) };
+}
+
+export function nodeRoute(source: RouteSource, seat: SeatSubject['seat']): NativeRoute {
+  return { label: sourced('OpenRig node read', source), text: get(source, nodePath(seat)) };
+}
+
+export function paneFocusRoute(source: RouteSource, socketPath: string, paneId: string): NativeRoute {
+  return { label: sourced('Herdr socket request', source), text: `${socketPath} ← ${JSON.stringify({ id: 'atlas', method: 'pane.focus', params: { pane_id: paneId } })}  # source ${source.key}` };
+}
+
 export function shellQuote(value: string): string {
   return /^[A-Za-z0-9_./:@%=+-]+$/.test(value) ? value : `'${value.replace(/'/g, `'\\''`)}'`;
-}
-
-/** A CLI route runs against the machine's own daemon, so its label names the source it belongs to. */
-const sourced = (label: string, sourceKey: string): string => `${label} · source ${sourceKey}`;
-
-export function screenRoute(sourceKey: string, sessionAddress: string): NativeRoute {
-  return { label: sourced('rig capture', sourceKey), text: `rig capture ${shellQuote(sessionAddress)} --lines 40` };
-}
-
-export function workRoute(sourceKey: string, qitemId: string): NativeRoute {
-  return { label: sourced('rig queue show', sourceKey), text: `rig queue show ${shellQuote(qitemId)} --json` };
-}
-
-export function transitionsRoute(sourceKey: string, qitemId: string): NativeRoute {
-  return { label: sourced('rig queue transitions', sourceKey), text: `rig queue transitions ${shellQuote(qitemId)} --json` };
-}
-
-export function ownedWorkRoute(sourceKey: string, sessionAddress: string): NativeRoute {
-  return { label: sourced('rig queue list', sourceKey), text: `rig queue list -A --destination ${shellQuote(sessionAddress)} --json` };
-}
-
-export function nodeRoute(seat: SeatSubject['seat'], endpoint: string): NativeRoute {
-  return { label: 'OpenRig node read', text: `GET ${endpoint.replace(/\/$/, '')}/api/rigs/${encodeURIComponent(seat.rigId)}/nodes/${encodeURIComponent(seat.logicalId)}` };
-}
-
-export function paneFocusRoute(sourceKey: string, socketPath: string, paneId: string): NativeRoute {
-  return { label: sourced('Herdr socket request', sourceKey), text: `${socketPath} ← ${JSON.stringify({ id: 'atlas', method: 'pane.focus', params: { pane_id: paneId } })}` };
-}
-
-export function tabFocusRoute(tabId: string): NativeRoute {
-  return { label: 'herdr tab focus', text: `herdr tab focus ${shellQuote(tabId)}` };
 }
 
 export function workingFileRoute(artifact: AccountArtifact): NativeRoute | null {

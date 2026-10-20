@@ -4,7 +4,7 @@ import { loadAccountJson } from './account/loadAccountJson';
 import { validateAccount } from './account/accountValidation';
 import type { AccountArtifact, CapturedParticipant, SeatSubject } from './account/accountSchema';
 import { inspectArtifact, type ArtifactRead } from './artifactReads';
-import { confinedRoot } from './sourceSettings';
+import { anchoredPath, confinedRoot } from './sourceSettings';
 import { readLocalFilePrefix } from './native/localFiles';
 import { focusHerdrView, returnToHerdrView } from './native/herdrFocus';
 import type { HerdrViewWitness } from './native/herdrViews';
@@ -213,19 +213,24 @@ export class NativeSources {
    * Opens an artifact's working file with the system's default application after confining
    * and reading it again now; a path retained from an earlier read is never opened as is.
    */
-  async openArtifactWorkingFile(sourceKey: string, artifact: AccountArtifact): Promise<void> {
+  async openArtifactWorkingFile(sourceKey: string, artifact: AccountArtifact, options: Options = {}): Promise<void> {
     const locator = artifact.working;
     if (!locator) throw new Error('This artifact has no working file.');
-    const root = await confinedRoot(this.source(sourceKey), locator.root);
-    if (!root) throw new Error('This path is outside the allowed roots in Atlas settings.');
-    const file = await readLocalFilePrefix(root, locator.path, { maxBytes: 1 });
+    options.signal?.throwIfAborted();
+    const confined = await confinedRoot(this.source(sourceKey), locator.root);
+    if (!confined) throw new Error('This path is outside the allowed roots in Atlas settings.');
+    const file = await readLocalFilePrefix(confined.anchor, anchoredPath(confined, locator.path), { maxBytes: 1 });
+    options.signal?.throwIfAborted();
     await openLocalFile(file.path);
   }
 
-  /** Opens the exact provider record after locating and validating it again now. */
-  async openConversationRecord(sourceKey: string, participant: Pick<CapturedParticipant, 'runtime' | 'conversationId'> & { cwd?: string | null }): Promise<ProviderRecord> {
-    const located = await this.locateRecord(sourceKey, participant);
+  /** Opens the exact provider record after locating and validating it again now; a cancelled open never reaches the desktop. */
+  async openConversationRecord(
+    sourceKey: string, participant: Pick<CapturedParticipant, 'runtime' | 'conversationId'> & { cwd?: string | null }, options: Options = {},
+  ): Promise<ProviderRecord> {
+    const located = await this.locateRecord(sourceKey, participant, options);
     if (located.state === 'unavailable') throw new Error(located.message);
+    options.signal?.throwIfAborted();
     await openLocalFile(located.record.path);
     return located.record;
   }

@@ -40,12 +40,12 @@ export function exampleAccount(): AccountDocument {
     ],
     artifacts: [
       {
-        id: 'artifact:brief', caption: 'Brief',
+        id: 'artifact:brief', caption: 'Brief', sourceKey: 'local',
         working: { root: '/repo/example', path: 'briefs/one.md' },
         captured: { root: '/evidence', path: 'briefs/one.md', sha256: 'b'.repeat(64), capturedAt: '2026-01-01T10:05:00Z' },
         reviewed: { revision: 'a'.repeat(40) },
       },
-      { id: 'artifact:charter', caption: 'Charter', working: { root: '/repo/example', path: 'panel/CHARTER.md' } },
+      { id: 'artifact:charter', caption: 'Charter', sourceKey: 'local', working: { root: '/repo/example', path: 'panel/CHARTER.md' } },
     ],
   };
 }

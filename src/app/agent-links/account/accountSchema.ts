@@ -152,6 +152,8 @@ export interface ReviewedArtifact {
 export interface AccountArtifact {
   id: string;
   caption: string;
+  /** The local source whose allowed roots confine this artifact's reads. */
+  sourceKey: string;
   working?: ArtifactLocator;
   captured?: CapturedArtifact;
   reviewed?: ReviewedArtifact;

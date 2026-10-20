@@ -61,7 +61,7 @@ describe('validateAccount', () => {
     (badDigest.artifacts[0]!.captured as { sha256: string }).sha256 = 'nope';
     expect(() => validateAccount(badDigest)).toThrow('must be a SHA-256 hex digest');
     const emptyArtifact = exampleAccount();
-    emptyArtifact.artifacts.push({ id: 'artifact:empty', caption: 'Empty' });
+    emptyArtifact.artifacts.push({ id: 'artifact:empty', caption: 'Empty', sourceKey: 'local' });
     expect(() => validateAccount(emptyArtifact)).toThrow('must locate a working, captured or reviewed file');
   });
 });

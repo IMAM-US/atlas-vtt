@@ -220,7 +220,7 @@ function artifact(raw: Record<string, unknown>, at: string): AccountArtifact {
   const reviewed = f.optionalRecord('reviewed');
   if (!working && !captured && !reviewed) fail(at, 'must locate a working, captured or reviewed file');
   const result = withUnknown(raw, {
-    id: f.string('id'), caption: f.string('caption'),
+    id: f.string('id'), caption: f.string('caption'), sourceKey: f.string('sourceKey'),
     ...optional({
       working: working && locator(working, `${at}.working`), captured: captured && capturedArtifact(captured, `${at}.captured`),
       reviewed: reviewed && reviewedArtifact(reviewed, `${at}.reviewed`), sourceIds: f.strings('sourceIds', false),

@@ -1,6 +1,6 @@
 import type { AccountArtifact } from './account/accountSchema';
 import type { AgentLinkSourceSettings } from './sourceSettings';
-import { confinedRoot } from './sourceSettings';
+import { anchoredPath, confinedRoot } from './sourceSettings';
 import { readCheckoutFacts, readGitFile, readWorkingGitFile, type CheckoutFacts } from './native/gitFiles';
 import { readLocalFile, readPreservedFile } from './native/localFiles';
 import { failure, now, type ReadFailure } from './reads';
@@ -40,12 +40,13 @@ const outsideRoots = (): ReadFailure => ({ state: 'unavailable', message: 'This 
 async function working(source: AgentLinkSourceSettings, artifact: AccountArtifact, reviewedRevision: string | undefined): Promise<ArtifactSource | null> {
   const locator = artifact.working;
   if (!locator) return null;
-  const root = await confinedRoot(source, locator.root);
-  if (!root) return outsideRoots();
+  const confined = await confinedRoot(source, locator.root);
+  if (!confined) return outsideRoots();
+  const root = `${confined.anchor}${confined.relative ? `/${confined.relative}` : ''}`;
   try {
     let checkout: CheckoutFacts | null = null;
-    try { checkout = await readCheckoutFacts(root, reviewedRevision); } catch { checkout = null; }
-    const file = checkout ? await readWorkingGitFile(root, locator.path) : await readLocalFile(root, locator.path);
+    try { checkout = await readCheckoutFacts(root, reviewedRevision, { within: confined.anchor }); } catch { checkout = null; }
+    const file = checkout ? await readWorkingGitFile(root, locator.path, { within: confined.anchor }) : await readLocalFile(confined.anchor, anchoredPath(confined, locator.path));
     return { state: 'current', source: 'working', path: file.path, sha256: file.sha256, sizeBytes: file.sizeBytes, text: textOf(file.bytes),
       checkout, label: 'Working file', observedAt: file.observedAt };
   } catch (error) {
@@ -56,10 +57,10 @@ async function working(source: AgentLinkSourceSettings, artifact: AccountArtifac
 async function captured(source: AgentLinkSourceSettings, artifact: AccountArtifact): Promise<ArtifactSource | null> {
   const locator = artifact.captured;
   if (!locator) return null;
-  const root = await confinedRoot(source, locator.root);
-  if (!root) return outsideRoots();
+  const confined = await confinedRoot(source, locator.root);
+  if (!confined) return outsideRoots();
   try {
-    const file = await readPreservedFile(root, locator.path, locator.sha256);
+    const file = await readPreservedFile(confined.anchor, anchoredPath(confined, locator.path), locator.sha256);
     return { state: 'current', source: 'captured', path: file.path, sha256: file.sha256, sizeBytes: file.sizeBytes, text: textOf(file.bytes),
       checkout: null, label: `As captured ${locator.capturedAt}`, observedAt: file.observedAt };
   } catch (error) {
@@ -73,10 +74,10 @@ async function reviewed(source: AgentLinkSourceSettings, artifact: AccountArtifa
   const named = revision.root ?? artifact.working?.root;
   const path = revision.path ?? artifact.working?.path;
   if (!named || !path) return { state: 'unavailable', message: 'The reviewed revision has no repository to read from.', observedAt: now() };
-  const root = await confinedRoot(source, named);
-  if (!root) return outsideRoots();
+  const confined = await confinedRoot(source, named);
+  if (!confined) return outsideRoots();
   try {
-    const file = await readGitFile(root, path, revision.revision);
+    const file = await readGitFile(`${confined.anchor}${confined.relative ? `/${confined.relative}` : ''}`, path, revision.revision, { within: confined.anchor });
     if (revision.sha256 && file.sha256 !== revision.sha256) {
       return { state: 'unavailable', message: 'The reviewed revision does not match the hash the account recorded.', observedAt: now() };
     }

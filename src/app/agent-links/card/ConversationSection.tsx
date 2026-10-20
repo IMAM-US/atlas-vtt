@@ -26,8 +26,8 @@ function viewLabel(view: ResolvedNativeView): string {
 export function ConversationSection({ subject, seat }: { subject: SeatSubject; seat: SeatRead | null }): React.ReactElement {
   const { sources } = useCard();
   const next = useActionSignal();
+  const routeSource = sources.source(subject.sourceKey);
   const current: CurrentSeat | null = seat?.state === 'current' ? seat : null;
-  const address = subject.seat.sessionAddress ?? current?.process.sessionName ?? subject.seat.logicalId;
   const liveReason = !seat ? 'Checking…' : seat.state === 'current' ? null : seat.state === 'unverified' ? 'No verified participant' : seat.state === 'different-seat' ? 'Map subject has no live entrance' : 'Unavailable';
   const pinnedProblem = current ? sources.pinnedConversationProblem(subject, current) : null;
   const [screen, setScreen] = useState<Screen | null>(null);
@@ -92,7 +92,12 @@ export function ConversationSection({ subject, seat }: { subject: SeatSubject; s
   const openRecord = async (which: 'current' | 'previous'): Promise<void> => {
     const participant = participantFor(which);
     if (!participant) return;
-    try { await sources.openConversationRecord(subject.sourceKey, participant); } catch (error) { new Notice(error instanceof Error ? error.message : 'The record could not be opened.'); }
+    const signal = next();
+    try {
+      await sources.openConversationRecord(subject.sourceKey, participant, { signal });
+    } catch (error) {
+      if (!signal.aborted) new Notice(error instanceof Error ? error.message : 'The record could not be opened.');
+    }
   };
 
   const changed = Boolean(current?.participant && subject.participant && current.participant.conversationId !== subject.participant.conversationId);
@@ -106,12 +111,12 @@ export function ConversationSection({ subject, seat }: { subject: SeatSubject; s
     <h4>Conversation</h4>
     <RouteRow label="Read screen" onPress={() => { void readScreen('pinned'); }} disabledReason={liveReason ?? pinnedProblem ?? busyReason}
       detail={screen?.state === 'current' ? `last ${SCREEN_LINES} · ${clock(screen.capturedAt)}${screen.scope === 'seat-screen' ? ' · seat screen' : ''}${occupant}` : screen?.state === 'unavailable' ? `Unavailable: ${screen.message}` : `last ${SCREEN_LINES}`}
-      route={screenRoute(subject.sourceKey, address)} tone={screen?.state === 'unavailable' ? 'unavailable' : undefined}>
+      route={screenRoute(routeSource, subject.seat)} tone={screen?.state === 'unavailable' ? 'unavailable' : undefined}>
       {screen?.state === 'current' && <pre className="agent-link-screen">{screenLines}</pre>}
     </RouteRow>
     <RouteRow label="Show in Herdr" onPress={() => { void resolve('pinned'); }} disabledReason={liveReason ?? pinnedProblem ?? busyReason}
       detail={views ? views.state === 'unavailable' ? `Unavailable: ${views.message}` : candidates.length === 0 ? `Not open in Herdr${occupant}` : candidates.length > 1 ? `Unclear: ${candidates.length} views${occupant}` : viewLabel(candidates[0]!) + occupant : 'moves the shared Herdr view'}
-      route={candidates[0] ? paneFocusRoute(subject.sourceKey, candidates[0].witness.socketPath, candidates[0].witness.pane.pane_id) : null}
+      route={candidates[0] ? paneFocusRoute(routeSource, candidates[0].witness.socketPath, candidates[0].witness.pane.pane_id) : null}
       tone={views?.state === 'unavailable' ? 'unavailable' : views && candidates.length !== 1 ? 'changed' : undefined}>
       {candidates.length > 1 && <div className="agent-link-list">
         {candidates.map((view) => <Button key={view.witness.pane.pane_id} variant="secondary" onClick={() => { void show(view.witness, next(), choice); }}>{viewLabel(view)}</Button>)}

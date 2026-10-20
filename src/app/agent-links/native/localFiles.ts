@@ -43,7 +43,9 @@ export function sha256(bytes: Uint8Array): string {
   return createHash('sha256').update(bytes).digest('hex');
 }
 
-function requireContained(root: string, target: string): void {
+/** `target` must lie below `root` (or equal it when `allowSame`); both are real paths. */
+export function requireContained(root: string, target: string, allowSame = false): void {
+  if (allowSame && root === target) return;
   const inside = relative(root, target);
   if (!inside || inside === '..' || inside.startsWith(`..${sep}`) || isAbsolute(inside)) {
     throw new Error('File path escapes its configured root');

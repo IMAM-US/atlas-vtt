@@ -1,11 +1,12 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
-import { mkdtemp, mkdir, realpath, symlink } from 'fs/promises';
+import { mkdtemp, mkdir, realpath, rename, symlink, writeFile } from 'fs/promises';
 import { homedir, tmpdir } from 'os';
 import { join } from 'path';
 import {
-  confinedRoot, defaultSourceSettings, expandRoot, openRigConnectionOf, readAgentLinkSettings, viewConnectionsOf,
+  anchoredPath, confinedRoot, defaultSourceSettings, expandRoot, openRigConnectionOf, readAgentLinkSettings, viewConnectionsOf,
 } from '../../src/app/agent-links/sourceSettings';
+import { readLocalFile } from '../../src/app/agent-links/native/localFiles';
 import { claudeRecordRelativePath } from '../../src/app/agent-links/native/providerRecordLocator';
 
 describe('source settings', () => {
@@ -18,27 +19,44 @@ describe('source settings', () => {
 
   it('confines artifact roots to the real paths of the allowed roots', async () => {
     const base = await realpath(await mkdtemp(join(tmpdir(), 'atlas-roots-')));
-    await mkdir(join(base, 'allowed', 'inside'), { recursive: true });
+    const allowed = join(base, 'allowed');
+    await mkdir(join(allowed, 'inside'), { recursive: true });
     await mkdir(join(base, 'outside'), { recursive: true });
-    await symlink(join(base, 'outside'), join(base, 'allowed', 'escape'));
-    await symlink(join(base, 'allowed'), join(base, 'alias'));
-    const source = { ...defaultSourceSettings(), allowedRoots: [join(base, 'allowed'), '/nonexistent-root'] };
-    expect(await confinedRoot(source, join(base, 'allowed'))).toBe(join(base, 'allowed'));
-    expect(await confinedRoot(source, join(base, 'allowed', 'inside'))).toBe(join(base, 'allowed', 'inside'));
+    await symlink(join(base, 'outside'), join(allowed, 'escape'));
+    await symlink(allowed, join(base, 'alias'));
+    const source = { ...defaultSourceSettings(), allowedRoots: [allowed, '/nonexistent-root'] };
+    expect(await confinedRoot(source, allowed)).toEqual({ anchor: allowed, relative: '' });
+    expect(await confinedRoot(source, join(allowed, 'inside'))).toEqual({ anchor: allowed, relative: 'inside' });
     // A link inside an allowed root that points outside is outside.
-    expect(await confinedRoot(source, join(base, 'allowed', 'escape'))).toBeNull();
-    expect(await confinedRoot(source, join(base, 'allowed', 'escape', 'deeper'))).toBeNull();
+    expect(await confinedRoot(source, join(allowed, 'escape'))).toBeNull();
+    expect(await confinedRoot(source, join(allowed, 'escape', 'deeper'))).toBeNull();
     // A link to the allowed root reads at the real allowed path.
-    expect(await confinedRoot(source, join(base, 'alias', 'inside'))).toBe(join(base, 'allowed', 'inside'));
+    expect(await confinedRoot(source, join(base, 'alias', 'inside'))).toEqual({ anchor: allowed, relative: 'inside' });
     expect(await confinedRoot(source, join(base, 'allowed-other'))).toBeNull();
     expect(await confinedRoot(source, join(base, 'outside'))).toBeNull();
     expect(await confinedRoot(source, `${base}/allowed/../outside`)).toBeNull();
     expect(await confinedRoot(source, 'relative')).toBeNull();
     // An allowed root that is itself a link anchors at its real path.
     const linked = { ...defaultSourceSettings(), allowedRoots: [join(base, 'alias')] };
-    expect(await confinedRoot(linked, join(base, 'allowed', 'inside'))).toBe(join(base, 'allowed', 'inside'));
+    expect(await confinedRoot(linked, join(allowed, 'inside'))).toEqual({ anchor: allowed, relative: 'inside' });
     expect(expandRoot('~/x')).toBe(`${homedir()}/x`);
     expect(expandRoot('x')).toBe('');
+  });
+
+  it('reads through the configured anchor, so a root swapped for a link after confinement is refused', async () => {
+    const base = await realpath(await mkdtemp(join(tmpdir(), 'atlas-swap-')));
+    const allowed = join(base, 'allowed');
+    await mkdir(join(allowed, 'sub'), { recursive: true });
+    await mkdir(join(base, 'outside'), { recursive: true });
+    await writeFile(join(allowed, 'sub', 'brief.md'), 'inside bytes');
+    await writeFile(join(base, 'outside', 'brief.md'), 'outside bytes');
+    const source = { ...defaultSourceSettings(), allowedRoots: [allowed] };
+    const confined = (await confinedRoot(source, join(allowed, 'sub')))!;
+    expect(confined).toEqual({ anchor: allowed, relative: 'sub' });
+    expect((await readLocalFile(confined.anchor, anchoredPath(confined, 'brief.md'))).bytes.toString()).toBe('inside bytes');
+    await rename(join(allowed, 'sub'), join(allowed, 'sub-moved'));
+    await symlink(join(base, 'outside'), join(allowed, 'sub'));
+    await expect(readLocalFile(confined.anchor, anchoredPath(confined, 'brief.md'))).rejects.toThrow('escapes its configured root');
   });
 
   it('builds connections only from complete local settings', () => {

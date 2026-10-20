@@ -32,7 +32,7 @@ function ArtifactRows({ heading, work, artifact }: { heading: string; work: Acco
   const [read, setRead] = useState<ArtifactRead | null>(null);
   const [busy, setBusy] = useState(false);
   const [viewing, setViewing] = useState<ArtifactFile['source'] | null>(null);
-  const sourceKey = work?.sourceKey ?? 'local';
+  const sourceKey = artifact.sourceKey;
   const inspect = async (): Promise<void> => {
     const signal = next();
     setBusy(true);
@@ -50,7 +50,12 @@ function ArtifactRows({ heading, work, artifact }: { heading: string; work: Acco
   const reviewNote = review ? `Review ✓ ${reviewer ? `by ${reviewer.caption} ` : ''}at ${short(review.revision)}` : null;
   const open = async (file: ArtifactFile): Promise<void> => {
     if (file.source !== 'working') { setViewing((current) => (current === file.source ? null : file.source)); return; }
-    try { await sources.openArtifactWorkingFile(sourceKey, artifact); } catch (error) { new Notice(error instanceof Error ? error.message : 'The file could not be opened.'); }
+    const signal = next();
+    try {
+      await sources.openArtifactWorkingFile(sourceKey, artifact, { signal });
+    } catch (error) {
+      if (!signal.aborted) new Notice(error instanceof Error ? error.message : 'The file could not be opened.');
+    }
   };
   const summary = (): string => {
     if (!read) return [artifact.working && 'working', artifact.captured && 'captured', artifact.reviewed && 'reviewed'].filter(Boolean).join(' · ');
