@@ -55,6 +55,9 @@ jobs:
       - name: Test reporting service
         run: python3 -m unittest discover -s services/issue-reporter
 
+      - name: Test worktree pruning
+        run: node --test scripts/testing/*.test.mjs
+
       - name: Test
         run: npx vitest run
 
