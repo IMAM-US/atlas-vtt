@@ -23,6 +23,7 @@ import { focusToken } from '../pixi/tokenFocus';
 import { canRunMapHotkeys, matchesMapHotkey } from '../keyboard/mapHotkeys';
 import { SettingsService } from '../services/SettingsService';
 import { RecordedWorkspaceOverlay } from '../agent-workspace/RecordedWorkspaceOverlay';
+import { AgentLinkOverlay } from '../agent-links/card/AgentLinkOverlay';
 import { HotkeyHelp } from '../keyboard/HotkeyHelp';
 
 
@@ -215,6 +216,7 @@ export const UIRoot: React.FC<UIRootProps> = ({ app, view, pixiApp }) => {
           </div>
 
           {!isPlayerView && !isMapLoading && <RecordedWorkspaceOverlay />}
+          {!isPlayerView && !isMapLoading && <AgentLinkOverlay />}
 
           {/* Bottom row — undo/redo docked left of the main toolbar, view actions (DM only) at the right edge */}
           <BottomToolbarRow

@@ -1,5 +1,6 @@
 import type { BundleFile, BundleFileRole } from './bundleFormat';
 import { remapPaths, type PathMap } from './pathRemap';
+import { rewriteAccountNotePaths } from '../../agent-links/account/accountReferences';
 
 /** JSON files carry vault paths and asset ids that must follow the files and records they point at. */
 const JSON_ROLES: ReadonlySet<BundleFileRole> = new Set<BundleFileRole>(['asset-file', 'scene-map', 'scene-snapshot']);
@@ -21,10 +22,10 @@ function indentationOf(text: string): string | undefined {
   return /^[[{]\r?\n([ \t]+)\S/.exec(text)?.[1];
 }
 
-function rewriteJson(text: string, rewrites: PathMap): string {
+function rewriteJson(text: string, paths: PathMap, assetIds: PathMap): string {
   try {
     const parsed: unknown = JSON.parse(text);
-    const remapped = remapPaths(parsed, rewrites);
+    const remapped = remapPaths(parsed, paths, assetIds);
     if (JSON.stringify(remapped) === JSON.stringify(parsed)) return text;
     return JSON.stringify(remapped, null, indentationOf(text)) + (text.endsWith('\n') ? '\n' : '');
   } catch {
@@ -50,9 +51,11 @@ function relinkStatblockNote(file: BundleFile, text: string, rewrites: PathMap):
 }
 
 /** `text` of a file that `refersToFiles`, with the paths and ids it refers to rewritten; `text` itself when nothing changes. */
-export function rewriteText(file: BundleFile, text: string, rewrites: PathMap): string {
-  if (JSON_ROLES.has(file.role)) return rewriteJson(text, rewrites);
-  if (file.role === 'statblock-note') return relinkStatblockNote(file, text, rewrites);
+export function rewriteText(file: BundleFile, text: string, paths: PathMap, assetIds: PathMap = new Map()): string {
+  // A native-source account follows only its typed note references, by vault path; native ids and locators stay as written.
+  if (file.role === 'source-account') return rewriteAccountNotePaths(text, (path) => paths.get(path) ?? null);
+  if (JSON_ROLES.has(file.role)) return rewriteJson(text, paths, assetIds);
+  if (file.role === 'statblock-note') return relinkStatblockNote(file, text, paths);
   return text;
 }
 
@@ -61,16 +64,17 @@ export function rewriteText(file: BundleFile, text: string, rewrites: PathMap): 
  * files and renamed records, statblock notes follow their artwork. Returns
  * `raw` itself when nothing changes, so unchanged files keep their exact bytes.
  */
-export function rewriteContent(file: BundleFile, raw: ArrayBuffer, rewrites: PathMap): ArrayBuffer {
-  if (!mayRewrite(file, rewrites)) return raw;
+export function rewriteContent(file: BundleFile, raw: ArrayBuffer, paths: PathMap, assetIds: PathMap = new Map()): ArrayBuffer {
+  if (!mayRewrite(file, paths, assetIds)) return raw;
   const text = decoder.decode(raw);
-  const rewritten = rewriteText(file, text, rewrites);
+  const rewritten = rewriteText(file, text, paths, assetIds);
   return rewritten === text ? raw : toBuffer(rewritten);
 }
 
 /** Whether the file is text that refers to other files or records: JSON, or a statblock note that shows artwork. */
 export const refersToFiles = (file: BundleFile): boolean =>
-  JSON_ROLES.has(file.role) || (file.role === 'statblock-note' && file.statblockImage !== undefined);
+  JSON_ROLES.has(file.role) || file.role === 'source-account' || (file.role === 'statblock-note' && file.statblockImage !== undefined);
 
 /** Whether `rewriteContent` may change the file's bytes, so they must be read to know the result. */
-export const mayRewrite = (file: BundleFile, rewrites: PathMap): boolean => rewrites.size > 0 && refersToFiles(file);
+export const mayRewrite = (file: BundleFile, paths: PathMap, assetIds: PathMap = new Map()): boolean =>
+  (paths.size > 0 || assetIds.size > 0) && refersToFiles(file);

@@ -23,7 +23,7 @@ const sceneName = (mapPath: string): string => baseName(mapPath).replace(/\.atla
 function keepsStatblockLink(asset: Asset, plan: TransferPlan): boolean {
   if (asset.type !== 'token' || !asset.statblockPath) return true;
   const artworkCopied = plan.steps.some((step) => step.op === 'copy' && step.file.vaultPath === asset.imagePath);
-  return !artworkCopied || plan.rewrites.has(asset.statblockPath);
+  return !artworkCopied || plan.paths.has(asset.statblockPath);
 }
 
 /**
@@ -34,7 +34,7 @@ function keepsStatblockLink(asset: Asset, plan: TransferPlan): boolean {
 export function transferredRecord(asset: Asset, { targetCollectionId, newIds, plan, now }: RecordContext): Asset {
   const newId = newIds.get(asset.id);
   const record: Asset = {
-    ...remapPaths(asset, plan.rewrites),
+    ...remapPaths(asset, plan.paths, newIds),
     id: newId ?? asset.id,
     collection: targetCollectionId,
     createdAt: newId ? now : asset.createdAt,

@@ -146,7 +146,7 @@ describe('exporting', () => {
     const manifest = JSON.parse(await zip.file('manifest.json')!.async('string')) as {
       format: number; release: unknown; collection: Record<string, unknown>; files: Array<{ vaultPath: string; sha256: string; owners: string[] }>;
     };
-    expect(manifest).toMatchObject({ format: 4, release: { kind: 'release', notes: 'First release' }, collection: { version: 1, author: 'Dungeon Tube' } });
+    expect(manifest).toMatchObject({ format: 5, release: { kind: 'release', notes: 'First release' }, collection: { version: 1, author: 'Dungeon Tube' } });
     const image = manifest.files.find((file) => file.vaultPath === TOKEN_IMAGE)!;
     expect(image.sha256).toMatch(/^[0-9a-f]{64}$/);
     expect(image.owners).toHaveLength(3);

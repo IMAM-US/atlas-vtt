@@ -151,11 +151,11 @@ export async function exportCollectionBundle(
   const packedPaths = [...selected.files.map((file) => file.vaultPath), ...(cover ? [cover.path] : [])];
   const origin = choice.kind === 'share'
     ? await originNames(app, preview.collection, packedPaths)
-    : { collectionId: preview.collection.id, name: preview.collection.name, names: new Map<string, string>() };
-  const named = (value: string): string => origin.names.get(value) ?? value;
+    : { collectionId: preview.collection.id, name: preview.collection.name, paths: new Map<string, string>(), assetIds: new Map<string, string>() };
+  const namedPath = (value: string): string => origin.paths.get(value) ?? value;
   const exported = await exportedCollection(assets, preview, choice, exportedAt);
   const collection: CollectionMetadata = { ...exported, id: origin.collectionId, name: choice.kind === 'share' ? origin.name : exported.name };
-  if (cover) collection.coverPath = named(cover.path);
+  if (cover) collection.coverPath = namedPath(cover.path);
   else delete collection.coverPath;
   const { default: JSZip } = await import('jszip');
   const zip = new JSZip();
@@ -164,14 +164,14 @@ export async function exportCollectionBundle(
     reportFileStep(onProgress, 'Adding', index, selected.files.length, 0, 0.6);
     const content = await readVaultBinary(app, file.vaultPath);
     if (!content) continue;
-    const data = rewriteContent(file, content, origin.names);
-    const bundlePath = named(file.vaultPath);
+    const data = rewriteContent(file, content, origin.paths, origin.assetIds);
+    const bundlePath = namedPath(file.vaultPath);
     files.push({
       ...file,
       vaultPath: bundlePath,
       sha256: await sha256(data),
-      ...(file.owners && { owners: file.owners.map(named) }),
-      ...(file.statblockImage && { statblockImage: { ...file.statblockImage, path: named(file.statblockImage.path) } }),
+      ...(file.owners && { owners: file.owners.map((id) => origin.assetIds.get(id) ?? id) }),
+      ...(file.statblockImage && { statblockImage: { ...file.statblockImage, path: namedPath(file.statblockImage.path) } }),
     });
     zip.file(zipPathFor(bundlePath), data, { compression: STORED_EXTENSIONS.test(bundlePath) ? 'STORE' : 'DEFLATE' });
   }
@@ -185,7 +185,7 @@ export async function exportCollectionBundle(
     exportedAt,
     collection,
     release: { kind: choice.kind === 'share' ? 'share' : 'release', ...(notes ? { notes } : {}) },
-    assets: selected.assets.map((asset) => remapPaths(asset, origin.names)),
+    assets: selected.assets.map((asset) => remapPaths(asset, origin.paths, origin.assetIds)),
     files,
   };
   zip.file(BUNDLE_MANIFEST, JSON.stringify(manifest, null, 2));
@@ -209,28 +209,29 @@ export async function exportCollectionBundle(
  * from did, so every vault that has the collection compares the same items.
  * Files the sharer added move from their collection folder to the original's.
  */
-async function originNames(app: App, collection: CollectionMetadata, packedPaths: readonly string[]): Promise<{ collectionId: string; name: string; names: Map<string, string> }> {
+async function originNames(app: App, collection: CollectionMetadata, packedPaths: readonly string[]): Promise<{ collectionId: string; name: string; paths: Map<string, string>; assetIds: Map<string, string> }> {
   const record = await readInstallRecord(app, collection.uid);
   const collectionId = record?.sourceCollectionId ?? collection.id;
   // A name the vault had to give the copy (because another collection used the original) is not a rename by the user.
   const keptOwnName = record?.sourceName !== undefined && record.fields.name?.installed === await fieldFingerprint(collection, 'name');
   const name = keptOwnName ? record.sourceName : collection.name;
-  const names = new Map<string, string>();
+  const paths = new Map<string, string>();
+  const assetIds = new Map<string, string>();
   for (const [bundlePath, file] of Object.entries(record?.files ?? {})) {
-    if (file.target !== bundlePath) names.set(file.target, bundlePath);
+    if (file.target !== bundlePath) paths.set(file.target, bundlePath);
   }
   for (const [bundleId, asset] of Object.entries(record?.assets ?? {})) {
-    if (asset.localId !== bundleId) names.set(asset.localId, bundleId);
+    if (asset.localId !== bundleId) assetIds.set(asset.localId, bundleId);
   }
   const localFolder = `${COLLECTIONS_DIR}/${collection.id}/`;
   if (collectionId !== collection.id) {
     for (const vaultPath of packedPaths) {
-      if (!names.has(vaultPath) && vaultPath.startsWith(localFolder)) {
-        names.set(vaultPath, `${COLLECTIONS_DIR}/${collectionId}/${vaultPath.slice(localFolder.length)}`);
+      if (!paths.has(vaultPath) && vaultPath.startsWith(localFolder)) {
+        paths.set(vaultPath, `${COLLECTIONS_DIR}/${collectionId}/${vaultPath.slice(localFolder.length)}`);
       }
     }
   }
-  return { collectionId, name, names };
+  return { collectionId, name, paths, assetIds };
 }
 
 /**

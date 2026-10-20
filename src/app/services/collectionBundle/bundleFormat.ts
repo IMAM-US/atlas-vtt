@@ -1,9 +1,11 @@
 import type { Asset, CollectionMetadata } from '../AssetService';
 import { isRecord } from '../assetMetadataGuards';
 import { SNAPSHOTS_DIR } from '../../snapshots/snapshotPaths';
+import { isAccountPath } from '../../agent-links/account/references';
+import { ownedPaths } from '../vault-sync/assetFiles';
 
 /** Bumped when the zip layout or manifest shape changes. */
-export const BUNDLE_FORMAT = 4;
+export const BUNDLE_FORMAT = 5;
 /** Oldest format this version still imports. */
 const OLDEST_BUNDLE_FORMAT = 2;
 export const BUNDLE_MANIFEST = 'manifest.json';
@@ -13,10 +15,11 @@ export const BUNDLE_FILES_DIR = 'files';
 /**
  * `asset-file` is the file that backs an asset record: token image, map JSON, scene, encounter or player JSON.
  * `linked-note` is a note a scene's pins or characters open; `cover` is the collection's cover image (format 4).
+ * `source-account` is a scene's authored native-source account, whose contents remain opaque (format 5).
  */
 const BUNDLE_FILE_ROLES = [
   'asset-file', 'thumbnail', 'scene-map', 'scene-thumbnail', 'scene-snapshot', 'scene-snapshot-thumbnail', 'background', 'token-image', 'statblock-note', 'statblock-image',
-  'linked-note', 'cover',
+  'linked-note', 'cover', 'source-account',
 ] as const;
 export type BundleFileRole = typeof BUNDLE_FILE_ROLES[number];
 
@@ -77,6 +80,7 @@ const SNAPSHOT_ROLES: ReadonlySet<BundleFileRole> = new Set<BundleFileRole>(['sc
  * files may sit in their scene's `.snapshots` folder.
  */
 export function isSafeBundlePath(path: string, role?: BundleFileRole): boolean {
+  if (role === 'source-account' && !isAccountPath(path)) return false;
   if (!path || path.length > 1024 || path.startsWith('/') || path.includes('\\')) return false;
   if ([...path].some((character) => character.charCodeAt(0) < 0x20)) return false;
   const segments = path.split('/');
@@ -126,5 +130,9 @@ export function manifestProblem(value: unknown): string | null {
   if (coverPath !== undefined && !files.some((file) => file.role === 'cover' && file.vaultPath === coverPath)) return 'This collection export is damaged.';
   const unsafe = files.find((file) => !isSafeBundlePath(file.vaultPath, file.role) || (file.statblockImage && !isSafeBundlePath(file.statblockImage.path)));
   if (unsafe) return `This collection export contains a file Atlas will not write: ${unsafe.vaultPath}`;
+  const owned = new Set(assets.flatMap((asset) => ownedPaths({ ...asset, collection: collection.id } as Asset)));
+  for (const file of files) if (file.role !== 'source-account') owned.add(file.vaultPath);
+  const conflictingAccount = files.find((file) => file.role === 'source-account' && owned.has(file.vaultPath));
+  if (conflictingAccount) return `Source account conflicts with an asset or another file reference: ${conflictingAccount.vaultPath}`;
   return null;
 }

@@ -17,6 +17,8 @@ export interface UISlice {
   assetManagerInitialTab?: 'scenes' | 'maps' | 'encounters' | 'tokens' | undefined;
   isCommandPaletteOpen: boolean;
   isDiceTrayOpen: boolean;
+  /** The map object a completed click (press and release without a drag) last landed on; cleared when its card closes. */
+  clickedObjectId: string | null;
 
   // Actions
   setGridSettingsOpen: (open: boolean) => void;
@@ -27,6 +29,7 @@ export interface UISlice {
   closeAssetManager: () => void;
   setCommandPaletteOpen: (open: boolean) => void;
   setDiceTrayOpen: (open: boolean) => void;
+  setClickedObjectId: (id: string | null) => void;
 }
 
 /** Default state — all panels closed */
@@ -40,6 +43,7 @@ export function createInitialUIState(): Pick<
   | 'assetManagerInitialTab'
   | 'isCommandPaletteOpen'
   | 'isDiceTrayOpen'
+  | 'clickedObjectId'
 > {
   return {
     isGridSettingsOpen: false,
@@ -50,6 +54,7 @@ export function createInitialUIState(): Pick<
     assetManagerInitialTab: undefined,
     isCommandPaletteOpen: false,
     isDiceTrayOpen: false,
+    clickedObjectId: null,
   };
 }
 
@@ -66,6 +71,7 @@ export function createUIActions(
   | 'closeAssetManager'
   | 'setCommandPaletteOpen'
   | 'setDiceTrayOpen'
+  | 'setClickedObjectId'
 > {
   return {
     setGridSettingsOpen: (open) => set((draft) => { draft.isGridSettingsOpen = open; }),
@@ -82,5 +88,6 @@ export function createUIActions(
     }),
     setCommandPaletteOpen: (open) => set((draft) => { draft.isCommandPaletteOpen = open; }),
     setDiceTrayOpen: (open) => set((draft) => { draft.isDiceTrayOpen = open; }),
+    setClickedObjectId: (id) => set((draft) => { draft.clickedObjectId = id; }),
   };
 }

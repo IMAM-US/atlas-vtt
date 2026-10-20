@@ -37,8 +37,8 @@ export interface TransferPlanInput {
 
 export interface TransferPlan {
   steps: TransferStep[];
-  /** Old path → new path of every file that goes somewhere, and old id → new id of every copied asset. */
-  rewrites: PathMap;
+  /** Vault paths only: account locations must never resolve through asset-id rewrites. */
+  paths: PathMap;
   /** Where the JSON file behind each asset's record ends up, by the asset's current id. */
   recordPaths: ReadonlyMap<string, string>;
 }
@@ -90,14 +90,14 @@ export function planTransfer(input: TransferPlanInput): TransferPlan {
   const isTaken = (path: string): boolean => claimed.has(path) || input.existsInVault(path);
   const isMapTaken = (path: string): boolean => isTaken(path) || input.hiddenFolders.has(snapshotFolderFor(path));
   const steps: TransferStep[] = [];
-  const rewrites = new Map<string, string>(newIds);
+  const paths = new Map<string, string>();
   const recordPaths = new Map<string, string>();
   const place = (file: BundleFile, wanted: string, op: TransferMode): string => {
     const taken = file.role === 'scene-map' ? isMapTaken : isTaken;
     const to = taken(wanted) ? freePathIn(parentPath(wanted), baseName(wanted), taken) : wanted;
     claimed.add(to);
     steps.push({ file, to, op });
-    rewrites.set(file.vaultPath, to);
+    paths.set(file.vaultPath, to);
     return to;
   };
 
@@ -145,8 +145,8 @@ export function planTransfer(input: TransferPlanInput): TransferPlan {
   for (const { file, map } of besideMaps) {
     // A moved map takes its snapshot folder along as a whole.
     if (mode === 'move' && file.role !== 'scene-thumbnail') continue;
-    const mapTarget = rewrites.get(map);
+    const mapTarget = paths.get(map);
     if (mapTarget) place(file, besideMap(file, mapTarget), mode);
   }
-  return { steps, rewrites, recordPaths };
+  return { steps, paths, recordPaths };
 }

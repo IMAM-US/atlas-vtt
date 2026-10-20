@@ -30,9 +30,22 @@ describe('bundle paths', () => {
 });
 
 describe('manifest checks', () => {
-  it('accepts sound format 3 and format 2 manifests', () => {
+  it('accepts the account role and supported older manifests', () => {
     expect(manifestProblem(manifest())).toBeNull();
+    expect(manifestProblem(manifest({ files: [{ vaultPath: 'accounts/team.json', role: 'source-account' }] }))).toBeNull();
+    expect(manifestProblem(manifest({ format: 4 }))).toBeNull();
+    expect(manifestProblem(manifest({ format: 3 }))).toBeNull();
     expect(manifestProblem(manifest({ format: 2, files: [{ vaultPath: 'atlas-vtt/a.json', role: 'asset-file' }] }))).toBeNull();
+  });
+
+  it.each(['.obsidian/native.json', '/private/native.json', 'C:/native.json', 'accounts/../native.json', 'accounts/team.json#seat', 'accounts/team.md'])('rejects unsafe account location %s', (vaultPath) => {
+    expect(manifestProblem(manifest({ files: [{ vaultPath, role: 'source-account' }] }))).toContain('will not write');
+  });
+
+  it('rejects two roles for the same imported account path', () => {
+    const vaultPath = 'account.json';
+    expect(manifestProblem(manifest({ files: [{ vaultPath, role: 'source-account' }, { vaultPath, role: 'background' }] })))
+      .toContain('Source account conflicts');
   });
 
   it('asks for an Atlas update for newer formats and rejects older ones', () => {

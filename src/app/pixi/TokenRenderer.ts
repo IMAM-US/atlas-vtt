@@ -186,6 +186,7 @@ export class TokenRenderer {
       this.uiManager.updateHandlePositions()
     );
     this.interactionController.setTokensHeldCallback((tokenIds) => this.uiManager.setTokensHeld(tokenIds));
+    this.interactionController.setTokenClickCallback((tokenId) => this.store.getState().setClickedObjectId(tokenId));
     this.interactionController.setSelectionUpdateCallback(() => {
       if (typeof this.selectionOverlayUpdater === 'function') {
         this.selectionOverlayUpdater();

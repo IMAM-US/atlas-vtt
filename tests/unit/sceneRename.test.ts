@@ -93,7 +93,48 @@ describe('renaming a map file in the vault', () => {
   });
 });
 
+describe('source accounts on note rename', () => {
+  it('points the account\'s typed note references at the renamed note and leaves native ids alone', async () => {
+    const accountPath = `${scenes}/accounts/links.json`;
+    const account = {
+      format: 'atlas-source-account', version: 1,
+      subjects: [{ id: 'seat:one', kind: 'seat', notePath: 'Notes/Seat.md', seat: { nodeId: 'Notes/Seat.md' } }],
+    };
+    const { app, files } = createInMemoryApp({
+      files: {
+        [`${scenes}/Bound.atlasmap`]: JSON.stringify({ version: 3, state: { objects: { tokens: { t: { id: 't', kind: 'token', x: 0, y: 0, imagePath: 'art.webp', sourceReference: { accountPath, subjectId: 'seat:one' } } }, pins: {} } } }),
+        [accountPath]: JSON.stringify(account, null, 2) + '\n',
+        'Notes/Seat.md': '# Seat',
+      },
+    });
+    await AssetService.getInstance(app).initialize();
+    await new FileReferenceService(app).handleFileRenamed('Notes/Seat.md', 'Notes/Renamed Seat.md');
+    const rewritten = JSON.parse(files.get(accountPath)!) as typeof account;
+    expect(rewritten.subjects[0]!.notePath).toBe('Notes/Renamed Seat.md');
+    expect(rewritten.subjects[0]!.seat.nodeId).toBe('Notes/Seat.md');
+    expect(files.get(accountPath)!.endsWith('\n')).toBe(true);
+  });
+});
+
 describe('rewriteMapReferences', () => {
+  it('follows token and text accounts and token note anchors without changing native identity', () => {
+    const oldPath = 'accounts/colleagues.json';
+    const original = { accountPath: oldPath, subjectId: oldPath, native: { nodeId: oldPath } };
+    const objects = {
+      tokens: { t: { imagePath: 'art.webp', notePath: 'Notes/Work.md#Scope', sourceReference: { ...original } } },
+      texts: { x: { sourceReference: { ...original } } },
+    };
+    const moves = movedPathOf([
+      { from: oldPath, to: 'accounts/renamed.json' },
+      { from: 'Notes/Work.md', to: 'Notes/Renamed.md' },
+    ]);
+    expect(rewriteMapReferences({ objects }, moves)).toBe(true);
+    expect(objects.tokens.t.sourceReference).toEqual({ ...original, accountPath: 'accounts/renamed.json' });
+    expect(objects.texts.x.sourceReference).toEqual(objects.tokens.t.sourceReference);
+    expect(objects.tokens.t.notePath).toBe('Notes/Renamed.md#Scope');
+    expect(rewriteMapReferences({ objects }, moves)).toBe(false);
+  });
+
   it('retargets token art, token statblocks and pin targets, leaving other paths alone', () => {
     const objects = {
       tokens: {

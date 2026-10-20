@@ -1,0 +1,112 @@
+import { realpath } from 'fs/promises';
+import { homedir } from 'os';
+import { isAbsolute, resolve } from 'path';
+import { isRecord } from '../services/assetMetadataGuards';
+import type { OpenRigConnection } from './native/openRigRead';
+import type { NativeViewConnections } from './native/viewResolution';
+
+/**
+ * Machine-local connection settings for one native source. They live in Atlas's settings
+ * file, never in a collection or an account: an imported account selects a source by `key`
+ * and can never name an endpoint, socket, root or credential.
+ */
+export interface AgentLinkSourceSettings {
+  key: string;
+  openRigEndpoint: string;
+  openRigHostId: string;
+  openRigToken: string;
+  /** Herdr Unix sockets to discover views on, one per line in the settings tab. */
+  herdrSocketPaths: string[];
+  tmuxSocketPath: string;
+  tmuxExecutablePath: string;
+  /** Repository and evidence roots artifact reads are confined to. */
+  allowedRoots: string[];
+  claudeProjectsRoot: string;
+  codexSessionsRoot: string;
+}
+
+export interface AgentLinkSettings {
+  sources: AgentLinkSourceSettings[];
+}
+
+export const LOCAL_SOURCE_KEY = 'local';
+
+export function defaultSourceSettings(key = LOCAL_SOURCE_KEY): AgentLinkSourceSettings {
+  return {
+    key, openRigEndpoint: '', openRigHostId: '', openRigToken: '', herdrSocketPaths: [],
+    tmuxSocketPath: '', tmuxExecutablePath: '', allowedRoots: [], claudeProjectsRoot: '~/.claude/projects', codexSessionsRoot: '~/.codex/sessions',
+  };
+}
+
+export const DEFAULT_AGENT_LINK_SETTINGS: AgentLinkSettings = { sources: [defaultSourceSettings()] };
+
+const text = (value: unknown, fallback: string): string => (typeof value === 'string' ? value.trim() : fallback);
+const lines = (value: unknown): string[] =>
+  Array.isArray(value) ? value.filter((entry): entry is string => typeof entry === 'string').map((entry) => entry.trim()).filter(Boolean) : [];
+
+/** Stored settings as this version understands them; a malformed entry falls back field by field. */
+export function readAgentLinkSettings(stored: unknown): AgentLinkSettings {
+  const entries = isRecord(stored) && Array.isArray(stored.sources) ? stored.sources.filter(isRecord) : [];
+  const sources = entries.map((entry) => {
+    const defaults = defaultSourceSettings(text(entry.key, LOCAL_SOURCE_KEY) || LOCAL_SOURCE_KEY);
+    return {
+      ...defaults,
+      openRigEndpoint: text(entry.openRigEndpoint, ''), openRigHostId: text(entry.openRigHostId, ''), openRigToken: text(entry.openRigToken, ''),
+      herdrSocketPaths: lines(entry.herdrSocketPaths), tmuxSocketPath: text(entry.tmuxSocketPath, ''), tmuxExecutablePath: text(entry.tmuxExecutablePath, ''),
+      allowedRoots: lines(entry.allowedRoots), claudeProjectsRoot: text(entry.claudeProjectsRoot, defaults.claudeProjectsRoot),
+      codexSessionsRoot: text(entry.codexSessionsRoot, defaults.codexSessionsRoot),
+    };
+  });
+  return { sources: sources.length ? sources : [defaultSourceSettings()] };
+}
+
+/** `~` stands for the home directory; everything else must already be absolute. */
+export function expandRoot(root: string): string {
+  const expanded = root === '~' ? homedir() : root.startsWith('~/') ? resolve(homedir(), root.slice(2)) : root;
+  return isAbsolute(expanded) ? resolve(expanded) : '';
+}
+
+async function realRoot(path: string): Promise<string | null> {
+  const expanded = expandRoot(path);
+  if (!expanded) return null;
+  try { return await realpath(expanded); } catch { return null; }
+}
+
+/** A confined location: the configured allowed root's real path and the relative path below it that an account named. */
+export interface ConfinedRoot { anchor: string; relative: string }
+
+/**
+ * Where an account's root lies within a configured allowed root, or null. Both sides are
+ * resolved through symlinks first, so an account cannot name a link that escapes the
+ * configured roots, and every read anchors at the configured root itself: the reader
+ * resolves the whole relative path again at read time, so a later swap below the anchor
+ * cannot redirect it outside.
+ */
+export async function confinedRoot(source: AgentLinkSourceSettings, root: string): Promise<ConfinedRoot | null> {
+  const target = await realRoot(root);
+  if (!target) return null;
+  for (const allowed of source.allowedRoots) {
+    const anchor = await realRoot(allowed);
+    if (!anchor) continue;
+    if (target === anchor) return { anchor, relative: '' };
+    if (target.startsWith(`${anchor}/`)) return { anchor, relative: target.slice(anchor.length + 1) };
+  }
+  return null;
+}
+
+/** `path` below the account root, expressed below the configured anchor. */
+export const anchoredPath = (confined: ConfinedRoot, path: string): string => (confined.relative ? `${confined.relative}/${path}` : path);
+
+export function openRigConnectionOf(source: AgentLinkSourceSettings): OpenRigConnection | null {
+  if (!source.openRigEndpoint || !source.openRigHostId) return null;
+  return { endpoint: source.openRigEndpoint, hostId: source.openRigHostId, ...(source.openRigToken ? { bearerToken: source.openRigToken } : {}) };
+}
+
+export function viewConnectionsOf(source: AgentLinkSourceSettings): NativeViewConnections | null {
+  if (!source.openRigHostId || !source.herdrSocketPaths.length || !source.tmuxSocketPath || !source.tmuxExecutablePath) return null;
+  return {
+    localHostId: source.openRigHostId,
+    herdrSocketPaths: source.herdrSocketPaths.map(expandRoot).filter(Boolean),
+    tmux: [{ socketPath: expandRoot(source.tmuxSocketPath), executablePath: expandRoot(source.tmuxExecutablePath) }],
+  };
+}

@@ -22,8 +22,6 @@ export interface ImportTargets {
   paths: Map<string, string>;
   /** Bundle asset id → id in this vault. */
   assetIds: Map<string, string>;
-  /** Every string replaced inside JSON files and asset records: moved paths and renamed ids. */
-  rewrites: Map<string, string>;
   /** Bundle paths of files the vault already has but the collection does not own; never written or removed. */
   shared: Set<string>;
   /** Assets left out because deleting them would trash a file outside Atlas's folder the collection does not own. */
@@ -45,7 +43,7 @@ interface ImportInputs {
 
 /** The record the import stores for a bundle asset: paths and ids rewritten, filed under the target collection. */
 export function installedAsset(asset: Asset, targets: ImportTargets): Asset {
-  return { ...remapPaths(asset, targets.rewrites), id: targets.assetIds.get(asset.id) ?? asset.id, collection: targets.collectionId };
+  return { ...remapPaths(asset, targets.paths, targets.assetIds), id: targets.assetIds.get(asset.id) ?? asset.id, collection: targets.collectionId };
 }
 
 /** Asset fields naming files that deleting the asset trashes; an import must never point them outside Atlas's folder. */
@@ -157,12 +155,8 @@ export async function planTargets(
       && (record?.files[source] ? usedElsewhere.has(target) : !isOwnArtwork(target));
     if (isOutsideAtlas || isSharedArtwork) shared.add(source);
   }
-  const rewrites = new Map<string, string>();
-  for (const [source, target] of [...paths, ...assetIds]) {
-    if (source !== target) rewrites.set(source, target);
-  }
   const targets: ImportTargets = {
-    collectionId, paths, assetIds, rewrites, shared, skipped: [],
+    collectionId, paths, assetIds, shared, skipped: [],
     targetOf: (bundlePath) => paths.get(bundlePath) ?? record?.files[bundlePath]?.target,
     localIdOf: (bundleId) => assetIds.get(bundleId) ?? record?.assets[bundleId]?.localId ?? bundleId,
   };
@@ -203,8 +197,8 @@ export async function gatherImportInputs(
     const theirs = sourceHashes.get(file.vaultPath) ?? null;
     let theirsInstalled = theirs ?? undefined;
     const entry = zip.file(zipPathFor(file.vaultPath));
-    if (theirs !== null && entry && mayRewrite(file, targets.rewrites)) {
-      theirsInstalled = await sha256(rewriteContent(file, await entry.async('arraybuffer'), targets.rewrites));
+    if (theirs !== null && entry && mayRewrite(file, targets.paths, targets.assetIds)) {
+      theirsInstalled = await sha256(rewriteContent(file, await entry.async('arraybuffer'), targets.paths, targets.assetIds));
     }
     items.push({
       key: `file:${file.vaultPath}`, kind: 'file', unit: fileUnit(file),

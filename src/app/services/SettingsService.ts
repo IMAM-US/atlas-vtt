@@ -7,6 +7,10 @@ import {
   resolveLaserPointerSettings,
   type LaserPointerSettings,
 } from '../tools/laserPointerSettings';
+import {
+  DEFAULT_AGENT_LINK_SETTINGS, defaultSourceSettings, readAgentLinkSettings,
+  type AgentLinkSettings, type AgentLinkSourceSettings,
+} from '../agent-links/sourceSettings';
 
 /**
  * How wheel events drive the map viewport.
@@ -35,6 +39,8 @@ export interface AtlasSettings {
   laserPointer: LaserPointerSettings;
   /** Game system presets the user saved, as stored; `SystemPresetService` validates them. */
   systemPresets: unknown[];
+  /** Machine-local native source connections for source-linked tokens; never exported. */
+  agentLinks: AgentLinkSettings;
   localPlayerView: {
     // UI element visibility toggles
     showToolbar: boolean;
@@ -62,6 +68,7 @@ const DEFAULT_SETTINGS: AtlasSettings = {
   },
   laserPointer: DEFAULT_LASER_POINTER_SETTINGS,
   systemPresets: [],
+  agentLinks: DEFAULT_AGENT_LINK_SETTINGS,
   localPlayerView: {
     // UI element visibility defaults
     showToolbar: false, // Hide toolbar by default in player view
@@ -179,6 +186,7 @@ export class SettingsService {
   private applyStoredSettings(stored: Partial<AtlasSettings>): void {
     this.settings = this.deepMerge(DEFAULT_SETTINGS, stored);
     this.settings.hotkeys = readHotkeyOverrides(stored.hotkeys);
+    this.settings.agentLinks = readAgentLinkSettings(stored.agentLinks);
     // Rewrite files from versions that saved every binding, so they keep only the user's.
     if (JSON.stringify(stored.hotkeys ?? {}) !== JSON.stringify(this.settings.hotkeys)) this.scheduleSave();
   }
@@ -298,6 +306,19 @@ export class SettingsService {
 
   setLaserPointerSettings(settings: Partial<LaserPointerSettings>): void {
     this.settings.laserPointer = resolveLaserPointerSettings({ ...this.settings.laserPointer, ...settings });
+    this.commit();
+  }
+
+  /** The connection settings of a native source; an unknown key reads as unconfigured. */
+  getAgentLinkSource(key: string): AgentLinkSourceSettings {
+    return this.settings.agentLinks.sources.find((source) => source.key === key) ?? defaultSourceSettings(key);
+  }
+
+  setAgentLinkSource(key: string, patch: Partial<AgentLinkSourceSettings>): void {
+    const sources = this.settings.agentLinks.sources.some((source) => source.key === key)
+      ? this.settings.agentLinks.sources.map((source) => (source.key === key ? { ...source, ...patch, key } : source))
+      : [...this.settings.agentLinks.sources, { ...defaultSourceSettings(key), ...patch, key }];
+    this.settings.agentLinks = { sources };
     this.commit();
   }
 
