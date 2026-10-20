@@ -100,7 +100,8 @@ export function ConversationSection({ subject, seat }: { subject: SeatSubject; s
     }
   };
 
-  const changed = Boolean(current?.participant && subject.participant && current.participant.conversationId !== subject.participant.conversationId);
+  const changed = Boolean(current?.participant && subject.participant
+    && (current.participant.conversationId !== subject.participant.conversationId || current.participant.runtime !== subject.participant.runtime));
   const pinnedElsewhere = subject.policy === 'captured-conversation' && Boolean(pinnedProblem);
   const screenLines = screen?.state === 'current' ? screen.content.split('\n').slice(-SCREEN_LINES).join('\n') : '';
   const candidates = views && views.state !== 'unavailable' ? views.views : [];

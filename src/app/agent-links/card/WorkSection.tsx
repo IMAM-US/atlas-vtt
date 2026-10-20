@@ -33,8 +33,9 @@ export function WorkSection({ subject, owned, mapWork, liveMapWork }: {
   const fresh = newWork(owned, mapWork, subject.sourceKey);
   const isOpen = (qitemId: string, sourceKey: string): boolean => open?.qitemId === qitemId && open.sourceKey === sourceKey;
   const toggle = (qitemId: string, sourceKey: string): void => setOpen((current) => (current?.qitemId === qitemId && current.sourceKey === sourceKey ? null : { qitemId, sourceKey }));
-  const handoffLink = (sessionAddress: string | null, subjectId: string | undefined): React.ReactNode => {
-    const target = subjectId ? subjectOf(loaded.account, subjectId) : sessionAddress ? seatBySessionAddress(loaded.account, subject.sourceKey, sessionAddress) : null;
+  /** An authored subject id is its own link; a native address resolves only within the work row's source. */
+  const handoffLink = (sessionAddress: string | null, subjectId: string | undefined, sourceKey: string): React.ReactNode => {
+    const target = subjectId ? subjectOf(loaded.account, subjectId) : sessionAddress ? seatBySessionAddress(loaded.account, sourceKey, sessionAddress) : null;
     if (!target) return sessionAddress ? `→ handed off to ${sessionAddress}` : null;
     return <Button variant="link" className="agent-link-inline" onClick={() => openSubject(target.id)}>→ handed off to {target.caption}</Button>;
   };
@@ -56,7 +57,7 @@ export function WorkSection({ subject, owned, mapWork, liveMapWork }: {
       const state = item ? liveState(item) : live?.state === 'unavailable' ? `on map: ${work.captured.state} ${clock(work.captured.observedAt)} · live unavailable` : `on map: ${work.captured.state} ${clock(work.captured.observedAt)} · checking…`;
       const handedTo = text(item?.handedOffTo) ?? work.captured.handedOffTo ?? null;
       return <RouteRow key={work.id} label="Map" onPress={() => toggle(work.qitemId, work.sourceKey)} detail={<>{work.caption} · {state}{work.review ? ' · review ✓' : ''}</>} route={workRoute(sources.source(work.sourceKey), work.qitemId)}>
-        {handedTo && <p className="agent-link-muted">{handoffLink(handedTo, work.handedOffToSubjectId)}</p>}
+        {handedTo && <p className="agent-link-muted">{handoffLink(handedTo, work.handedOffToSubjectId, work.sourceKey)}</p>}
         {isOpen(work.qitemId, work.sourceKey) && <WorkDetail sourceKey={work.sourceKey} qitemId={work.qitemId} authored={work} />}
       </RouteRow>;
     })}

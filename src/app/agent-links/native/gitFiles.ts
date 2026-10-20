@@ -10,8 +10,11 @@ import {
 const execute = promisify(execFile);
 const GIT_TIMEOUT_MS = 5000;
 
-/** `within`: a configured anchor the repository root must lie inside, checked on the real path at read time. */
-export interface GitReadOptions extends FileReadOptions { within?: string }
+/**
+ * `within`: a configured anchor the repository root must lie inside, checked on the real path
+ * at read time. `comparedRevision`: a commit whose ancestry the checkout facts report.
+ */
+export interface GitReadOptions extends FileReadOptions { within?: string; comparedRevision?: string }
 
 export interface CheckoutFacts {
   repositoryPath: string;
@@ -148,6 +151,7 @@ export async function readWorkingGitFile(
   rootPath: string, relativePath: string, options: GitReadOptions = {},
 ): Promise<LocalFileRead & { checkout: CheckoutFacts }> {
   validateRelativeFilePath(relativePath);
+  if (options.comparedRevision) validateCommit(options.comparedRevision);
   const root = await repositoryRoot(rootPath, options.within);
   const before = await facts(root);
   await assertSameRoot(rootPath, root, options.within);
@@ -155,7 +159,8 @@ export async function readWorkingGitFile(
   const below = anchor === root ? relativePath : `${relative(anchor, root)}/${relativePath}`;
   const file = await readLocalFile(anchor, below, options);
   await assertSameRoot(rootPath, root, options.within);
-  const checkout = await facts(root);
+  // The checkout returned with the bytes is the one observed after them; the earlier facts only prove nothing moved meanwhile.
+  const checkout = await facts(root, options.comparedRevision?.toLowerCase());
   await assertSameRoot(rootPath, root, options.within);
   if (checkout.headCommit !== before.headCommit || checkout.branch !== before.branch) {
     throw new Error('Git checkout changed during the file read');

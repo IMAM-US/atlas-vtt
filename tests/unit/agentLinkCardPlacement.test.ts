@@ -7,16 +7,29 @@ import { exampleAccount } from '../fixtures/exampleAccount';
 
 describe('cardPlacement', () => {
   const container = { width: 1200, height: 800 };
+  const token = { x: 300, y: 300, radius: 35, labelHalfWidth: 0 };
   it('opens to the right of the token with room, else to its left, never off the view', () => {
-    expect(cardPlacement({ x: 300, y: 300, radius: 35 }, container)).toEqual({ left: 347, top: 276, maxHeight: 516 });
-    const leftSide = cardPlacement({ x: 1100, y: 300, radius: 35 }, container);
+    expect(cardPlacement(token, container)).toEqual({ left: 347, top: 265, maxHeight: 527 });
+    const leftSide = cardPlacement({ ...token, x: 1100 }, container);
     expect(leftSide.left + CARD_WIDTH).toBeLessThanOrEqual(1100 - 35);
-    expect(cardPlacement({ x: 10, y: 10, radius: 35 }, { width: 300, height: 400 }).left).toBe(8);
+    expect(cardPlacement({ ...token, x: 10, y: 10 }, { width: 300, height: 400 }).left).toBe(8);
   });
-  it('keeps a minimum height by moving up near the bottom edge', () => {
-    const low = cardPlacement({ x: 300, y: 790, radius: 35 }, container);
-    expect(low.top).toBe(552);
+  it('clears the nameplate when it is wider than the token', () => {
+    expect(cardPlacement({ ...token, labelHalfWidth: 60 }, container).left).toBe(300 + 60 + 12);
+    const leftSide = cardPlacement({ ...token, x: 1100, labelHalfWidth: 60 }, container);
+    expect(leftSide.left + CARD_WIDTH).toBeLessThanOrEqual(1100 - 60 - 12);
+  });
+  it('stays between the top bar and the bottom toolbar and keeps a minimum height', () => {
+    const insets = { top: 56, bottom: 88 };
+    const high = cardPlacement({ ...token, y: 20 }, container, insets);
+    expect(high.top).toBe(64);
+    expect(high.top + high.maxHeight).toBe(800 - 88 - 8);
+    const low = cardPlacement({ ...token, y: 790 }, container, insets);
+    expect(low.top + low.maxHeight).toBe(800 - 88 - 8);
     expect(low.maxHeight).toBe(240);
+    const plain = cardPlacement({ ...token, y: 790 }, container);
+    expect(plain.top).toBe(552);
+    expect(plain.maxHeight).toBe(240);
   });
 });
 

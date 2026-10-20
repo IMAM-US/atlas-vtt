@@ -6,6 +6,21 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 import { promisify } from 'util';
 import { readLocalFile, readLocalFilePrefix, readPreservedFile, sha256 } from '../../src/app/agent-links/native/localFiles';
+
+/** Lets a test act between the Git facts and the real local read; the reader itself is never replaced. */
+const beforeLocalRead = vi.hoisted(() => ({ hook: null as (() => Promise<void>) | null }));
+vi.mock('../../src/app/agent-links/native/localFiles', async (importOriginal) => {
+  const original = await importOriginal<typeof import('../../src/app/agent-links/native/localFiles')>();
+  return {
+    ...original,
+    readLocalFile: async (...args: Parameters<typeof original.readLocalFile>): ReturnType<typeof original.readLocalFile> => {
+      const hook = beforeLocalRead.hook;
+      beforeLocalRead.hook = null;
+      if (hook) await hook();
+      return original.readLocalFile(...args);
+    },
+  };
+});
 import { readCheckoutFacts, readGitFile, readWorkingGitFile } from '../../src/app/agent-links/native/gitFiles';
 import { locateProviderRecord } from '../../src/app/agent-links/native/providerRecord';
 
@@ -195,9 +210,15 @@ describe('working-file reads through a configured anchor', () => {
     expect(inside.relativePath).toBe('brief.md');
     expect(inside.checkout).toMatchObject({ repositoryPath: await realpath(sub), headCommit: head, branch: 'initial' });
     await expect(readWorkingGitFile(sub, 'brief.md', { within: join(allowed, 'elsewhere-missing') })).rejects.toThrow();
-    // Swap the repository path for a link to the twin: containment under the anchor refuses it.
-    await execute('mv', [sub, join(allowed, 'sub-moved')]);
-    await symlink(outside, sub);
+    // Swap the repository path for a link to the twin immediately before the real file read, after the Git facts passed:
+    // the read goes through the anchor, so the twin's bytes are refused instead of returned with the original's checkout.
+    beforeLocalRead.hook = async () => {
+      await execute('mv', [sub, join(allowed, 'sub-moved')]);
+      await symlink(outside, sub);
+    };
+    await expect(readWorkingGitFile(sub, 'brief.md', { within: allowed })).rejects.toThrow('escapes its configured root');
+    expect(beforeLocalRead.hook).toBeNull();
+    // Swapped before the call, containment under the anchor refuses every anchored read.
     await expect(readWorkingGitFile(sub, 'brief.md', { within: allowed })).rejects.toThrow('escapes its configured root');
     await expect(readCheckoutFacts(sub, undefined, { within: allowed })).rejects.toThrow('escapes its configured root');
     await expect(readGitFile(sub, 'brief.md', head, { within: allowed })).rejects.toThrow('escapes its configured root');
