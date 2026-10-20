@@ -13,6 +13,27 @@ export interface HttpReadOptions {
   maxBytes?: number;
 }
 
+/** Bounded native refusal metadata, without retaining the response body. */
+export class NativeHttpError extends Error {
+  constructor(readonly status: number, readonly code: string | null, readonly reason: string | null) {
+    super(`Native source returned HTTP ${status}${code ? ` (${code})` : ''}.${reason ? ` ${reason}` : ''}`);
+    this.name = 'NativeHttpError';
+  }
+}
+
+function nativeHttpError(status: number, bytes: Buffer): NativeHttpError {
+  try {
+    const value: unknown = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
+    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      const body = value as Record<string, unknown>;
+      const code = typeof body.error === 'string' && /^[A-Za-z0-9_.-]{1,128}$/.test(body.error) ? body.error : null;
+      const reason = typeof body.message === 'string' ? body.message : !code && typeof body.error === 'string' ? body.error : null;
+      return new NativeHttpError(status, code, reason?.slice(0, 2048) ?? null);
+    }
+  } catch { /* Non-JSON error bodies are not collected or presented. */ }
+  return new NativeHttpError(status, null, null);
+}
+
 /** A bounded, nonredirecting GET. A source cannot redirect credentials to another endpoint. */
 export async function readNativeJson(
   connection: NativeHttpConnection,
@@ -34,21 +55,23 @@ export async function readNativeJson(
   return new Promise((resolve, reject) => {
     const pending = request(url, { method: 'GET', headers, signal }, (response) => {
       const status = response.statusCode ?? 0;
-      if (status < 200 || status >= 300) {
+      if (status >= 300 && status < 400) {
         response.destroy();
-        reject(new Error(`Native source returned HTTP ${status}.`));
+        reject(new NativeHttpError(status, null, null));
         return;
       }
+      const successful = status >= 200 && status < 300;
       const chunks: Buffer[] = [];
       let length = 0;
       response.on('data', (chunk: Buffer) => {
         length += chunk.length;
-        if (length > (options.maxBytes ?? 1024 * 1024)) {
+        if (length > (successful ? options.maxBytes ?? 1024 * 1024 : 8192)) {
           response.destroy(new Error('Native response exceeded the read limit.'));
         } else chunks.push(chunk);
       });
       response.once('error', reject);
       response.once('end', () => {
+        if (!successful) { reject(nativeHttpError(status, Buffer.concat(chunks, length))); return; }
         try {
           resolve(JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(Buffer.concat(chunks, length))) as unknown);
         } catch (error) {

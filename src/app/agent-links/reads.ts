@@ -3,12 +3,16 @@ import type { NativeViewResolution } from './native/viewResolution';
 import type { HerdrFocusResult } from './native/herdrFocus';
 import type { ProviderRecord } from './native/providerRecord';
 import type { AccountDocument } from './account/accountSchema';
+import { NativeHttpError } from './native/httpRead';
 
 /**
  * Every native read the card shows is an observation with its own time and state. A failed
  * read never hides the captured account, and no read result is ever written into it.
  */
-export interface ReadFailure { state: 'unavailable'; message: string; observedAt: string }
+export interface ReadFailure {
+  state: 'unavailable'; message: string; observedAt: string;
+  refusal?: { status: number; code: string | null; reason: string | null };
+}
 
 export interface LoadedAccount { account: AccountDocument; path: string; sha256: string; loadedAt: string }
 
@@ -48,6 +52,8 @@ export type ConversationRecord = RecordRead | ReadFailure;
 
 export const failure = (error: unknown, fallback: string): ReadFailure => ({
   state: 'unavailable', message: error instanceof Error && error.message ? error.message : fallback, observedAt: new Date().toISOString(),
+  ...(error instanceof NativeHttpError && [403, 409].includes(error.status)
+    ? { refusal: { status: error.status, code: error.code, reason: error.reason } } : {}),
 });
 
 export const now = (): string => new Date().toISOString();

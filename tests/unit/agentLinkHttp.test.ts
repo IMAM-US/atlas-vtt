@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it } from 'vitest';
 import { createServer, type Server, type RequestListener } from 'http';
-import { readNativeJson } from '../../src/app/agent-links/native/httpRead';
+import { NativeHttpError, readNativeJson } from '../../src/app/agent-links/native/httpRead';
 
 const servers: Server[] = [];
 async function serve(handler: RequestListener): Promise<string> {
@@ -18,6 +18,16 @@ afterEach(async () => {
 });
 
 describe('native HTTP reads', () => {
+  it('preserves bounded native refusal status, code and the verbatim reason without response bodies', async () => {
+    const reason = 'The bound pane no longer matches its verified occupant.';
+    const endpoint = await serve((_request, response) => { response.writeHead(409); response.end(JSON.stringify({ error: 'record_identity_unverified', message: reason, transcript: 'must not be retained' })); });
+    try { await readNativeJson({ endpoint }, '/api/session'); throw new Error('Expected refusal'); }
+    catch (error) {
+      expect(error).toBeInstanceOf(NativeHttpError);
+      expect(error).toMatchObject({ status: 409, code: 'record_identity_unverified', reason });
+      expect(JSON.stringify(error)).not.toContain('must not be retained');
+    }
+  });
   it('reads through the real transport with GET and the configured source token', async () => {
     const endpoint = await serve((request, response) => {
       expect(request.method).toBe('GET');
