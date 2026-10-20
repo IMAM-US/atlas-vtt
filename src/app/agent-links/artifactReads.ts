@@ -44,11 +44,14 @@ async function working(source: AgentLinkSourceSettings, artifact: AccountArtifac
   if (!confined) return outsideRoots();
   const root = `${confined.anchor}${confined.relative ? `/${confined.relative}` : ''}`;
   try {
-    let checkout: CheckoutFacts | null = null;
-    try { checkout = await readCheckoutFacts(root, reviewedRevision, { within: confined.anchor }); } catch { checkout = null; }
-    const file = checkout ? await readWorkingGitFile(root, locator.path, { within: confined.anchor }) : await readLocalFile(confined.anchor, anchoredPath(confined, locator.path));
-    return { state: 'current', source: 'working', path: file.path, sha256: file.sha256, sizeBytes: file.sizeBytes, text: textOf(file.bytes),
-      checkout, label: 'Working file', observedAt: file.observedAt };
+    // Whether the root is a Git worktree decides the reader; the checkout shown is the one read together with the bytes.
+    let isWorktree = true;
+    try { await readCheckoutFacts(root, undefined, { within: confined.anchor }); } catch { isWorktree = false; }
+    const read = isWorktree
+      ? await readWorkingGitFile(root, locator.path, { within: confined.anchor, ...(reviewedRevision ? { comparedRevision: reviewedRevision } : {}) })
+      : { ...await readLocalFile(confined.anchor, anchoredPath(confined, locator.path)), checkout: null as CheckoutFacts | null };
+    return { state: 'current', source: 'working', path: read.path, sha256: read.sha256, sizeBytes: read.sizeBytes, text: textOf(read.bytes),
+      checkout: read.checkout, label: 'Working file', observedAt: read.observedAt };
   } catch (error) {
     return failure(error, 'Working file not found.');
   }

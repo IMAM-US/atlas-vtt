@@ -1,11 +1,26 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { execFile } from 'child_process';
-import { mkdtemp, mkdir, rm, symlink, writeFile } from 'fs/promises';
+import { mkdtemp, mkdir, realpath, rm, symlink, writeFile } from 'fs/promises';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { promisify } from 'util';
 import { readLocalFile, readLocalFilePrefix, readPreservedFile, sha256 } from '../../src/app/agent-links/native/localFiles';
+
+/** Lets a test act between the Git facts and the real local read; the reader itself is never replaced. */
+const beforeLocalRead = vi.hoisted(() => ({ hook: null as (() => Promise<void>) | null }));
+vi.mock('../../src/app/agent-links/native/localFiles', async (importOriginal) => {
+  const original = await importOriginal<typeof import('../../src/app/agent-links/native/localFiles')>();
+  return {
+    ...original,
+    readLocalFile: async (...args: Parameters<typeof original.readLocalFile>): ReturnType<typeof original.readLocalFile> => {
+      const hook = beforeLocalRead.hook;
+      beforeLocalRead.hook = null;
+      if (hook) await hook();
+      return original.readLocalFile(...args);
+    },
+  };
+});
 import { readCheckoutFacts, readGitFile, readWorkingGitFile } from '../../src/app/agent-links/native/gitFiles';
 import { locateProviderRecord } from '../../src/app/agent-links/native/providerRecord';
 
@@ -171,5 +186,45 @@ describe('explicit provider record identity', () => {
     await expect(locateProviderRecord(request)).rejects.toThrow('sidechain');
     await writeFile(join(root, request.relativePath), '{broken');
     await expect(locateProviderRecord(request)).rejects.toThrow('invalid JSON');
+  });
+});
+
+describe('working-file reads through a configured anchor', () => {
+  it('reads inside the anchor and refuses a repository path swapped for a link to a twin repository', async () => {
+    const allowed = await directory();
+    const sub = join(allowed, 'sub');
+    await mkdir(sub);
+    await git(sub, ['init', '-b', 'initial']);
+    await git(sub, ['config', 'user.name', 'Fixture']);
+    await git(sub, ['config', 'user.email', 'fixture@example.invalid']);
+    await git(sub, ['config', 'commit.gpgsign', 'false']);
+    await writeFile(join(sub, 'brief.md'), 'committed bytes');
+    const head = await commit(sub, 'brief');
+    // A twin repository outside the anchor with the same HEAD and branch but other working bytes.
+    const outside = join(await directory(), 'outside');
+    await execute('cp', ['-R', sub, outside]);
+    await writeFile(join(outside, 'brief.md'), 'outside bytes');
+    expect(await git(outside, ['rev-parse', 'HEAD'])).toBe(head);
+    const inside = await readWorkingGitFile(sub, 'brief.md', { within: allowed });
+    expect(inside.bytes.toString()).toBe('committed bytes');
+    expect(inside.relativePath).toBe('brief.md');
+    expect(inside.checkout).toMatchObject({ repositoryPath: await realpath(sub), headCommit: head, branch: 'initial' });
+    await expect(readWorkingGitFile(sub, 'brief.md', { within: join(allowed, 'elsewhere-missing') })).rejects.toThrow();
+    // Swap the repository path for a link to the twin immediately before the real file read, after the Git facts passed:
+    // the read goes through the anchor, so the twin's bytes are refused instead of returned with the original's checkout.
+    beforeLocalRead.hook = async () => {
+      await execute('mv', [sub, join(allowed, 'sub-moved')]);
+      await symlink(outside, sub);
+    };
+    await expect(readWorkingGitFile(sub, 'brief.md', { within: allowed })).rejects.toThrow('escapes its configured root');
+    expect(beforeLocalRead.hook).toBeNull();
+    // Swapped before the call, containment under the anchor refuses every anchored read.
+    await expect(readWorkingGitFile(sub, 'brief.md', { within: allowed })).rejects.toThrow('escapes its configured root');
+    await expect(readCheckoutFacts(sub, undefined, { within: allowed })).rejects.toThrow('escapes its configured root');
+    await expect(readGitFile(sub, 'brief.md', head, { within: allowed })).rejects.toThrow('escapes its configured root');
+    // Without an anchor the twin is a different repository root and is reported as such, never silently read as the original.
+    const twin = await readWorkingGitFile(sub, 'brief.md');
+    expect(twin.checkout.repositoryPath).toBe(await realpath(outside));
+    expect(twin.bytes.toString()).toBe('outside bytes');
   });
 });

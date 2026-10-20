@@ -2,7 +2,7 @@ import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 're
 import { useAtlasStore, useViewStoreHook } from '../../react/ViewStoreContext';
 import type { SourceReference } from '../../types';
 import { AgentLinkCard } from './AgentLinkCard';
-import { cardPlacement, CARD_WIDTH } from './cardPlacement';
+import { cardPlacement, CARD_WIDTH, type ViewInsets } from './cardPlacement';
 import { ChooserCard } from './ChooserCard';
 import { useObjectAnchor } from './useObjectAnchor';
 
@@ -31,22 +31,35 @@ export function AgentLinkOverlay(): React.ReactElement | null {
   useEffect(() => {
     if (clickedObjectId && !selectedIds.includes(clickedObjectId)) store.getState().setClickedObjectId(null);
   }, [store, clickedObjectId, selectedIds]);
-  const anchorId = chosen?.objectId ?? bound[0]?.objectId ?? null;
-  const anchor = useObjectAnchor(anchorId);
+  const anchorEntry = chosen ?? bound[0] ?? null;
+  const anchorId = anchorEntry?.objectId ?? null;
+  const anchor = useObjectAnchor(anchorId, anchorEntry?.label ?? '');
   const container = useRef<HTMLDivElement | null>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
+  const [insets, setInsets] = useState<ViewInsets>({ top: 0, bottom: 0 });
   useLayoutEffect(() => {
     const parent = container.current?.parentElement;
     if (!parent) return undefined;
-    const measure = (): void => setSize({ width: parent.clientWidth, height: parent.clientHeight });
+    const measure = (): void => {
+      setSize({ width: parent.clientWidth, height: parent.clientHeight });
+      // The card stays between the top bar row and the bottom toolbar row, both siblings in the map chrome.
+      const frame = parent.getBoundingClientRect();
+      const topBar = parent.querySelector('.atlas-top-bar-row')?.getBoundingClientRect();
+      const bottomBar = parent.querySelector('.atlas-bottom-toolbar-row')?.getBoundingClientRect();
+      setInsets({
+        top: topBar && topBar.height > 0 ? Math.max(0, topBar.bottom - frame.top) : 0,
+        bottom: bottomBar && bottomBar.height > 0 ? Math.max(0, frame.bottom - bottomBar.top) : 0,
+      });
+    };
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(parent);
+    for (const bar of parent.querySelectorAll('.atlas-top-bar-row, .atlas-bottom-toolbar-row')) observer.observe(bar);
     return () => observer.disconnect();
   }, [anchorId]);
   const close = (): void => store.getState().setClickedObjectId(null);
   if (isDragging || bound.length === 0 || !anchor) return <div ref={container} hidden />;
-  const box = cardPlacement(anchor, size.width && size.height ? size : { width: CARD_WIDTH + 32, height: 600 });
+  const box = cardPlacement(anchor, size.width && size.height ? size : { width: CARD_WIDTH + 32, height: 600 }, insets);
   const style: React.CSSProperties = { left: box.left, top: box.top, maxHeight: box.maxHeight, width: CARD_WIDTH };
   return <div ref={container} className="agent-link-overlay">
     {chosen
