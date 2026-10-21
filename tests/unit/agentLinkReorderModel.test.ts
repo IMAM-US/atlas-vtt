@@ -104,6 +104,34 @@ it('invalidates a pending exact result when a process event drains before the ba
   exact.dispose(); handle.release();
 });
 
+it.each(['queue.created', 'binding.changed'])('holds an already-completed exact result until missing %s drains', async (missing) => {
+  vi.useFakeTimers(); const f = fixture(), handle = f.model.watchSeat(subject); let finish!: (value: SeatRead) => void;
+  const read = vi.fn(async () => new Promise<SeatRead>((resolve) => { finish = resolve; }));
+  const exact = new ConversationObservation(handle, read); await vi.advanceTimersByTimeAsync(5);
+  f.emit('view.changed', 12); const value = exactSeat(), observedAt = value.observedAt; finish(value); await vi.advanceTimersByTimeAsync(50);
+  expect(exact.getSnapshot()).toMatchObject({ pending: true, value: null, applicable: false });
+  if (missing === 'binding.changed') vi.mocked(f.config.backend.readSeat).mockResolvedValue(seat(20));
+  vi.setSystemTime(Date.now() + 60_000);
+  f.emit(missing, 11); await vi.advanceTimersByTimeAsync(5);
+  expect(read).toHaveBeenCalledTimes(1);
+  if (missing === 'queue.created') {
+    expect(exact.getSnapshot()).toMatchObject({ pending: false, applicable: true });
+    expect(exact.getSnapshot().value).toBe(value); expect(value.observedAt).toBe(observedAt);
+  } else expect(exact.getSnapshot()).toMatchObject({ pending: false, applicable: false, value: null, needsRecheck: true });
+  exact.dispose(); handle.release();
+});
+
+it('rechecks readiness after the exact-result barrier returns before publishing its clock', async () => {
+  vi.useFakeTimers(); const f = fixture(), handle = f.model.watchSeat(subject);
+  vi.spyOn(handle, 'whenReady').mockImplementationOnce(async () => { queueMicrotask(() => f.emit('view.changed', 12)); });
+  const read = vi.fn(async () => exactSeat()), exact = new ConversationObservation(handle, read);
+  await vi.advanceTimersByTimeAsync(50);
+  expect(exact.getSnapshot()).toMatchObject({ pending: true, value: null, applicable: false });
+  f.emit('queue.created', 11); await vi.advanceTimersByTimeAsync(5);
+  expect(exact.getSnapshot()).toMatchObject({ pending: false, applicable: true });
+  expect(read).toHaveBeenCalledTimes(1); exact.dispose(); handle.release();
+});
+
 it('owns the hold per source and clears it on settings replacement and last-consumer release', async () => {
   vi.useFakeTimers(); const a = fixture('a'), b = fixture('b'), ah = a.model.watchOwned(subject), bh = b.model.watchOwned({ ...subject, sourceKey: 'b' });
   await vi.advanceTimersByTimeAsync(5); const old = vi.mocked(a.wire.subscribe).mock.calls[0]!;

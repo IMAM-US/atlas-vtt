@@ -47,7 +47,10 @@ export class ConversationObservation {
     const controller = new AbortController();
     this.controller = controller; this.pinned = fact;
     this.update({ ...this.state, pending: true, applicable: false });
-    void this.read(controller.signal).then((value) => {
+    void this.read(controller.signal).then(async (value) => {
+      if (controller.signal.aborted || this.disposed || this.controller !== controller) return;
+      // Keep the completed read's own clock; an unresolved hole may still contain a process change.
+      do { await this.process.whenReady(); } while (!this.process.isReady());
       const current = this.process.getSnapshot();
       if (controller.signal.aborted || this.disposed || this.controller !== controller
         || current.epoch !== fact.epoch || current.revision !== fact.revision) return;

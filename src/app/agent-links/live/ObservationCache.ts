@@ -38,6 +38,14 @@ export class ObservationCache {
     return {
       getSnapshot: () => owned.fact,
       subscribe: (listener): (() => void) => { owned.listeners.add(listener); return () => owned.listeners.delete(listener); },
+      isReady: (): boolean => !released && this.context !== null && this.context.ready(),
+      whenReady: async (): Promise<void> => {
+        const context = this.context;
+        if (released || !context) throw new Error('Native observation connection is unavailable.');
+        await context.verify();
+        context.signal.throwIfAborted();
+        if (released || this.context !== context) throw new Error('Native observation connection changed.');
+      },
       refresh: (): void => this.invalidate((candidate) => candidate === key),
       release: (): void => {
         if (released) return;

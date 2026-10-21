@@ -19,6 +19,9 @@ export interface ObservationHandle<T> {
   subscribe: (listener: () => void) => () => void;
   refresh: () => void;
   release: () => void;
+  /** A consumer's completed explicit read must also respect this source's publication barrier. */
+  whenReady: () => Promise<void>;
+  isReady: () => boolean;
 }
 export interface ConnectionState {
   status: 'connecting' | 'connected' | 'reconnecting' | 'unavailable' | 'closed';
