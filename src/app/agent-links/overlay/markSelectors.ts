@@ -25,8 +25,10 @@ export function activityHalo(subject: SeatSubject, fact: Observation<InventoryRe
     ? display as Activity : 'unknown';
   const needs = oracle && nativeObject(oracle.needsInput) ? oracle.needsInput : null;
   const reason = activity === 'needs-input' && needs ? plain(needs.reason) : '';
+  const label = activity === 'unknown' ? 'Activity not confirmed'
+    : `${subject.policy === 'captured-conversation' ? 'Seat activity now' : 'Activity'}: ${activity.replace('-', ' ')}${reason ? ` (${reason})` : ''}`;
   return { ...factStamp(fact), key: subjectKey(subject), activity,
-    label: absence ?? `Seat activity now: ${activity.replace('-', ' ')}${reason ? ` (${reason})` : ''} · ${freshnessLabel(fact)}` };
+    label: absence ?? `${label} · ${freshnessLabel(fact)}` };
 }
 
 export function workPip(fact: Observation<OwnedWork>): Pip | null {
@@ -34,6 +36,6 @@ export function workPip(fact: Observation<OwnedWork>): Pip | null {
   if (owned && !owned.truncated && owned.items.length === 0 && fact.freshness === 'live') return null;
   const count = owned ? owned.truncated ? 51 : owned.items.length : null;
   const blocked = owned?.items.filter((item) => item.state === 'blocked').length ?? 0;
-  const rows = count === null ? 'Owned work not confirmed' : `Owes ${count}${owned?.truncated ? '+' : ''} rows${blocked ? ` (${blocked}${owned?.truncated ? '+' : ''} blocked)` : ''}`;
+  const rows = count === null ? 'Owned work not confirmed' : `Owes ${count}${owned?.truncated ? '+' : ''} row${count === 1 ? '' : 's'}${blocked ? ` (${blocked}${owned?.truncated ? '+' : ''} blocked)` : ''}`;
   return { ...factStamp(fact), count, truncated: owned?.truncated ?? false, blocked, label: `${rows} · ${freshnessLabel(fact)}` };
 }

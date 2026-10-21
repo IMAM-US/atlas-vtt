@@ -130,6 +130,7 @@ it('keeps a broken authored reference visibly unavailable instead of silently dr
   await vi.advanceTimersByTimeAsync(120);
   expect(f.layer.getMarks()).toHaveLength(1);
   expect(f.layer.getMarks()[0]?.halos[0]).toMatchObject({ activity: 'unknown', freshness: 'unavailable' });
+  expect(f.layer.getMarks()[0]?.halos[0]?.label).toBe('Activity not confirmed · Unavailable: Subject not found in this account');
   expect(f.layer.getMarks()[0]?.lines.join()).toContain('Subject not found in this account');
   expect(f.exact).not.toHaveBeenCalled();
 });

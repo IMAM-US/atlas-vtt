@@ -6,6 +6,11 @@ import type { BoundAppearance } from './types';
 
 export interface AppearanceReference { id: string; path: string; subjectId: string; caption: string; token: boolean }
 
+/** Geometry can move during a hold; authored binding or account replacement invalidates the relation. */
+export function appearanceBinding(appearance: BoundAppearance): string {
+  return JSON.stringify([appearance.path, appearance.subjectId, appearance.revision]);
+}
+
 export function appearanceReferences(state: ViewAtlasState): AppearanceReference[] {
   return [...Object.values(state.objects.tokens), ...Object.values(state.objects.texts)].flatMap((object) => {
     const path = accountPathOf(object);

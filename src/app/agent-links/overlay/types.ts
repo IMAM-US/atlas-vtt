@@ -12,7 +12,10 @@ export interface Halo extends FactStamp {
   label: string;
 }
 export interface Pip extends FactStamp { count: number | null; truncated: boolean; blocked: number; label: string }
-export interface Tether { key: string; targetId: string; label: string; freshness: Freshness; evidence: readonly FactStamp[] }
+export interface Tether {
+  key: string; targetId: string; label: string; freshness: Freshness; evidence: readonly FactStamp[];
+  bindings: readonly { appearanceId: string; binding: string }[];
+}
 export interface AppearanceMark {
   id: string;
   binding: string;

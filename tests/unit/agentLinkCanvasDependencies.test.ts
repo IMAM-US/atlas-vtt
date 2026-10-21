@@ -90,3 +90,19 @@ it('preserves the weaker refusal label instead of calling an unresolved relation
   const f = fixture(); Object.assign(f.blocker, { value: null, freshness: 'refused', message: 'Native refused dependency verification' });
   expect(f.run().tethers).toHaveLength(0); expect(f.run().lines.join()).toContain('Refused: Native refused dependency verification');
 });
+
+it('includes qualifying owner inventory and its older clock even when the endpoint is a work appearance', () => {
+  const f = fixture(); f.targets[0]!.inventory.observedAt = '2026-01-01T11:00:00Z';
+  f.appearances.push({ ...appearance('work-a'), caption: 'Map review', subjectId: 'work-a', account: { ...account, work: [{ id: 'work-a', sourceKey: 'a', qitemId: 'qitem-review' }] } } as BoundAppearance);
+  const tether = f.run().tethers[0]!;
+  expect(tether.label).toContain('Map reviewer · reviewer@example');
+  expect(tether.label).toContain('Read 11:00Z');
+  expect(tether.evidence.some((stamp) => stamp.observedAt === '2026-01-01T11:00:00Z')).toBe(true);
+});
+
+it('refuses malformed blocker states instead of coercing them into active queue states', () => {
+  for (const state of [['in-progress'], ['pending'], null, 1]) {
+    const f = fixture(); if (f.blocker.value?.state === 'current') f.blocker.value.item.state = state;
+    expect(f.run().tethers).toHaveLength(0);
+  }
+});

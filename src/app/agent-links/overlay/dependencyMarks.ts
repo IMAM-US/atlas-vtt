@@ -6,6 +6,7 @@ import type { Observation } from '../live/types';
 import { nativeObject, type NativeObject } from '../native/openRigRead';
 import type { OwnedWork, Work } from '../reads';
 import { blockerReference, nativeReference } from './blockerReference';
+import { appearanceBinding } from './appearanceBindings';
 import { plain, factStamp } from './markSelectors';
 import type { NativeMarks } from './NativeMarks';
 import type { BoundAppearance, Tether } from './types';
@@ -13,7 +14,7 @@ import type { BoundAppearance, Tether } from './types';
 export interface TargetSeat { appearance: BoundAppearance; subject: SeatSubject; inventory: Observation<InventoryRead> }
 interface Dependencies { tethers: Tether[]; lines: string[] }
 
-const active = (row: NativeObject): boolean => ['pending', 'in-progress', 'blocked'].includes(String(row.state));
+const active = (row: NativeObject): boolean => typeof row.state === 'string' && ['pending', 'in-progress', 'blocked'].includes(row.state);
 const usable = <T>(fact: Observation<T>, epoch: number, source: string): boolean => fact.sourceKey === source && fact.epoch === epoch && ['live', 'read'].includes(fact.freshness) && fact.value !== null;
 
 /** Join queue custody, never participant identity. Every component remains separately dated. */
@@ -59,7 +60,7 @@ export function dependencyMarks(
       entry.id === appearance.subjectId && entry.sourceKey === source && entry.qitemId === ref.ref)) : [];
     const destinations = workTargets.length ? workTargets : nodes.size === 1 ? matching.map((entry) => entry.appearance) : [];
     if (!destinations.length || !reads.ready(source)) { result.lines.push(unresolved(full)); continue; }
-    if (!workTargets.length) inputs.push(...matching.map((entry) => entry.inventory));
+    if (!workTargets.length || nodes.size === 1) inputs.push(...new Set(matching.map((entry) => entry.inventory)));
     const observed = inputs.map((fact) => fact.observedAt).filter((time): time is string => time !== null).sort()[0];
     for (const destination of destinations) {
       const ownerSeat = nodes.size === 1 ? matching.find((entry) => entry.appearance.id === destination.id) ?? matching[0] : undefined;
@@ -67,7 +68,9 @@ export function dependencyMarks(
       const ownerName = ownerSeat ? `${plain(ownerSeat.appearance.caption)} · ${owner}` : owner;
       const label = ref.kind === 'qitem' ? `Waiting on ${itemName}${ownerName ? ` (owned by ${ownerName})` : ''}` : `Waiting on ${plain(destination.caption)} · ${owner}`;
       const line = `${label} · Read ${clock(observed ?? null)}`;
-      result.tethers.push({ key: JSON.stringify([source, id, ref.ref, destination.id]), targetId: destination.id, label: line, freshness: 'read', evidence: inputs.map(factStamp) });
+      const bindings = [destination, ...(ownerSeat && ownerSeat.appearance.id !== destination.id ? [ownerSeat.appearance] : [])]
+        .map((appearance) => ({ appearanceId: appearance.id, binding: appearanceBinding(appearance) }));
+      result.tethers.push({ key: JSON.stringify([source, id, ref.ref, destination.id]), targetId: destination.id, bindings, label: line, freshness: 'read', evidence: inputs.map(factStamp) });
       result.lines.push(line);
     }
   }

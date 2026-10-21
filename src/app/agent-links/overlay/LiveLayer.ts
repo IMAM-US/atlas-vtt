@@ -5,7 +5,7 @@ import type { InventoryRead } from '../live/OpenRigLive';
 import type { SeatSubject } from '../account/accountSchema';
 import type { Observation } from '../live/types';
 import { AccountLoads } from './AccountLoads';
-import { appearanceReferences, appearanceSubject, groupSeats, resolvedAppearances } from './appearanceBindings';
+import { appearanceBinding, appearanceReferences, appearanceSubject, groupSeats, resolvedAppearances } from './appearanceBindings';
 import { dependencyMarks, type TargetSeat } from './dependencyMarks';
 import { activityHalo, plain, workPip } from './markSelectors';
 import { NativeMarks } from './NativeMarks';
@@ -13,6 +13,7 @@ import { comparisonLine } from './comparisonLine';
 import { subjectKey, type AppearanceMark, type Halo } from './types';
 
 export interface LiveHover { id: string; lines: readonly string[] }
+interface RetainedMark { binding: string; halo: Halo; pip: AppearanceMark['pip']; tethers: AppearanceMark['tethers']; lines: readonly string[] }
 
 /** Per-view, memory-only observation owner. No store actions or native commands. */
 export class LiveLayer {
@@ -26,7 +27,7 @@ export class LiveLayer {
   private readonly listeners = new Set<() => void>();
   private readonly cleanups: (() => void)[] = [];
   private marks: readonly AppearanceMark[] = [];
-  private prior = new Map<string, { binding: string; halo: Halo; pip: AppearanceMark['pip']; tethers: AppearanceMark['tethers']; lines: readonly string[] }>();
+  private prior = new Map<string, RetainedMark>();
   private hoverId: string | null = null;
   private hover: LiveHover | null = null;
 
@@ -76,17 +77,18 @@ export class LiveLayer {
     const references = appearanceReferences(state);
     this.loads.setPaths(new Set(references.map((entry) => entry.path)));
     const appearances = resolvedAppearances(references, this.loads);
+    const bindings = new Map(appearances.map((appearance) => [appearance.id, appearanceBinding(appearance)]));
     this.native.begin();
     const targets: TargetSeat[] = appearances.flatMap((appearance) => {
       const subject = appearanceSubject(appearance);
       return subject?.kind === 'seat' ? [{ appearance, subject, inventory: this.inventory(subject) }] : [];
     });
-    const prior = new Map<string, (typeof this.prior extends Map<string, infer T> ? T : never)>();
+    const prior = new Map<string, RetainedMark>();
     const marks: AppearanceMark[] = [];
     for (const appearance of appearances) {
       if (!appearance.token) continue;
       const subject = appearanceSubject(appearance);
-      const binding = JSON.stringify([appearance.path, appearance.subjectId, appearance.revision]);
+      const binding = appearanceBinding(appearance);
       if (subject?.kind === 'seat') {
         const source = subject.sourceKey, key = JSON.stringify([appearance.id, subjectKey(subject)]);
         const version = JSON.stringify([binding, this.sources.live.getRevision(source)]);
@@ -98,7 +100,7 @@ export class LiveLayer {
           tethers: deps.tethers, lines: [...(comparison ? [comparison] : []), ...(pip ? [pip.label] : []), ...deps.lines] };
         const old = this.prior.get(key);
         const held = this.native.model(source).getConnection().checkingOrder;
-        const fact = held ? old?.binding === version ? old : { ...next, halo: this.unknown(source, key, 'Checking native event order'),
+        const fact = held ? old?.binding === version ? this.retainRelations(old, bindings) : { ...next, halo: this.unknown(source, key, 'Checking native event order'),
           pip: { sourceKey: source, epoch: -1, revision: 0, observedAt: null, message: 'Checking native event order', count: null, truncated: false, blocked: 0, freshness: 'refreshing' as const, label: 'Owned work not confirmed · Checking native event order' }, tethers: [], lines: [] } : next;
         prior.set(key, fact);
         marks.push({ id: appearance.id, binding: version, halos: [fact.halo], pip: fact.pip, tethers: fact.tethers,
@@ -135,8 +137,15 @@ export class LiveLayer {
     return this.native.read(subject.sourceKey, `inventory:${JSON.stringify(subject.seat.rigId)}`, (model) => model.watchInventory(subject.seat.rigId));
   }
 
+  private retainRelations(fact: RetainedMark, bindings: ReadonlyMap<string, string>): RetainedMark {
+    const tethers = fact.tethers.filter((tether) => tether.bindings.every((entry) => bindings.get(entry.appearanceId) === entry.binding));
+    if (tethers.length === fact.tethers.length) return fact;
+    const labels = new Set(fact.tethers.map((tether) => tether.label));
+    return { ...fact, tethers, lines: [...fact.lines.filter((line) => !labels.has(line)), ...tethers.map((tether) => tether.label)] };
+  }
+
   private unknown(sourceKey: string, key: string, message: string): Halo {
-    return { key, sourceKey, activity: 'unknown', freshness: 'unavailable', epoch: -1, revision: 0, observedAt: null, message, label: `Seat activity now: unknown · Unavailable: ${plain(message)}` };
+    return { key, sourceKey, activity: 'unknown', freshness: 'unavailable', epoch: -1, revision: 0, observedAt: null, message, label: `Activity not confirmed · Unavailable: ${plain(message)}` };
   }
 
   private updateHover(): void {

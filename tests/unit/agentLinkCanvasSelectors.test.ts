@@ -18,12 +18,19 @@ function inventory(display: unknown): Observation<InventoryRead> {
 it.each(['working', 'idle', 'needs-input', 'unknown'] as const)('renders the native %s oracle on a captured appearance as current-seat scope', (display) => {
   const halo = activityHalo(subject, inventory(display), true);
   expect(halo.activity).toBe(display);
-  expect(halo.label).toContain('Seat activity now');
+  expect(halo.label).toContain(display === 'unknown' ? 'Activity not confirmed' : 'Seat activity now');
   expect(halo.label).not.toContain('captured-a');
 });
 it('does not infer idle or absence from a missing or malformed oracle', () => {
   for (const malformed of [{ activity: 'idle' }, ['working'], ['needs-input'], null, 0]) expect(activityHalo(subject, inventory(malformed), true).activity).toBe('unknown');
   expect(inventoryAbsence(subject, inventory(undefined), true)).toBeNull();
+});
+it('uses card activity wording for current seats and scopes only captured appearances as seat activity now', () => {
+  expect(activityHalo({ ...subject, policy: 'current-seat' }, inventory('working'), true).label).toBe('Activity: working · Live 12:00:00Z');
+  expect(activityHalo(subject, inventory('working'), true).label).toBe('Seat activity now: working · Live 12:00:00Z');
+  for (const policy of ['current-seat', 'captured-conversation'] as const) {
+    expect(activityHalo({ ...subject, policy }, inventory(undefined), true).label).toBe('Activity not confirmed · Live 12:00:00Z');
+  }
 });
 it('requires complete current qualified ready inventory for the shared absence phrase', () => {
   const absent = fact<InventoryRead>({ nodes: [], complete: true, observedAt: '2026-01-01T12:00:00Z' });
@@ -37,6 +44,7 @@ it('requires complete current qualified ready inventory for the shared absence p
 it('keeps zero, unavailable, retained zero and a truncated lower bound distinct', () => {
   const owned: OwnedWork = { state: 'current', items: [], truncated: false, sessionName: 'builder@example', observedAt: '2026-01-01T12:00:00Z' };
   expect(workPip(fact(owned))).toBeNull();
+  expect(workPip(fact({ ...owned, items: [{ qitemId: 'qitem-one', state: 'pending' }] }))?.label).toBe('Owes 1 row · Live 12:00:00Z');
   expect(workPip({ ...fact(owned), freshness: 'last-known' })).toMatchObject({ count: 0, freshness: 'last-known' });
   expect(workPip({ ...fact<OwnedWork>(owned), value: null, freshness: 'unavailable', message: 'Native list refused' })).toMatchObject({ count: null, label: expect.stringContaining('Native list refused') });
   const items = Array.from({ length: 50 }, (_, i) => ({ qitemId: `qitem-${i}`, state: 'pending', blockedOn: 'old-ref' }));
