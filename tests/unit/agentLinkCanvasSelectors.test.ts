@@ -22,7 +22,7 @@ it.each(['working', 'idle', 'needs-input', 'unknown'] as const)('renders the nat
   expect(halo.label).not.toContain('captured-a');
 });
 it('does not infer idle or absence from a missing or malformed oracle', () => {
-  expect(activityHalo(subject, inventory({ activity: 'idle' }), true).activity).toBe('unknown');
+  for (const malformed of [{ activity: 'idle' }, ['working'], ['needs-input'], null, 0]) expect(activityHalo(subject, inventory(malformed), true).activity).toBe('unknown');
   expect(inventoryAbsence(subject, inventory(undefined), true)).toBeNull();
 });
 it('requires complete current qualified ready inventory for the shared absence phrase', () => {

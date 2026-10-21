@@ -21,7 +21,7 @@ export function activityHalo(subject: SeatSubject, fact: Observation<InventoryRe
   const oracle = node && nativeObject(node.activityState) ? node.activityState : null;
   const display = oracle?.display;
   const absence = inventoryAbsence(subject, fact, ready);
-  const activity: Activity = absence ? 'absent' : ['working', 'idle', 'needs-input', 'unknown'].includes(String(display))
+  const activity: Activity = absence ? 'absent' : typeof display === 'string' && ['working', 'idle', 'needs-input', 'unknown'].includes(display)
     ? display as Activity : 'unknown';
   const needs = oracle && nativeObject(oracle.needsInput) ? oracle.needsInput : null;
   const reason = activity === 'needs-input' && needs ? plain(needs.reason) : '';
