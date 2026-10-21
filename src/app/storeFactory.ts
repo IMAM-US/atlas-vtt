@@ -407,6 +407,8 @@ export function createViewAtlasStore(app: App, viewId: string, plugin?: AtlasVTT
 
   // Keep a reference to the delayed storage so we can expose flush() on the store
   let delayedStorageRef: ReturnType<typeof createDelayedStorage> | null = null;
+  // Transient UI changes must not manufacture a changed persisted widget slice.
+  let widgetProjection: { settings: WidgetSettings; values: Record<string, number>; scene: Pick<ViewAtlasState, 'widgetSettings' | 'widgetValues'> } | null = null;
 
   const createDelayedStorage = () => {
     // Create storage lazily but only ONCE to preserve debounce state
@@ -1429,10 +1431,12 @@ export function createViewAtlasStore(app: App, viewId: string, plugin?: AtlasVTT
             }
 
             // Collection-wide widgets are saved in the collection settings, not in the scene
-            const sceneWidgets = withoutCollectionWidgets({
-              widgets: state.widgetSettings.widgets,
-              widgetValues: state.widgetValues,
-            });
+            if (!widgetProjection || widgetProjection.settings !== state.widgetSettings || widgetProjection.values !== state.widgetValues) {
+              const sceneWidgets = withoutCollectionWidgets({ widgets: state.widgetSettings.widgets, widgetValues: state.widgetValues });
+              widgetProjection = { settings: state.widgetSettings, values: state.widgetValues, scene: {
+                widgetSettings: { ...state.widgetSettings, widgets: sceneWidgets.widgets }, widgetValues: sceneWidgets.widgetValues,
+              } };
+            }
             
             return {
               schema: state.schema,
@@ -1442,8 +1446,8 @@ export function createViewAtlasStore(app: App, viewId: string, plugin?: AtlasVTT
               grid: state.grid,
               objects: state.objects,
               camera: state.camera,
-              widgetValues: sceneWidgets.widgetValues,
-              widgetSettings: { ...state.widgetSettings, widgets: sceneWidgets.widgets },
+              widgetValues: widgetProjection.scene.widgetValues,
+              widgetSettings: widgetProjection.scene.widgetSettings,
               dmNotePath: state.dmNotePath, // DM note linking
               tokenSettings: state.tokenSettings, // Token display settings
               initiative: state.initiative, // Initiative tracker state
