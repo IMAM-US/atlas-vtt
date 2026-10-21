@@ -641,9 +641,25 @@ export function CommandPalette({ isOpen, onClose, toolbarRef }: CommandPalettePr
     }
   }, [focusedOptionIndex]);
 
-  // Close on click outside
+  // Close on click outside. The toolbar passes a new onClose on every render, so the listener's
+  // effect re-runs often: a pending check outlives those re-runs and reads the current handlers when
+  // it runs, but never a close or an unmount.
+  const outsideClickRef = useRef({ onClose, toolbarRef, activeSubmenu });
+  useLayoutEffect(() => {
+    outsideClickRef.current = { onClose, toolbarRef, activeSubmenu };
+  });
+  const pendingOutsideChecksRef = useRef(new Set<number>());
+  const clearOutsideChecks = useCallback((): void => {
+    for (const timer of pendingOutsideChecksRef.current) window.clearTimeout(timer);
+    pendingOutsideChecksRef.current.clear();
+  }, []);
   useEffect(() => {
-    const pending = new Set<number>();
+    if (!isOpen) clearOutsideChecks();
+  }, [isOpen, clearOutsideChecks]);
+  useEffect(() => clearOutsideChecks, [clearOutsideChecks]);
+
+  useEffect(() => {
+    const pending = pendingOutsideChecksRef.current;
     const handleMouseDown = (e: MouseEvent): void => {
       // Don't handle outside clicks when temporarily hidden
       if (isTemporarilyHidden) {
@@ -653,6 +669,7 @@ export function CommandPalette({ isOpen, onClose, toolbarRef }: CommandPalettePr
       // Add a small delay to allow dropdown menus to properly handle their events first
       const timer = window.setTimeout(() => {
         pending.delete(timer);
+        const { onClose, toolbarRef, activeSubmenu } = outsideClickRef.current;
         const target = e.target as Element;
         if (target?.closest?.('.atlas-onboarding-overlay')) return;
         // Dialogs opened from a page (naming or deleting a snapshot) sit outside the palette.
@@ -694,9 +711,8 @@ export function CommandPalette({ isOpen, onClose, toolbarRef }: CommandPalettePr
 
     return () => {
       document.removeEventListener("mousedown", handleMouseDown);
-      for (const timer of pending) window.clearTimeout(timer);
     };
-  }, [isOpen, isTemporarilyHidden, onClose, toolbarRef, activeSubmenu]);
+  }, [isOpen, isTemporarilyHidden]);
 
   // Update position on resize
   useEffect(() => {
