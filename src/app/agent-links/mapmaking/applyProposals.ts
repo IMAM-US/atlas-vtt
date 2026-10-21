@@ -50,9 +50,9 @@ export type ApplyOutcome =
   | { kind: 'refused'; reason: string }
   /**
    * The account write happened, then a guard stopped before any token was published. With
-   * `accountChanged` the target itself no longer holds what was written, so what it lists now is unknown.
+   * `changedPath` that account's receipt lapsed after the write, so what the accounts hold now is unknown.
    */
-  | { kind: 'stopped'; seatsAdded: number; reason: string; accountChanged?: boolean; seatIds?: readonly string[] }
+  | { kind: 'stopped'; seatsAdded: number; reason: string; changedPath?: string }
   | { kind: 'indeterminate'; reason: string };
 
 const WAIT_MS = 10_000;
@@ -153,7 +153,7 @@ export async function applyProposals(request: ApplyRequest): Promise<ApplyOutcom
     const lapse = (await receipts.qualify()) ?? receipts.held();
     if (lapse) {
       if (!created.size) return { kind: 'refused', reason: lapse.reason };
-      return { kind: 'stopped', seatsAdded: created.size, reason: lapse.reason, accountChanged: lapse.path === null || lapse.path === target.path, seatIds: [...created.values()].map((subject) => subject.id) };
+      return { kind: 'stopped', seatsAdded: created.size, reason: lapse.reason, changedPath: lapse.path ?? target.path };
     }
     const again = sceneReason() ?? request.guard(account, (seat) => created.get(seat)?.id ?? seat.proposal.reuse?.id ?? null);
     if (again) return created.size ? { kind: 'stopped', seatsAdded: created.size, reason: again } : { kind: 'refused', reason: again };

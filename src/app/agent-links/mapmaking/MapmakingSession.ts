@@ -249,9 +249,12 @@ export class MapmakingSession {
         bases: [...bases].flatMap(([path, sha256]) => (sha256 ? [{ path, sha256 }] : [])),
         eventsOf: (path) => this.events.get(path) ?? 0,
       }).catch((error: unknown): ApplyOutcome => ({ kind: 'indeterminate', reason: error instanceof Error ? error.message : 'Apply failed.' }));
+      // After an uncertain write, or an account that changed after it, that account is read again for the report.
+      const reread = outcome.kind === 'indeterminate' ? targetPath : outcome.kind === 'stopped' ? outcome.changedPath : undefined;
       let reload: Reload | undefined;
-      if (outcome.kind === 'indeterminate' || (outcome.kind === 'stopped' && outcome.accountChanged)) {
-        reload = await this.sources.loadAccount(targetPath).then((loaded): Reload => ({ ok: true, account: loaded.account }), (error: unknown): Reload => ({ ok: false, reason: error instanceof Error ? error.message : 'unreadable' }));
+      if (reread) {
+        reload = await this.sources.loadAccount(reread).then((): Reload => ({ ok: true }), (error: unknown): Reload => ({ ok: false, reason: error instanceof Error ? error.message : 'unreadable' }));
+        this.loads?.invalidate(reread);
       }
       // Our own write is read back at once, without waiting for the vault's modify event.
       if (outcome.kind !== 'refused') this.loads?.invalidate(targetPath);

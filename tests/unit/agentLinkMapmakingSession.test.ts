@@ -247,6 +247,30 @@ it('says the account changed after the write, and lists nothing as unused it can
   const applying = session.apply([{ key: keyOf(session, 'node-new'), caption: 'team.new' }]);
   await Promise.resolve(); rig.publish(); await applying;
   expect([removed, appliedTokens(store)]).toEqual([true, 0]);
-  expect(session.getSnapshot().status).toBe('Stopped: team.json changed during Apply and the new seat is no longer in it. No tokens were added to the map.');
+  expect(session.getSnapshot().status).toBe('Stopped: team.json changed during Apply (team.json changed since it was read). It was read again. No tokens were added to the map; the Proposals panel shows its current state.');
+  session.dispose();
+});
+
+it('claims nothing about the accounts when any of them changed after the write, whichever is read first', async () => {
+  const { memory, store, session, rig } = await twoAccounts();
+  const read = memory.app.vault.read;
+  let changed = false;
+  memory.app.vault.read = vi.fn(async (file: TFile) => {
+    const text = await read(file);
+    if (file.path === OTHER && !changed && vi.mocked(memory.app.vault.process).mock.calls.length > 0) {
+      changed = true;
+      const account = JSON.parse(memory.files.get(PATH)!) as AccountDocument;
+      // The new seat keeps its ID but loses the provenance that made it Atlas's.
+      memory.files.set(PATH, JSON.stringify({ ...account, subjects: account.subjects.map((subject) => (subject.kind === 'seat' && subject.seat.nodeId === 'node-new' ? { ...subject, sourceIds: [] } : subject)) }));
+      memory.files.set(OTHER, `${memory.files.get(OTHER)!}\n`);
+      vaultEvent(memory, PATH); vaultEvent(memory, OTHER);
+    }
+    return text;
+  });
+  const applying = session.apply([{ key: keyOf(session, 'node-new'), caption: 'team.new' }]);
+  await Promise.resolve(); rig.publish(); await applying;
+  expect([changed, appliedTokens(store)]).toEqual([true, 0]);
+  expect(session.getSnapshot().status).toMatch(/^Stopped: (other|team)\.json changed during Apply \(.*\)\. It was read again\. No tokens were added to the map; the Proposals panel shows its current state\.$/);
+  expect(session.getSnapshot().status).not.toContain('Unused');
   session.dispose();
 });
