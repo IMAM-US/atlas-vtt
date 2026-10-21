@@ -8,6 +8,7 @@ import { LocalPlayerView, LOCAL_PLAYER_VIEW_TYPE } from './src/app/local-player-
 import { PlayerView, PLAYER_VIEW_TYPE } from './src/app/player-view';
 import { DashboardView, DASHBOARD_VIEW_TYPE } from './src/app/dashboard-view';
 import { registerRecordedWorkspace } from './src/app/agent-workspace/registerRecordedWorkspace';
+import { ConversationRecordView, RECORD_VIEW_TYPE } from './src/app/agent-links/records/ConversationRecordView';
 import { initializeAtlasStorage } from './src/app/atlasStorageInit';
 import { CreatureIndex } from './src/app/creatures/CreatureIndex';
 import { disposeImageProcessing } from './src/app/imageProcessing/imageProcessing';
@@ -141,6 +142,7 @@ export default class AtlasVTTPlugin extends Plugin {
     this.registerView(LOCAL_PLAYER_VIEW_TYPE, (leaf) => new LocalPlayerView(leaf));
     this.registerView(PLAYER_VIEW_TYPE, (leaf) => new PlayerView(leaf, this));
     this.registerView(DASHBOARD_VIEW_TYPE, (leaf) => new DashboardView(leaf, this));
+    this.registerView(RECORD_VIEW_TYPE, (leaf) => new ConversationRecordView(leaf));
     registerLootQueryView(this);
   }
 }

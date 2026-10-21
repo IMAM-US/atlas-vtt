@@ -41,17 +41,25 @@ async function codexRecordRelativePath(root: string, conversationId: string): Pr
   return relative(base, resolve(matches[0]!));
 }
 
-/** The exact provider record file of a conversation: path validated against the record's own identity, no recency search. */
-export async function locateConversationRecord(
+/** Where a conversation's record lies below its provider root: derived for Claude Code, an exact id match for Codex. */
+export async function conversationRecordPath(
   roots: { claudeProjectsRoot: string; codexSessionsRoot: string }, location: ProviderRecordLocation,
-): Promise<ProviderRecord> {
+): Promise<{ providerRoot: string; relativePath: string }> {
   if (location.runtime === 'claude-code') {
     if (!location.cwd) throw new Error('The participant\'s working directory is unknown, so its record cannot be located.');
     const relativePath = claudeRecordRelativePath(location.cwd, location.conversationId);
     validateRelativeFilePath(relativePath);
-    return locateProviderRecord({ providerRoot: roots.claudeProjectsRoot, relativePath, runtime: 'claude-code', conversationId: location.conversationId });
+    return { providerRoot: roots.claudeProjectsRoot, relativePath };
   }
   const relativePath = await codexRecordRelativePath(roots.codexSessionsRoot, location.conversationId);
   validateRelativeFilePath(relativePath);
-  return locateProviderRecord({ providerRoot: roots.codexSessionsRoot, relativePath, runtime: 'codex', conversationId: location.conversationId });
+  return { providerRoot: roots.codexSessionsRoot, relativePath };
+}
+
+/** The exact provider record file of a conversation: path validated against the record's own identity, no recency search. */
+export async function locateConversationRecord(
+  roots: { claudeProjectsRoot: string; codexSessionsRoot: string }, location: ProviderRecordLocation,
+): Promise<ProviderRecord> {
+  const { providerRoot, relativePath } = await conversationRecordPath(roots, location);
+  return locateProviderRecord({ providerRoot, relativePath, runtime: location.runtime, conversationId: location.conversationId });
 }

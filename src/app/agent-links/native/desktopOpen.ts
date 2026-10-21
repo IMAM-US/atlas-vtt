@@ -24,7 +24,7 @@ function electronShell(): ElectronShell | null {
   }
 }
 
-function fileManagerName(): string {
+export function fileManagerName(): string {
   return process.platform === 'darwin' ? 'Finder' : process.platform === 'win32' ? 'File Explorer' : 'the file manager';
 }
 
@@ -54,4 +54,19 @@ export async function openLocalFile(validate: () => Promise<string>, signal?: Ab
   signal?.throwIfAborted();
   shell.showItemInFolder(revalidated);
   return { state: 'revealed', reason: failure, shownIn: fileManagerName() };
+}
+
+/**
+ * Shows a local file in its folder. `validate` confines and checks the file again now and
+ * returns its absolute path; cancellation is checked right before the desktop effect.
+ * Returns where the file is shown.
+ */
+export async function revealLocalFile(validate: () => Promise<string>, signal?: AbortSignal): Promise<string> {
+  const shell = electronShell();
+  if (!shell) throw new Error('Showing local files needs the desktop app.');
+  signal?.throwIfAborted();
+  const path = absolute(await validate());
+  signal?.throwIfAborted();
+  shell.showItemInFolder(path);
+  return fileManagerName();
 }

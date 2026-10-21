@@ -8,7 +8,16 @@ import type { NativeSources } from '../../src/app/agent-links/NativeSources';
 import type { ConversationRecord, CurrentSeat } from '../../src/app/agent-links/reads';
 import { TooltipProvider } from '../../src/app/packages/components/primitives/tooltip';
 
-afterEach(cleanup);
+/** The record view itself is covered elsewhere; here only which exact record a row asks it to open matters. */
+const opened = vi.hoisted(() => ({ calls: [] as Array<Record<string, unknown>> }));
+vi.mock('../../src/app/agent-links/records/openRecordView', () => ({
+  openRecordView: async (_app: unknown, identity: Record<string, unknown>) => { opened.calls.push(identity); },
+}));
+
+afterEach(() => {
+  cleanup();
+  opened.calls.length = 0;
+});
 
 const MAP = 'map00001-conversation';
 const FIRST = 'first001-conversation';
@@ -35,17 +44,16 @@ function recordOf(conversationId: string, validatedRecords: number): Conversatio
 }
 
 /** Locate calls stay pending until the test answers them, in any order. */
-function deferredSources(): { sources: NativeSources; locate: ReturnType<typeof vi.fn>; open: ReturnType<typeof vi.fn>; answer: (conversationId: string, read: ConversationRecord) => void } {
+function deferredSources(): { sources: NativeSources; locate: ReturnType<typeof vi.fn>; answer: (conversationId: string, read: ConversationRecord) => void } {
   const pending = new Map<string, (read: ConversationRecord) => void>();
   const locate = vi.fn((_sourceKey: string, participant: { conversationId: string }) => new Promise<ConversationRecord>((resolve) => pending.set(participant.conversationId, resolve)));
-  const open = vi.fn(async () => ({ state: 'revealed', reason: 'Failed to open path', shownIn: 'Finder' }));
   const answer = (conversationId: string, read: ConversationRecord): void => {
     const resolve = pending.get(conversationId);
     if (!resolve) throw new Error(`no pending read for ${conversationId}`);
     pending.delete(conversationId);
     resolve(read);
   };
-  return { sources: { locateRecord: locate, openConversationRecord: open } as unknown as NativeSources, locate, open, answer };
+  return { sources: { locateRecord: locate } as unknown as NativeSources, locate, answer };
 }
 
 function Records({ sources, current }: { sources: NativeSources; current: CurrentSeat }): React.ReactElement {
@@ -70,9 +78,7 @@ describe('conversation record rows', () => {
 
     fireEvent.click(within(rowOf('Previous conversation record')).getByRole('button', { name: 'Open record' }));
     await act(async () => undefined);
-    expect(native.open).toHaveBeenCalledWith('local', expect.objectContaining({ conversationId: MAP }), expect.anything());
-    expect(within(rowOf('Previous conversation record')).getByText("Couldn't open the record (Failed to open path). Shown in Finder.")).toBeTruthy();
-    expect(within(rowOf('Current conversation record')).queryByText(/Shown in Finder/)).toBeNull();
+    expect(opened.calls).toEqual([{ sourceKey: 'local', runtime: 'claude-code', conversationId: MAP, cwd: null, seatCaption: 'code.example' }]);
   });
 
   it('shows no earlier occupant\'s record once the current identity changes', async () => {
@@ -102,7 +108,6 @@ describe('conversation record rows', () => {
     expect(detailIn('Current conversation record')).toContain('12 records checked');
     fireEvent.click(within(rowOf('Current conversation record')).getByRole('button', { name: 'Open record' }));
     await act(async () => undefined);
-    expect(native.open).toHaveBeenCalledTimes(1);
-    expect(native.open).toHaveBeenCalledWith('local', expect.objectContaining({ conversationId: SECOND }), expect.anything());
+    expect(opened.calls).toEqual([expect.objectContaining({ sourceKey: 'local', runtime: 'claude-code', conversationId: SECOND, cwd: '/work' })]);
   });
 });

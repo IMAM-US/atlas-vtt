@@ -8,14 +8,15 @@ import { anchoredPath, confinedRoot } from './sourceSettings';
 import { readLocalFilePrefix } from './native/localFiles';
 import { focusHerdrView, returnToHerdrView } from './native/herdrFocus';
 import type { HerdrViewWitness } from './native/herdrViews';
-import { openLocalFile, type LocalOpen } from './native/desktopOpen';
+import { openLocalFile, revealLocalFile, type LocalOpen } from './native/desktopOpen';
 import {
   NativeIdentityError, readOpenRigParticipant, readOpenRigProcess, readOpenRigScreen, readOpenRigSeatScreen,
   sameOpenRigParticipant, sameOpenRigProcess, type OpenRigConnection, type OpenRigSeat,
 } from './native/openRigRead';
 import { LiveSources } from './live/LiveSources';
 import { readSeat, readOwnedWork, readWork, type SeatReadOptions } from './sourceReads';
-import { locateConversationRecord } from './native/providerRecordLocator';
+import { locateConversationRecord, type ProviderRecordLocation } from './native/providerRecordLocator';
+import { readRecordWindow, type RecordWindow, type RecordWindowOptions } from './native/recordWindow';
 import { resolveNativeSeatViews, resolveNativeViews, type NativeViewConnections } from './native/viewResolution';
 import {
   failure, now, type ConversationRecord, type CurrentSeat, type Focus, type LoadedAccount, type OwnedWork, type Screen, type SeatRead, type Views, type Work,
@@ -67,6 +68,20 @@ export class NativeSources {
 
   source(key: string): AgentLinkSourceSettings {
     return this.settings.getAgentLinkSource(key);
+  }
+
+  /**
+   * Calls `changed` whenever the settings of source `key` change, whether or not a live model
+   * watches that source. It only listens to the settings; it opens no connection.
+   */
+  watchSource(key: string, changed: () => void): () => void {
+    let fingerprint = JSON.stringify(this.source(key));
+    return this.settings.onChange(() => {
+      const next = JSON.stringify(this.source(key));
+      if (next === fingerprint) return;
+      fingerprint = next;
+      changed();
+    });
   }
 
   /** The authored document, validated; a schema problem is an error the card shows, never a guess. */
@@ -204,13 +219,18 @@ export class NativeSources {
   }
 
   /**
-   * Opens the exact provider record, located and validated again now; a cancelled open never reaches the desktop.
-   * When no application opens it, the record itself is shown in its folder; the seat's aggregate transcript never stands in.
+   * A bounded window of a conversation's exact record, located and checked against its own
+   * identity again now through one file handle; never the seat's aggregate transcript.
    */
-  openConversationRecord(
+  readRecordWindow(sourceKey: string, location: ProviderRecordLocation, options: RecordWindowOptions): Promise<RecordWindow> {
+    return readRecordWindow(this.recordRoots(sourceKey), location, options);
+  }
+
+  /** Shows the exact record in its folder after locating and validating it again now; returns where it is shown. */
+  revealConversationRecord(
     sourceKey: string, participant: Pick<CapturedParticipant, 'runtime' | 'conversationId'> & { cwd?: string | null }, options: Options = {},
-  ): Promise<LocalOpen> {
-    return openLocalFile(async () => {
+  ): Promise<string> {
+    return revealLocalFile(async () => {
       const located = await this.locateRecord(sourceKey, participant, options);
       if (located.state === 'unavailable') throw new Error(located.message);
       return located.record.path;
@@ -221,11 +241,10 @@ export class NativeSources {
   async locateRecord(
     sourceKey: string, participant: Pick<CapturedParticipant, 'runtime' | 'conversationId'> & { cwd?: string | null }, options: Options = {},
   ): Promise<ConversationRecord> {
-    const source = this.source(sourceKey);
     try {
       options.signal?.throwIfAborted();
       const record = await locateConversationRecord(
-        { claudeProjectsRoot: expandRoot(source.claudeProjectsRoot), codexSessionsRoot: expandRoot(source.codexSessionsRoot) },
+        this.recordRoots(sourceKey),
         { runtime: participant.runtime, conversationId: participant.conversationId, ...(participant.cwd ? { cwd: participant.cwd } : {}) },
       );
       options.signal?.throwIfAborted();
@@ -233,5 +252,10 @@ export class NativeSources {
     } catch (error) {
       return failure(error, 'The conversation record could not be located.');
     }
+  }
+
+  private recordRoots(sourceKey: string): { claudeProjectsRoot: string; codexSessionsRoot: string } {
+    const source = this.source(sourceKey);
+    return { claudeProjectsRoot: expandRoot(source.claudeProjectsRoot), codexSessionsRoot: expandRoot(source.codexSessionsRoot) };
   }
 }
