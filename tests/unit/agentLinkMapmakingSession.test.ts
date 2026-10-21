@@ -108,6 +108,8 @@ it('applies from a fresh inventory, reports the account line, and keeps the seat
   expect(session.getSnapshot().set.unused.map((row) => row.subject.id)).toEqual([seat.id]);
   store.temporal.getState().redo(); await settle();
   expect(Object.values(store.getState().objects.tokens).filter((token) => token.initiativeAutoAdd === false)).toHaveLength(2);
+  // The tokens are back, so the undo line no longer holds.
+  expect(session.getSnapshot().status).toBeNull();
   expect(session.getSnapshot().set.unused).toEqual([]);
   expect(memory.files.get(PATH)).toBe(afterApply);
   expect(vi.mocked(memory.app.vault.process)).toHaveBeenCalledTimes(1);
@@ -272,5 +274,17 @@ it('claims nothing about the accounts when any of them changed after the write, 
   expect([changed, appliedTokens(store)]).toEqual([true, 0]);
   expect(session.getSnapshot().status).toMatch(/^Stopped: (other|team)\.json changed during Apply \(.*\)\. It was read again\. No tokens were added to the map; the Proposals panel shows its current state\.$/);
   expect(session.getSnapshot().status).not.toContain('Unused');
+  session.dispose();
+});
+
+it('clears the undo line once a new step follows the undo', async () => {
+  const { store, session, settle, rig } = await setup();
+  session.open(); await settle();
+  const applying = session.apply([{ key: keyOf(session, 'node-new'), caption: 'team.new' }]);
+  await Promise.resolve(); rig.publish(); await applying; await settle();
+  store.temporal.getState().undo(); await settle();
+  expect(session.getSnapshot().status).toMatch(/^Undo removed 1 token/);
+  store.getState().addToken({ imagePath: 'art/example.webp', x: 455, y: 455, size: 1 }); await settle();
+  expect(session.getSnapshot().status).toBeNull();
   session.dispose();
 });

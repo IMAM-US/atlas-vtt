@@ -61,6 +61,8 @@ export class MapmakingSession {
   private sceneEpoch = 0;
   private applied: { tokenIds: string[]; seats: number; path: string; present: boolean; removed: boolean } | null = null;
   private status: string | null = null;
+  /** The undo line last shown, while it still describes the history. */
+  private undoStatus: string | null = null;
   private snapshot: ProposalsSnapshot = { open: false, set: emptyProposals({ kind: 'ready' }), scope: [], targets: [], targetPath: null, basis: null, layout: 'checking', placements: new Map(), busy: false, status: null };
 
   constructor(private readonly app: App, private readonly store: ViewAtlasStore, private readonly sources: Pick<NativeSources, 'live' | 'loadAccount'>,
@@ -78,9 +80,16 @@ export class MapmakingSession {
     }), sources.live.subscribe(this.changed));
     const history = getHistoryStore(store);
     // Undo sets the scene before its history, so a removal just seen plus a grown redo stack is that undo.
+    // Once history moves past it again (a redo or a new step), its line no longer holds and is cleared.
     if (history) this.cleanups.push(history.subscribe((now, before) => {
       const applied = this.applied;
-      if (applied?.removed && now.futureStates.length > before.futureStates.length) this.say(undoLine(applied.tokenIds.length, applied.seats, applied.path));
+      if (applied?.removed && now.futureStates.length > before.futureStates.length) {
+        this.undoStatus = undoLine(applied.tokenIds.length, applied.seats, applied.path);
+        this.say(this.undoStatus);
+      } else if (this.undoStatus && now.pastStates.length > before.pastStates.length) {
+        if (this.status === this.undoStatus) { this.status = null; this.changed(); }
+        this.undoStatus = null;
+      }
       if (applied) applied.removed = false;
     }));
     // AccountLoads acts only on the accounts this scene uses and reports its own change; Apply counts the events.
