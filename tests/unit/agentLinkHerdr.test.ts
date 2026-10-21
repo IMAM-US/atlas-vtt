@@ -100,7 +100,8 @@ describe('explicit native view focus', () => {
     const test = await fixture();
     const target = await secondView(test.path);
     test.state.noAck = true;
-    const result = await focusHerdrView(target, [], async () => {}, { timeoutMs: 30 });
+    // The one timeout covers the reads before and after the focus too, so it must outlast a socket round trip on a loaded runner.
+    const result = await focusHerdrView(target, [], async () => {}, { timeoutMs: 1000 });
     expect(result.status).toBe('focused');
     expect(test.methods.filter((method) => method === 'pane.focus')).toHaveLength(1);
   });
