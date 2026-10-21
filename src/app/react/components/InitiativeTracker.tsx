@@ -45,10 +45,11 @@ function EditInitiativePopup({
 
   // Focus input on mount
   useEffect(() => {
-    window.setTimeout(() => {
+    const timer = window.setTimeout(() => {
       inputRef.current?.focus();
       inputRef.current?.select();
     }, 50);
+    return () => window.clearTimeout(timer);
   }, []);
 
   // Handle keyboard
@@ -171,14 +172,19 @@ export const InitiativeTracker: React.FC = () => {
 
   // Listen for hotkey events to provide visual feedback
   useEffect(() => {
+    let clearPressed: number | null = null;
     const handleHotkey = (e: CustomEvent<'prev' | 'next'>): void => {
       setHotkeyPressed(e.detail);
       // Clear after animation duration
-      window.setTimeout(() => setHotkeyPressed(null), 150);
+      if (clearPressed !== null) window.clearTimeout(clearPressed);
+      clearPressed = window.setTimeout(() => setHotkeyPressed(null), 150);
     };
 
     window.addEventListener('atlas-initiative-hotkey', handleHotkey as EventListener);
-    return () => window.removeEventListener('atlas-initiative-hotkey', handleHotkey as EventListener);
+    return () => {
+      window.removeEventListener('atlas-initiative-hotkey', handleHotkey as EventListener);
+      if (clearPressed !== null) window.clearTimeout(clearPressed);
+    };
   }, []);
 
   // Auto-sync: Add all map tokens to initiative automatically
