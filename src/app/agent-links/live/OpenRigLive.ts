@@ -5,6 +5,7 @@ import { readNativeJson } from '../native/httpRead';
 import { nativeObject, type NativeObject, type OpenRigConnection } from '../native/openRigRead';
 import { openRigConnectionOf } from '../sourceSettings';
 import { ObservationCache } from './ObservationCache';
+import { EventOrder } from './EventOrder';
 import { invalidatedFacets } from './eventInvalidation';
 import { readFrontier, subscribeOpenRig } from './openRigEvents';
 import { seatKey, type ConnectionState, type Frontier, type LiveConfiguration, type NativeEvent, type ObservationHandle, type ReadResult } from './types';
@@ -130,16 +131,9 @@ export class OpenRigLive {
     const { signal } = controller;
     const frontier = await this.wire.frontier(source, signal);
     if (signal.aborted) return;
-    let cursor = Number(frontier.seq);
     let bootstrapping = true;
     let buffered = 0;
-    const subscription = await this.wire.subscribe(source, frontier, signal, (event: NativeEvent) => {
-      if (signal.aborted || epoch !== this.epoch || event.seq <= cursor) return;
-      // Native children may precede persisted parents. Rehydrate rather than skip the missing invalidation.
-      if (event.seq !== cursor + 1 || event.type === 'event.delivery_poisoned') {
-        this.disconnected(epoch, new Error('Native event continuity is unverified; reconciling.')); return;
-      }
-      cursor = event.seq;
+    const order = new EventOrder(Number(frontier.seq), signal, (event: NativeEvent) => {
       this.attempt = 0;
       if (bootstrapping && ++buffered > 1024) {
         this.disconnected(epoch, new Error('Native bootstrap event buffer overflow.')); return;
@@ -153,21 +147,29 @@ export class OpenRigLive {
           && (!event.logicalId || event.logicalId !== binding.logicalId)) return false;
         return true;
       });
+    }, (checkingOrder) => {
+      if (this.state.status === 'connected') this.update({ ...this.state, checkingOrder });
+      if (!checkingOrder && !signal.aborted) this.cache.resume();
     }, (error) => this.disconnected(epoch, error));
+    const subscription = await this.wire.subscribe(source, frontier, signal, (event) => order.push(event), (error) => this.disconnected(epoch, error));
     if (signal.aborted) { subscription.close(); return; }
     signal.addEventListener('abort', () => subscription.close(), { once: true });
     let checking: Promise<void> | null = null;
     const verify = (): Promise<void> => {
-      if (!checking) checking = this.verify(source, { ...frontier, seq: String(cursor) }, signal).catch((error: unknown) => {
+      if (!checking) checking = (async (): Promise<void> => {
+        await order.settled();
+        await this.verify(source, { ...frontier, seq: String(order.cursor) }, signal);
+        await order.settled();
+      })().catch((error: unknown) => {
         this.disconnected(epoch, error); throw error;
       }).finally(() => { checking = null; });
       return checking;
     };
-    await verify();
+    do { await verify(); } while (!signal.aborted && !order.ready());
     if (signal.aborted || epoch !== this.epoch) return;
     bootstrapping = false;
     this.update({ status: 'connected', since: new Date().toISOString(), message: null, epoch });
-    this.cache.connect(epoch, signal, verify);
+    this.cache.connect(epoch, signal, verify, order.ready);
   }
 
   private async verify(source: OpenRigConnection, expected: Frontier, signal: AbortSignal): Promise<void> {

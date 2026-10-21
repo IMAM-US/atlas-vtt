@@ -11,7 +11,7 @@ interface Slot<T> {
   fact: Observation<T>;
   listeners: Set<() => void>;
 }
-interface Context { epoch: number; signal: AbortSignal; verify: () => Promise<void> }
+interface Context { epoch: number; signal: AbortSignal; verify: () => Promise<void>; ready: () => boolean }
 
 /** A disposable observation store. No Atlas store, persistence or undo dependencies. */
 export class ObservationCache {
@@ -38,6 +38,14 @@ export class ObservationCache {
     return {
       getSnapshot: () => owned.fact,
       subscribe: (listener): (() => void) => { owned.listeners.add(listener); return () => owned.listeners.delete(listener); },
+      isReady: (): boolean => !released && this.context !== null && this.context.ready(),
+      whenReady: async (): Promise<void> => {
+        const context = this.context;
+        if (released || !context) throw new Error('Native observation connection is unavailable.');
+        await context.verify();
+        context.signal.throwIfAborted();
+        if (released || this.context !== context) throw new Error('Native observation connection changed.');
+      },
       refresh: (): void => this.invalidate((candidate) => candidate === key),
       release: (): void => {
         if (released) return;
@@ -50,11 +58,14 @@ export class ObservationCache {
     };
   }
 
-  connect(epoch: number, signal: AbortSignal, verify: () => Promise<void>): void {
+  connect(epoch: number, signal: AbortSignal, verify: () => Promise<void>, ready: () => boolean = () => true): void {
     this.epoch = epoch;
-    this.context = { epoch, signal, verify };
+    this.context = { epoch, signal, verify, ready };
     this.invalidate(() => true);
   }
+
+  /** A temporary order barrier may reopen without invalidating process observations. */
+  resume(): void { this.schedule(); }
 
   hold(epoch: number, message: string, clear = false): void {
     this.epoch = epoch;
@@ -87,13 +98,13 @@ export class ObservationCache {
   }
 
   private schedule(): void {
-    if (!this.context || this.timer || this.running >= 4 || ![...this.slots.values()].some((slot) => slot.dirty && !slot.pending)) return;
+    if (!this.context || !this.context.ready() || this.timer || this.running >= 4 || ![...this.slots.values()].some((slot) => slot.dirty && !slot.pending)) return;
     this.timer = setTimeout(() => { this.timer = null; this.pump(); }, this.delayMs);
   }
 
   private pump(): void {
     const context = this.context;
-    if (!context || context.signal.aborted) return;
+    if (!context || !context.ready() || context.signal.aborted) return;
     for (const [key, slot] of this.slots) {
       if (this.running >= 4) break;
       if (!slot.dirty || slot.pending) continue;
@@ -113,6 +124,8 @@ export class ObservationCache {
       if (signal.aborted || this.context !== context || this.slots.get(key) !== slot || slot.version !== version) return;
       await context.verify();
       if (signal.aborted || this.context !== context || this.slots.get(key) !== slot || slot.version !== version) return;
+      // A new hole can open after verify resolves but before this continuation runs.
+      if (!context.ready()) { slot.dirty = true; return; }
       const value = result.value ?? (result.kind !== 'value' ? slot.fact.value : null);
       const observedAt = result.value && typeof result.value === 'object' && 'observedAt' in result.value
         && typeof result.value.observedAt === 'string' ? result.value.observedAt : new Date().toISOString();

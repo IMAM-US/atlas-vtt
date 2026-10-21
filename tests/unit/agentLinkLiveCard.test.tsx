@@ -99,6 +99,30 @@ it('shows changed process as historical, never an exact successor until an expli
   cleanup(); f.registry.dispose();
 });
 
+it('keeps the exact read applicable when a handoff child arrives before its persisted successor', async () => {
+  vi.useFakeTimers(); const f = fixture(); const view = render(<Card sources={f.sources} />); await settle();
+  const connection = f.registry.openRig('a').getConnection();
+  await emit('queue.handed_off');
+  const child = transport.seq += 2;
+  await act(async () => transport.event?.({ type: 'view.changed', seq: child }));
+  await settle(50);
+  expect(f.registry.openRig('a').getConnection()).toMatchObject({ status: 'connected', epoch: connection.epoch, checkingOrder: true });
+  fireEvent.click(screen.getByRole('button', { name: /Sources/ }));
+  expect(screen.getByText(/OpenRig · connected since.*checking event order/)).toBeTruthy();
+  expect(transport.close).not.toHaveBeenCalled();
+  f.owned.mockResolvedValue({ state: 'current', items: [{ qitemId: 'successor', summary: 'Successor work', state: 'pending' }], truncated: false, sessionName: 'builder@example', observedAt: new Date().toISOString() });
+  await act(async () => transport.event?.({ type: 'queue.created', seq: child - 1 })); await settle();
+  expect(screen.getByText(/Successor work · pending/)).toBeTruthy();
+  expect(screen.queryByRole('button', { name: 'Recheck conversation' })).toBeNull();
+  expect(screen.queryByText(/checking event order/)).toBeNull();
+  expect(view.container.querySelector('.agent-link-headline')?.textContent).not.toContain('needs rechecking');
+  expect(f.exact).toHaveBeenCalledTimes(1);
+  expect(f.process).toHaveBeenCalledTimes(1);
+  fireEvent.click(screen.getByRole('button', { name: 'Read screen' })); await settle();
+  expect(f.sources.readScreen).toHaveBeenCalledWith(subject, expect.objectContaining({ participant: expect.objectContaining({ conversationId: 'current-conversation' }) }), expect.anything());
+  view.unmount(); f.registry.dispose();
+});
+
 it('discards old exact observations on source settings replacement without another provider read', async () => {
   vi.useFakeTimers(); const f = fixture(); render(<Card sources={f.sources} />); await settle();
   expect(f.exact).toHaveBeenCalledTimes(1);

@@ -33,7 +33,7 @@ export function activityLabel(subject: SeatSubject, fact: Observation<InventoryR
 export function connectionLabel(name: string, connection: ConnectionState, lastKnown: string | null, views = false): string {
   const what = views ? 'views' : 'facts';
   switch (connection.status) {
-    case 'connected': return views ? `${name} · connected; views are dated reads` : `${name} · connected since ${clock(connection.since)}`;
+    case 'connected': return views ? `${name} · connected; views are dated reads` : `${name} · connected since ${clock(connection.since)}${connection.checkingOrder ? ', checking event order' : ''}`;
     case 'connecting': return `${name} · connecting`;
     case 'reconnecting': return `${name} · reconnecting${lastKnown ? `, ${what} last known ${clock(lastKnown)}` : ''}`;
     case 'unavailable': return `${name} · unavailable: ${connection.message ?? 'source could not be read'}`;
