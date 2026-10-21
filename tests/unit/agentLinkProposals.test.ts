@@ -9,7 +9,7 @@ const TARGET = 'atlas-vtt/collections/Example/accounts/team.json';
 const OTHER = 'atlas-vtt/collections/Example/accounts/other.json';
 const node = (nodeId: string, logicalId: string, podId: string | null = 'pod-team', extra: Record<string, unknown> = {}): Record<string, unknown> =>
   ({ nodeId, logicalId, podId, rigId: 'rig-one', hostSelfId: 'host-one', rigName: 'example', ...extra });
-const baseNodes = (): Record<string, unknown>[] => [node('node-builder', 'code.builder'), node('node-a', 'panel.a', 'pod-panel'), node('node-b', 'panel.b', 'pod-panel'), node('node-lead', 'orch.lead')];
+const baseNodes = (): Record<string, unknown>[] => [node('node-builder', 'team.builder'), node('node-a', 'panel.a', 'pod-panel'), node('node-b', 'panel.b', 'pod-panel'), node('node-lead', 'team.lead')];
 
 const connection: ConnectionState = { status: 'connected', since: '2026-01-01T10:00:00Z', message: null, epoch: 3 };
 function inventory(nodes: Record<string, unknown>[], change: Partial<Observation<InventoryRead>> = {}, state: Partial<InventoryState> = {}): InventoryState {
@@ -20,7 +20,7 @@ const appearances: BoundAppearance[] = [{ objectId: 'tok-builder', accountPath: 
 const accounts = (target: AccountDocument = exampleAccount(), more: Array<[string, AccountState]> = []): Map<string, AccountState> =>
   new Map<string, AccountState>([[TARGET, { account: target, error: null }], ...more]);
 const run = (overrides: Partial<Parameters<typeof proposalsFor>[0]> = {}): ReturnType<typeof proposalsFor> =>
-  proposalsFor({ appearances, accounts: accounts(), targetPath: TARGET, inventories: [inventory([...baseNodes(), node('node-new', 'code.new')])], dismissed: new Set(), ...overrides });
+  proposalsFor({ appearances, accounts: accounts(), targetPath: TARGET, inventories: [inventory([...baseNodes(), node('node-new', 'team.new')])], dismissed: new Set(), ...overrides });
 const seat = (id: string, nodeId: string, policy: SeatSubject['policy'] = 'current-seat', extra: Partial<SeatSubject> = {}): SeatSubject =>
   ({ id, kind: 'seat', caption: id, sourceKey: 'local', seat: { rigId: 'rig-one', nodeId, logicalId: id }, policy, workIds: [], observedAt: '2026-01-01T10:00:00Z', ...extra });
 
@@ -46,7 +46,7 @@ describe('stage 4 proposals', () => {
   });
 
   it('shows absence, a different seat and a new pod member only from a qualifying inventory', () => {
-    const nodes = [node('node-builder', 'code.builder'), node('node-a2', 'panel.a', 'pod-panel'), node('node-b', 'panel.b', 'pod-panel'), node('node-lead', 'orch.lead'), node('node-c', 'panel.c', 'pod-panel')];
+    const nodes = [node('node-builder', 'team.builder'), node('node-a2', 'panel.a', 'pod-panel'), node('node-b', 'panel.b', 'pod-panel'), node('node-lead', 'team.lead'), node('node-c', 'panel.c', 'pod-panel')];
     const live = run({ inventories: [inventory(nodes)] });
     expect(live.differentSeatNow.map((row) => [row.subject.id, row.node?.nodeId])).toEqual([['seat:panel-a', 'node-a2']]);
     expect(live.newInGroupPod.map((row) => row.node.nodeId)).toEqual(['node-a2', 'node-c']);
@@ -64,14 +64,14 @@ describe('stage 4 proposals', () => {
 
   it('keeps sources and hosts apart: the same node ID elsewhere is a different seat', () => {
     const target = exampleAccount();
-    target.subjects.push(seat('seat:new-other-source', 'node-new', 'current-seat', { sourceKey: 'other' }), seat('seat:new-other-host', 'node-new', 'current-seat', { seat: { rigId: 'rig-one', nodeId: 'node-new', logicalId: 'code.new', hostId: 'host-two' } }));
+    target.subjects.push(seat('seat:new-other-source', 'node-new', 'current-seat', { sourceKey: 'other' }), seat('seat:new-other-host', 'node-new', 'current-seat', { seat: { rigId: 'rig-one', nodeId: 'node-new', logicalId: 'team.new', hostId: 'host-two' } }));
     expect(run({ accounts: accounts(target) }).notOnMap.find((row) => row.node.nodeId === 'node-new')?.reuse).toBeNull();
   });
 
   it('reports ambiguous subjects and unreadable nodes, and notes a seat only pinned to an earlier conversation', () => {
     const target = exampleAccount();
     target.subjects.push(seat('seat:x1', 'node-x'), seat('seat:x2', 'node-x'), seat('seat:y-pinned', 'node-y', 'captured-conversation'));
-    const result = run({ accounts: accounts(target), inventories: [inventory([...baseNodes(), node('node-x', 'code.x'), node('node-y', 'code.y'), node('node-bad', '')])] });
+    const result = run({ accounts: accounts(target), inventories: [inventory([...baseNodes(), node('node-x', 'team.x'), node('node-y', 'team.y'), node('node-bad', '')])] });
     expect(result.cantPropose.map((row) => row.reason)).toEqual([expect.stringContaining('unreadable'), expect.stringContaining('ambiguous, 2')]);
     expect(result.notOnMap.find((row) => row.node.nodeId === 'node-y')).toMatchObject({ reuse: null, pinnedEarlier: { id: 'seat:y-pinned' } });
   });
@@ -96,5 +96,29 @@ describe('stage 4 proposals', () => {
     expect(dismissed.notOnMap.map((row) => row.node.nodeId)).toEqual(['node-lead']);
     expect(dismissed.candidateKeys.has(key)).toBe(true);
     expect(run({ dismissed: new Set([key]), inventories: [inventory(baseNodes())] }).candidateKeys.has(key)).toBe(false);
+  });
+
+  it('keeps a listed node present even when its other fields are unreadable', () => {
+    const result = run({ inventories: [inventory(baseNodes().map((entry) => (entry.nodeId === 'node-builder' ? { ...entry, podId: 42 } : entry)))] });
+    expect(result.cantPropose.map((row) => row.reason)).toEqual([expect.stringContaining('unreadable')]);
+    expect(result.notInOpenRig).toEqual([]);
+  });
+
+  it('withdraws every negative claim while a binding names nothing in its account', () => {
+    const result = run({ appearances: [...appearances, { objectId: 'broken', accountPath: TARGET, subjectId: 'seat:missing' }] });
+    expect(result.status).toEqual({ kind: 'blocked', reason: expect.stringContaining('seat:missing') });
+    expect(result.notOnMap).toEqual([]);
+    expect(run({ appearances: [...appearances, { objectId: 'work', accountPath: TARGET, subjectId: 'work:build-one' }] }).status).toEqual({ kind: 'ready' });
+  });
+
+  it('resolves group members in the group\'s own account, never through a same-named subject elsewhere', () => {
+    const other: AccountDocument = { ...exampleAccount(), subjects: [seat('seat:panel-a', 'node-foreign')] };
+    const result = run({
+      appearances: [...appearances, { objectId: 'foreign', accountPath: OTHER, subjectId: 'seat:panel-a' }],
+      accounts: accounts(exampleAccount(), [[OTHER, { account: other, error: null }]]),
+      inventories: [inventory([...baseNodes(), node('node-foreign', 'foreign.seat', 'pod-foreign'), node('node-stranger', 'foreign.stranger', 'pod-foreign')])],
+    });
+    expect(result.newInGroupPod.map((row) => row.node.nodeId)).toEqual([]);
+    expect(result.notOnMap.map((row) => row.node.nodeId)).toEqual(['node-lead', 'node-stranger']);
   });
 });

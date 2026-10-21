@@ -39,13 +39,13 @@ function setup(): { request: (seats: ChosenSeat[], extra?: Partial<ApplyRequest>
   const inventory = inventoryHandle();
   const request = (seats: ChosenSeat[], extra: Partial<ApplyRequest> = {}): ApplyRequest => ({
     app, store, scenePath: SCENE, sceneName: 'Example', target: { path: PATH, sha256: textSha256(text), account: exampleAccount() }, seats,
-    inventories: [{ sourceKey: 'local', rigId: 'rig-one', handle: inventory.handle, connection: () => connection }], settingsCurrent: () => true, sceneCurrent: () => true, guard: () => null,
+    inventories: [{ sourceKey: 'local', rigId: 'rig-one', handle: inventory.handle, connection: () => connection }], settingsCurrent: () => true, sceneCurrent: () => true, accountsCurrent: async () => null, guard: () => null,
     signal: new AbortController().signal, now: () => new Date('2026-01-01T10:06:00Z'), waitMs: 200, ...extra,
   });
   return { request, app, files, store, inventory };
 }
-const reuseLead = (): ChosenSeat => ({ proposal: { key: 'lead', node: node('node-lead', 'orch.lead'), reuse: exampleAccount().subjects.find((subject) => subject.id === 'seat:lead') as never, pinnedEarlier: null }, caption: 'orch.lead', position: { x: 150, y: 50 } });
-const addNew = (): ChosenSeat => ({ proposal: { key: 'new', node: node('node-new', 'code.new'), reuse: null, pinnedEarlier: null }, caption: 'New builder', position: { x: 250, y: 50 } });
+const reuseLead = (): ChosenSeat => ({ proposal: { key: 'lead', node: node('node-lead', 'team.lead'), reuse: exampleAccount().subjects.find((subject) => subject.id === 'seat:lead') as never, pinnedEarlier: null }, caption: 'team.lead', position: { x: 150, y: 50 } });
+const addNew = (): ChosenSeat => ({ proposal: { key: 'new', node: node('node-new', 'team.new'), reuse: null, pinnedEarlier: null }, caption: 'New builder', position: { x: 250, y: 50 } });
 const run = async (context: ReturnType<typeof setup>, request: ApplyRequest): Promise<Awaited<ReturnType<typeof applyProposals>>> => {
   const pending = applyProposals(request);
   await Promise.resolve();
@@ -61,12 +61,12 @@ describe('applying proposals', () => {
     const outcome = await run(context, context.request([reuseLead(), addNew()]));
     expect(outcome).toMatchObject({ kind: 'applied', seatsAdded: 1 });
     const written = JSON.parse(context.files.get(PATH)!) as AccountDocument;
-    const added = written.subjects.find((subject) => subject.id.startsWith('seat:code.new~'));
+    const added = written.subjects.find((subject) => subject.id.startsWith('seat:team.new~'));
     expect(added).toMatchObject({ kind: 'seat', caption: 'New builder', policy: 'current-seat', seat: { nodeId: 'node-new', hostId: 'host-one', rigId: 'rig-one' } });
     expect(added?.kind === 'seat' && atlasAdded(written, added)).toMatchObject({ kind: 'atlas-rig-inventory', scenePath: SCENE, rigId: 'rig-one' });
     const tokens = Object.values(context.store.getState().objects.tokens);
     expect(tokens.map((token) => [token.kind, 'name' in token ? token.name : null, token.isHidden, token.initiativeAutoAdd, token.sourceReference?.subjectId]))
-      .toEqual([['character', 'orch.lead', true, false, 'seat:lead'], ['character', 'New builder', true, false, added!.id]]);
+      .toEqual([['character', 'team.lead', true, false, 'seat:lead'], ['character', 'New builder', true, false, added!.id]]);
     const afterApply = context.files.get(PATH);
     const history = getHistoryStore(context.store)!;
     history.getState().undo();
@@ -116,8 +116,7 @@ describe('applying proposals', () => {
     expect(await run(uncertain, uncertain.request([addNew()]))).toEqual({ kind: 'indeterminate', reason: 'saved, then failed' });
     expect(Object.keys(uncertain.store.getState().objects.tokens)).toHaveLength(0);
     const moved = setup();
-    let calls = 0;
-    const outcome = await run(moved, moved.request([addNew()], { guard: (account) => (++calls === 2 && account.subjects.some((subject) => subject.id.startsWith('seat:code.new~')) ? 'The cell was taken.' : null) }));
+    const outcome = await run(moved, moved.request([addNew()], { guard: (account) => (account.subjects.some((subject) => subject.id.startsWith('seat:team.new~')) ? 'The cell was taken.' : null) }));
     expect(outcome).toEqual({ kind: 'stopped', seatsAdded: 1, reason: 'The cell was taken.' });
     expect(Object.keys(moved.store.getState().objects.tokens)).toHaveLength(0);
   });
@@ -138,10 +137,36 @@ describe('applying proposals', () => {
   it('runs two Applies on one account one after another, the second refusing on the changed text', async () => {
     const context = setup();
     const first = applyProposals(context.request([addNew()]));
-    const second = applyProposals(context.request([{ ...addNew(), proposal: { ...addNew().proposal, key: 'other', node: node('node-other', 'code.other') } }]));
+    const second = applyProposals(context.request([{ ...addNew(), proposal: { ...addNew().proposal, key: 'other', node: node('node-other', 'team.other') } }]));
     await Promise.resolve();
     context.inventory.publish();
     expect(await first).toMatchObject({ kind: 'applied' });
     expect(await second).toMatchObject({ kind: 'refused', reason: expect.stringContaining('changed since it was read') });
+  });
+
+  it('checks the account as it is now before reusing a subject, and writes nothing when cancelled while the write is queued', async () => {
+    const reused = setup();
+    const account = JSON.parse(reused.files.get(PATH)!) as AccountDocument;
+    reused.files.set(PATH, `${JSON.stringify({ ...account, subjects: account.subjects.filter((subject) => subject.id !== 'seat:lead') }, null, 2)}\n`);
+    expect(await run(reused, reused.request([reuseLead()]))).toEqual({ kind: 'refused', reason: 'team.json changed since it was read.' });
+    expect(Object.keys(reused.store.getState().objects.tokens)).toHaveLength(0);
+    const queued = setup();
+    const before = queued.files.get(PATH), controller = new AbortController();
+    let release = (): void => undefined;
+    const gate = new Promise<void>((resolve) => { release = resolve; });
+    const process = queued.app.vault.process;
+    queued.app.vault.process = vi.fn(async (file: TFile, fn: (data: string) => string) => { await gate; await process(file, fn); });
+    const pending = run(queued, queued.request([addNew()], { signal: controller.signal }));
+    await vi.waitFor(() => expect(queued.app.vault.process).toHaveBeenCalled());
+    controller.abort(); release();
+    expect(await pending).toEqual({ kind: 'refused', reason: 'Apply was cancelled.' });
+    expect(queued.files.get(PATH)).toBe(before);
+  });
+
+  it('stops before publishing when another account the scene uses changed meanwhile', async () => {
+    const context = setup();
+    const outcome = await run(context, context.request([addNew()], { accountsCurrent: async () => 'other.json changed since it was read.' }));
+    expect(outcome).toEqual({ kind: 'stopped', seatsAdded: 1, reason: 'other.json changed since it was read.' });
+    expect(Object.keys(context.store.getState().objects.tokens)).toHaveLength(0);
   });
 });

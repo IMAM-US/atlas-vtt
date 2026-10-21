@@ -5,7 +5,7 @@ import type { TokenInput } from '../../storeFactory';
 import { runHistoryTransaction } from '../../stores/history';
 import type { AccountDocument, SeatSubject } from '../account/accountSchema';
 import { validateAccount } from '../account/accountValidation';
-import { withAccountExclusion, writeAccount } from '../account/accountWriter';
+import { accountUnchanged, withAccountExclusion, writeAccount } from '../account/accountWriter';
 import type { InventoryRead } from '../live/OpenRigLive';
 import type { ConnectionState, Observation, ObservationHandle } from '../live/types';
 import { newSeatId, newSeatSubject, provenanceSource, withNewSeats } from './newSeats';
@@ -28,6 +28,8 @@ export interface ApplyRequest {
   settingsCurrent: () => boolean;
   /** False once the scene was switched or reloaded since the panel showed these proposals. */
   sceneCurrent: () => boolean;
+  /** Reads every other account the scene references; a reason when one no longer holds the text the proposals were made from. */
+  accountsCurrent: () => Promise<string | null>;
   /**
    * Re-derives, from the current scene, every referenced account and the live inventory, whether
    * each chosen seat is still unrepresented, still resolves to `expected(seat)` in the target
@@ -102,7 +104,9 @@ export async function applyProposals(request: ApplyRequest): Promise<ApplyOutcom
       if (state.mapPath !== request.scenePath || state.isMapLoading || !request.sceneCurrent()) return 'The scene changed.';
       return request.settingsCurrent() ? null : 'The source settings changed.';
     };
-    const first = sceneReason() ?? request.guard(target.account, (seat) => seat.proposal.reuse?.id ?? null);
+    const asRead = (seat: ChosenSeat): string | null => seat.proposal.reuse?.id ?? null;
+    const unchanged = (): string | null => sceneReason() ?? request.guard(target.account, asRead);
+    const first = unchanged();
     if (first) return { kind: 'refused', reason: first };
     const appliedAt = (request.now?.() ?? new Date()).toISOString();
     const reserved = new Set<string>();
@@ -123,7 +127,8 @@ export async function applyProposals(request: ApplyRequest): Promise<ApplyOutcom
     let account = target.account;
     if (created.size) {
       const groups = [...sources.values()].map((source) => ({ source, subjects: [...created.values()].filter((subject) => subject.sourceIds?.includes(source.id)) }));
-      const outcome = await writeAccount(request.app, target.path, target.sha256, (current) => groups.reduce((next, group) => withNewSeats(group.source, group.subjects)(next), current));
+      // The guards run again inside the write's synchronous callback: a cancel or change while it was queued writes nothing.
+      const outcome = await writeAccount(request.app, target.path, target.sha256, (current) => groups.reduce((next, group) => withNewSeats(group.source, group.subjects)(next), current), unchanged);
       if (outcome.kind === 'refused') return { kind: 'refused', reason: outcome.reason };
       if (outcome.kind === 'indeterminate') return { kind: 'indeterminate', reason: outcome.reason };
       account = validateAccount(JSON.parse(outcome.text) as unknown);
@@ -132,9 +137,15 @@ export async function applyProposals(request: ApplyRequest): Promise<ApplyOutcom
         return written?.kind !== 'seat' || !seatMatches(written, { sourceKey: subject.sourceKey, hostId: subject.seat.hostId!, rigId: subject.seat.rigId, nodeId: subject.seat.nodeId });
       });
       if (missing) return { kind: 'stopped', seatsAdded: created.size, reason: `${missing.id} is not in the written account.` };
+    } else {
+      // Nothing to write, but the reused subjects must still be in the account as it is now.
+      const changed = await accountUnchanged(request.app, target.path, target.sha256);
+      if (changed) return { kind: 'refused', reason: changed };
     }
+    const others = await request.accountsCurrent();
+    if (others) return created.size ? { kind: 'stopped', seatsAdded: created.size, reason: others } : { kind: 'refused', reason: others };
     const again = sceneReason() ?? request.guard(account, (seat) => created.get(seat)?.id ?? seat.proposal.reuse?.id ?? null);
-    if (again) return { kind: 'stopped', seatsAdded: created.size, reason: again };
+    if (again) return created.size ? { kind: 'stopped', seatsAdded: created.size, reason: again } : { kind: 'refused', reason: again };
     const tokens: TokenInput[] = request.seats.map((seat) => ({
       id: tokenId(), kind: 'character', name: seat.caption, x: seat.position.x, y: seat.position.y, imagePath: '', size: 1,
       showRing: true, showNameplate: true, isHidden: true, hasVision: false, initiativeAutoAdd: false,

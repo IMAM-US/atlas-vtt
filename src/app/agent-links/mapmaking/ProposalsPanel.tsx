@@ -10,7 +10,8 @@ import './proposals.scss';
 export interface ProposalsPanelProps {
   snapshot: ProposalsSnapshot;
   onPreview: (chosen: readonly ChosenRow[]) => void;
-  onApply: (chosen: readonly ChosenRow[]) => void;
+  /** `consent` is the basis a reformat was agreed for, or null. */
+  onApply: (chosen: readonly ChosenRow[], consent: string | null) => void;
   onDismiss: (key: string) => void;
   onChooseTarget: (path: string) => void;
   onClose: () => void;
@@ -31,7 +32,7 @@ export function ProposalsPanel(props: ProposalsPanelProps): React.ReactElement {
   const targetFile = targetPath ? fileName(targetPath) : '';
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
   const [captions, setCaptions] = useState<ReadonlyMap<string, string>>(new Map());
-  const [consented, setConsented] = useState(false);
+  const [consented, setConsented] = useState<string | null>(null);
   const rows = set.notOnMap;
   const chosen = useMemo(() => rows.filter((row) => selected.has(row.key) && placements.get(row.key)), [rows, selected, placements]);
   const choice = useMemo((): ChosenRow[] => chosen.map((row) => ({ key: row.key, caption: (captions.get(row.key) ?? row.node.logicalId).trim() || row.node.logicalId })), [chosen, captions]);
@@ -42,10 +43,14 @@ export function ProposalsPanel(props: ProposalsPanelProps): React.ReactElement {
     if (!next.delete(key)) next.add(key);
     return next;
   });
-  const needsConsent = props.snapshot.reflowNeeded && !consented && chosen.some((row) => !row.reuse);
+  // A consent counts only for the account exactly as loaded when it was given.
+  const { basis, layout } = props.snapshot;
+  const writes = chosen.some((row) => !row.reuse);
+  const checking = writes && layout === 'checking';
+  const needsConsent = writes && layout === 'reformat' && consented !== basis;
   const apply = (): void => {
-    if (needsConsent) { setConsented(true); return; }
-    props.onApply(choice);
+    if (needsConsent) { setConsented(basis); return; }
+    props.onApply(choice, consented === basis ? basis : null);
   };
   return <section className="atlas-proposals" aria-label="Proposals" onKeyDown={(event) => event.stopPropagation()}>
     <header className="atlas-proposals__header">
@@ -80,8 +85,8 @@ export function ProposalsPanel(props: ProposalsPanelProps): React.ReactElement {
             </span>
           </div>;
         })}
-        <Button variant="secondary" disabled={!chosen.length || busy} onClick={apply}>
-          {needsConsent ? `Apply will reformat ${targetFile} once` : applyLabel(chosen, targetFile)}
+        <Button variant="secondary" disabled={!chosen.length || busy || checking} onClick={apply}>
+          {checking ? `Checking the layout of ${targetFile}…` : needsConsent ? `Apply will reformat ${targetFile} once` : applyLabel(chosen, targetFile)}
         </Button>
       </section>}
       {set.notInOpenRig.length > 0 && <section aria-label="Not in OpenRig now">
@@ -93,7 +98,7 @@ export function ProposalsPanel(props: ProposalsPanelProps): React.ReactElement {
       </section>}
       {set.differentSeatNow.length > 0 && <section aria-label="Different seat now">
         <h4>Different seat now</h4>
-        {set.differentSeatNow.map((row) => <p key={row.key} className="atlas-proposals__muted">{row.subject.caption}: {row.node?.logicalId} is now another node; Atlas never rebinds a token to it.</p>)}
+        {set.differentSeatNow.map((row) => <p key={row.key} className="atlas-proposals__muted">{row.subject.caption}: {row.node?.logicalId} is a different seat now. Atlas never rebinds a token to it.</p>)}
       </section>}
       {set.newInGroupPod.length > 0 && <section aria-label="New in a group's pod">
         <h4>New in a group's pod</h4>

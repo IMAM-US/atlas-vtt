@@ -13,7 +13,7 @@ const state = {
   objects: {
     tokens: {
       'token-1': { id: 'token-1', kind: 'character', name: 'Bandit Captain', hp: { current: 8, max: 10 }, imagePath: 'tokens/bandit-captain.png' },
-      'seat-token': { id: 'seat-token', kind: 'character', name: 'code.builder', imagePath: '', isHidden: true, initiativeAutoAdd: false },
+      'seat-token': { id: 'seat-token', kind: 'character', name: 'team.builder', imagePath: '', isHidden: true, initiativeAutoAdd: false },
     },
   },
   addToInitiative: vi.fn(),

@@ -50,6 +50,8 @@ function serialize(value: unknown, indent: string, finalNewline: boolean): strin
  */
 export async function writeAccount(
   app: App, path: string, expectedSha256: string, change: (account: AccountDocument) => AccountDocument,
+  /** Checked inside Obsidian's synchronous callback, right before the new text is produced; a reason refuses the write. */
+  precondition?: () => string | null,
 ): Promise<AccountWriteOutcome> {
   const file = app.vault.getAbstractFileByPath(path);
   const name = path.split('/').pop() ?? path;
@@ -57,8 +59,10 @@ export async function writeAccount(
   let written: string | null = null;
   try {
     await app.vault.process(file, (current) => {
-      if (file.path !== path) throw new AccountRefusal(`${name} was moved.`);
+      if (file.path !== path || app.vault.getAbstractFileByPath(path) !== file) throw new AccountRefusal(`${name} was moved or replaced.`);
       if (textSha256(current) !== expectedSha256) throw new AccountRefusal(`${name} changed since it was read.`);
+      const blocked = precondition?.();
+      if (blocked) throw new AccountRefusal(blocked);
       const layout = accountLayout(current);
       let next: string;
       try {
@@ -77,12 +81,29 @@ export async function writeAccount(
   }
   const text: string | null = written;
   if (text === null) return { kind: 'refused', reason: 'The account was not written.' };
-  const now = app.vault.getAbstractFileByPath(path);
-  // A replacement at the same path is caught by the text compare below; identical text is the same account.
-  if (file.path !== path || !(now instanceof TFile)) return { kind: 'indeterminate', reason: `${name} was moved or replaced during the write.` };
-  const current = await app.vault.read(now);
+  // The same TFile at the same path: a replacement, even with identical bytes, is not the file that was written.
+  if (file.path !== path || app.vault.getAbstractFileByPath(path) !== file) return { kind: 'indeterminate', reason: `${name} was moved or replaced during the write.` };
+  let current: string;
+  try {
+    current = await app.vault.read(file);
+  } catch (error) {
+    return { kind: 'indeterminate', reason: `${name} could not be read back after the write${error instanceof Error ? `: ${error.message}` : ''}.` };
+  }
+  if (file.path !== path || app.vault.getAbstractFileByPath(path) !== file) return { kind: 'indeterminate', reason: `${name} was moved or replaced during the write.` };
   if (current !== text) return { kind: 'indeterminate', reason: `${name} changed right after the write.` };
   return { kind: 'confirmed', text, sha256: textSha256(text) };
+}
+
+/** Whether the account at `path` still holds the text whose SHA-256 was read; a reason when it doesn't or can't be read. */
+export async function accountUnchanged(app: App, path: string, expectedSha256: string): Promise<string | null> {
+  const name = path.split('/').pop() ?? path;
+  const file = app.vault.getAbstractFileByPath(path);
+  if (!(file instanceof TFile)) return `${name} is no longer in the vault.`;
+  try {
+    return textSha256(await app.vault.read(file)) === expectedSha256 ? null : `${name} changed since it was read.`;
+  } catch (error) {
+    return `${name} could not be read${error instanceof Error ? `: ${error.message}` : ''}.`;
+  }
 }
 
 const exclusions = new Map<string, Promise<unknown>>();

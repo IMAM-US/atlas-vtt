@@ -1,29 +1,35 @@
 import { Notice, TFile, type App } from 'obsidian';
 import type { Point } from '../../grid/hexGeometry';
 import type { MapRect } from '../../grid/hexNumbering';
-import { computeTokenPixelSize } from '../../pixi/token-renderer/tokenSizing';
 import type { ViewAtlasState, ViewAtlasStore } from '../../storeFactory';
 import { getHistoryStore } from '../../stores/history';
 import type { NativeSources } from '../NativeSources';
 import type { AccountDocument } from '../account/accountSchema';
-import { accountLayout, textSha256 } from '../account/accountWriter';
+import { accountLayout, accountUnchanged, textSha256 } from '../account/accountWriter';
 import { freshnessLabel } from '../card/freshnessLabels';
 import { AccountLoads } from '../overlay/AccountLoads';
 import { appearanceReferences, type AppearanceReference } from '../overlay/appearanceBindings';
 import { NativeMarks } from '../overlay/NativeMarks';
-import { applyProposals, type ChosenSeat } from './applyProposals';
-import { applyLine, undoLine, type Reload } from './applyReport';
-import { placeProposals } from './placement';
+import { applyProposals, type ApplyOutcome, type ChosenSeat } from './applyProposals';
+import { applyLine, fileName, undoLine, type Reload } from './applyReport';
+import { overlapsAny, placeProposals } from './placement';
 import type { ProposalGhostRenderer } from './ProposalGhostRenderer';
-import { emptyProposals, proposalsFor, qualifyingInventory, type InventoryState, type ProposalSet } from './proposals';
-import { accountStates, boundAppearances, cellSize, covered, footprints, groupProposals, placementRequests, qualifiedNodes, rigsInScope, type RigScope } from './sceneInputs';
+import { emptyProposals, proposalsFor, qualifyingInventory, type AccountState, type InventoryState, type ProposalSet } from './proposals';
+import { accountStates, boundAppearances, footprints, groupProposals, newTokenDiameter, placementRequests, qualifiedNodes, rigsInScope, type RigScope } from './sceneInputs';
 
 export interface ChosenRow { key: string; caption: string }
+/** Whether writing the target keeps its exact layout, needs consent to reformat it, or is still being checked. */
+export type AccountLayoutState = 'checking' | 'kept' | 'reformat';
 export interface ProposalsSnapshot {
   open: boolean; set: ProposalSet; scope: readonly string[]; targets: readonly string[]; targetPath: string | null;
-  reflowNeeded: boolean; placements: ReadonlyMap<string, Point | null>; busy: boolean; status: string | null;
+  /** The target as loaded, `[path, sha256]`: what a consent to reformat is given for. */
+  basis: string | null; layout: AccountLayoutState;
+  placements: ReadonlyMap<string, Point | null>; busy: boolean; status: string | null;
 }
-interface Derived { references: AppearanceReference[]; paths: Set<string>; targetPath: string | null; rigs: RigScope[]; inventories: InventoryState[]; set: ProposalSet }
+interface Derived {
+  references: AppearanceReference[]; paths: Set<string>; targetPath: string | null; accounts: Map<string, AccountState>;
+  rigs: RigScope[]; inventories: InventoryState[]; set: ProposalSet;
+}
 
 const inventoryKey = (rigId: string): string => `inventory:${JSON.stringify(rigId)}`;
 const rigKey = (sourceKey: string, rigId: string): string => JSON.stringify([sourceKey, rigId]);
@@ -46,13 +52,14 @@ export class MapmakingSession {
   private chosenTarget: string | null = null;
   private derived: Derived | null = null;
   private nodes: ReturnType<typeof qualifiedNodes> = [];
-  private reflow: { sha256: string; needed: boolean } | null = null;
+  private layout: { basis: string; state: AccountLayoutState } | null = null;
+  private layoutPending: string | null = null;
   private choice: readonly ChosenRow[] = [];
   private operation: AbortController | null = null;
   private sceneEpoch = 0;
   private applied: { tokenIds: string[]; seats: number; path: string; present: boolean; removed: boolean } | null = null;
   private status: string | null = null;
-  private snapshot: ProposalsSnapshot = { open: false, set: emptyProposals({ kind: 'ready' }), scope: [], targets: [], targetPath: null, reflowNeeded: false, placements: new Map(), busy: false, status: null };
+  private snapshot: ProposalsSnapshot = { open: false, set: emptyProposals({ kind: 'ready' }), scope: [], targets: [], targetPath: null, basis: null, layout: 'checking', placements: new Map(), busy: false, status: null };
 
   constructor(private readonly app: App, private readonly store: ViewAtlasStore, private readonly sources: Pick<NativeSources, 'live' | 'loadAccount'>,
     private readonly ghosts: ProposalGhostRenderer, private readonly mapRect: () => MapRect | null) {
@@ -142,15 +149,21 @@ export class MapmakingSession {
     if (derived.set.status.kind === 'ready') for (const [key, rig] of this.dismissed) if (qualifying.has(rig) && !derived.set.candidateKeys.has(key)) this.dismissed.delete(key);
     this.derived = derived;
     this.nodes = qualifiedNodes(derived.inventories, (entry) => !qualifyingInventory(entry));
-    const bounds = this.mapRect();
-    const requests = placementRequests(derived.set.notOnMap, state, derived.references, accountStates(derived.paths, this.loads), this.nodes);
-    const placements = bounds ? placeProposals(requests, footprints(state), state.grid, bounds) : new Map(requests.map((request) => [request.key, null]));
     const loaded = derived.targetPath ? this.loads.get(derived.targetPath)?.value : null;
-    if (loaded && this.reflow?.sha256 !== loaded.sha256) this.checkReflow(loaded.path, loaded.sha256);
+    const basis = loaded ? JSON.stringify([loaded.path, loaded.sha256]) : null;
+    if (loaded && basis && this.layout?.basis !== basis) this.checkLayout(loaded.path, loaded.sha256, basis);
     const scope = derived.rigs.map((rig) => `${rig.name} · inventory ${freshnessLabel(derived.inventories.find((entry) => entry.sourceKey === rig.sourceKey && entry.rigId === rig.rigId)?.observation)}`);
     this.snapshot = { open: this.opened, set: derived.set, scope, targets: [...derived.paths].sort(), targetPath: derived.targetPath,
-      reflowNeeded: loaded ? this.reflow?.sha256 === loaded.sha256 && this.reflow.needed : false, placements, busy: this.operation !== null, status: this.status };
+      basis, layout: basis && this.layout?.basis === basis ? this.layout.state : 'checking', placements: this.placementsFor(state, derived), busy: this.operation !== null, status: this.status };
     this.drawGhosts();
+  }
+
+  /** Where each proposal goes in the scene as it is now: the same computation for the ghosts and for Apply's last check. */
+  private placementsFor(state: ViewAtlasState, derived: Derived): Map<string, Point | null> {
+    const bounds = this.mapRect();
+    const nodes = qualifiedNodes(derived.inventories, (entry) => !qualifyingInventory(entry));
+    const requests = placementRequests(derived.set.notOnMap, state, derived.references, derived.accounts, nodes);
+    return bounds ? placeProposals(requests, footprints(state), state.grid, bounds, newTokenDiameter(state)) : new Map(requests.map((request) => [request.key, null]));
   }
 
   /** The diff from the current scene, accounts and inventories; `override` puts the text a write returned in place of the target's load. */
@@ -169,29 +182,33 @@ export class MapmakingSession {
     const set = !paths.size ? emptyProposals({ kind: 'blocked', reason: 'Bind a token to an account first.' })
       : !targetPath ? emptyProposals({ kind: 'blocked', reason: 'Choose the account new seats are added to.' })
         : proposalsFor({ appearances: boundAppearances(references), accounts, targetPath, inventories, dismissed: new Set(this.dismissed.keys()) });
-    return { references, paths, targetPath, rigs, inventories, set };
+    return { references, paths, targetPath, accounts, rigs, inventories, set };
   }
 
-  private checkReflow(path: string, sha256: string): void {
+  /** Reads the target once per loaded content to learn whether a write keeps its layout; until then a writing Apply waits. */
+  private checkLayout(path: string, sha256: string, basis: string): void {
     const file = this.app.vault.getAbstractFileByPath(path);
-    if (!(file instanceof TFile)) return;
+    if (!(file instanceof TFile) || this.layoutPending === basis) return;
+    this.layoutPending = basis;
     void this.app.vault.read(file).then((text) => {
+      if (this.layoutPending === basis) this.layoutPending = null;
       if (textSha256(text) !== sha256) return;
-      this.reflow = { sha256, needed: !accountLayout(text).canonical };
+      this.layout = { basis, state: accountLayout(text).canonical ? 'kept' : 'reformat' };
       this.changed();
-    }, () => undefined);
+    }, () => { if (this.layoutPending === basis) this.layoutPending = null; });
   }
 
   private drawGhosts(): void {
     const state = this.store.getState(), placements = this.snapshot.placements;
-    const radius = computeTokenPixelSize(cellSize(state), 1) / 2;
+    const radius = newTokenDiameter(state) / 2;
     this.ghosts.setGhosts(this.opened && this.visible(state) ? this.choice.flatMap((row) => {
       const position = placements.get(row.key);
       return position ? [{ key: row.key, position, radius, caption: row.caption }] : [];
     }) : []);
   }
 
-  async apply(choice: readonly ChosenRow[]): Promise<void> {
+  /** `consent` is the basis a reformat was agreed for; it counts only for the target exactly as loaded now. */
+  async apply(choice: readonly ChosenRow[], consent: string | null = null): Promise<void> {
     const derived = this.derived, targetPath = derived?.targetPath, loaded = targetPath ? this.loads?.get(targetPath)?.value : null;
     if (this.operation || !derived || !targetPath || !loaded) return;
     const seats: ChosenSeat[] = choice.flatMap((row) => {
@@ -199,7 +216,14 @@ export class MapmakingSession {
       return proposal && position ? [{ proposal, caption: row.caption, position }] : [];
     });
     if (!seats.length) return;
+    const basis = JSON.stringify([loaded.path, loaded.sha256]), layout = this.layout?.basis === basis ? this.layout.state : 'checking';
+    if (seats.some((seat) => !seat.proposal.reuse)) {
+      if (layout === 'checking') { this.say(`Not applied: still checking the layout of ${fileName(targetPath)}.`); return; }
+      if (layout === 'reformat' && consent !== basis) { this.say(`Not applied: Apply would reformat ${fileName(targetPath)}; confirm it first.`); return; }
+    }
     const controller = new AbortController(), epoch = this.sceneEpoch;
+    // The text every referenced account had when these proposals were made; Apply holds the scene to it.
+    const bases = new Map([...derived.paths].map((path) => [path, this.loads?.get(path)?.value?.sha256 ?? null]));
     this.operation = controller; this.status = null; this.changed();
     const rigs = [...new Map(seats.map(({ proposal: { node } }) => [rigKey(node.sourceKey, node.rigId), node])).values()];
     const revisions = new Map(rigs.map((node) => [node.sourceKey, this.sources.live.getRevision(node.sourceKey)]));
@@ -214,8 +238,16 @@ export class MapmakingSession {
         target: { path: targetPath, sha256: loaded.sha256, account: loaded.account }, seats, inventories, signal: controller.signal,
         settingsCurrent: () => [...revisions].every(([source, revision]) => this.sources.live.getRevision(source) === revision),
         sceneCurrent: () => this.sceneEpoch === epoch && this.opened,
-        guard: (account, expected) => this.guard(seats, targetPath, account, expected),
-      });
+        guard: (account, expected) => this.basesHeld(bases, targetPath) ?? this.guard(seats, targetPath, account, expected),
+        accountsCurrent: async () => {
+          for (const [path, sha256] of bases) {
+            if (path === targetPath) continue;
+            const reason = sha256 ? await accountUnchanged(this.app, path, sha256) : `${fileName(path)} was not read.`;
+            if (reason) return reason;
+          }
+          return null;
+        },
+      }).catch((error: unknown): ApplyOutcome => ({ kind: 'indeterminate', reason: error instanceof Error ? error.message : 'Apply failed.' }));
       let reload: Reload | undefined;
       if (outcome.kind === 'indeterminate') {
         reload = await this.sources.loadAccount(targetPath).then((): Reload => ({ ok: true }), (error: unknown): Reload => ({ ok: false, reason: error instanceof Error ? error.message : 'unreadable' }));
@@ -236,19 +268,32 @@ export class MapmakingSession {
     }
   }
 
+  /** Every account the scene referenced is still loaded with the same text, and the scene references no other. */
+  private basesHeld(bases: ReadonlyMap<string, string | null>, targetPath: string): string | null {
+    const paths = new Set(appearanceReferences(this.store.getState()).map((reference) => reference.path));
+    if (paths.size !== bases.size || [...paths].some((path) => !bases.has(path))) return 'The map\'s bindings changed.';
+    for (const [path, sha256] of bases) {
+      if (path !== targetPath && this.loads?.get(path)?.value?.sha256 !== sha256) return `${fileName(path)} changed during Apply.`;
+    }
+    return null;
+  }
+
   private guard(seats: readonly ChosenSeat[], targetPath: string, account: AccountDocument, expected: (seat: ChosenSeat) => string | null): string | null {
     if (!this.loads) return 'Proposals were closed.';
     const state = this.store.getState();
-    const { set, targetPath: current } = this.derive(state, { path: targetPath, account });
-    if (current !== targetPath) return 'The account new seats are added to changed.';
+    const derived = this.derive(state, { path: targetPath, account });
+    const { set } = derived;
+    if (derived.targetPath !== targetPath) return 'The account new seats are added to changed.';
     if (set.status.kind === 'blocked') return set.status.reason;
-    const objects = footprints(state);
+    // Placement is recomputed whole, so a changed grid, map size or object moves every affected cell, not just the chosen centres.
+    const placements = this.placementsFor(state, derived), objects = footprints(state), diameter = newTokenDiameter(state);
     for (const seat of seats) {
       const { node } = seat.proposal, row = set.notOnMap.find((entry) => entry.key === seat.proposal.key);
       const waiting = set.waiting.find((entry) => entry.sourceKey === node.sourceKey && entry.rigId === node.rigId);
       if (!row) return waiting ? `${node.rigId}: ${waiting.reason}` : `${node.logicalId} is no longer proposed.`;
       if ((row.reuse?.id ?? null) !== expected(seat)) return `${node.logicalId}: the account's subject for this seat changed.`;
-      if (covered(objects, seat.position)) return `The cell for ${seat.caption} was taken.`;
+      const now = placements.get(seat.proposal.key);
+      if (!now || now.x !== seat.position.x || now.y !== seat.position.y || overlapsAny(objects, seat.position, diameter)) return `The map changed where ${seat.caption} would go; check the ghosts and apply again.`;
     }
     return null;
   }
@@ -263,7 +308,7 @@ export class MapmakingSession {
 
   private deactivate(): void {
     this.operation?.abort();
-    this.loads?.dispose(); this.loads = null; this.native.dispose(); this.derived = null; this.nodes = []; this.choice = []; this.reflow = null;
+    this.loads?.dispose(); this.loads = null; this.native.dispose(); this.derived = null; this.nodes = []; this.choice = []; this.layout = null; this.layoutPending = null;
     this.ghosts.setGhosts([]);
   }
 

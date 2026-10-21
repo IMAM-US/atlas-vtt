@@ -26,8 +26,8 @@ afterEach(() => vi.useRealTimers());
 
 const PATH = 'atlas-vtt/collections/Example/accounts/team.json';
 const SCENE = 'atlas-vtt/collections/Example/scenes/Example.atlasmap';
-const nodes = [{ nodeId: 'node-builder', logicalId: 'code.builder', podId: 'pod-team', rigId: 'rig-one', hostSelfId: 'host-one' },
-  { nodeId: 'node-new', logicalId: 'code.new', podId: 'pod-team', rigId: 'rig-one', hostSelfId: 'host-one' }];
+const nodes = [{ nodeId: 'node-builder', logicalId: 'team.builder', podId: 'pod-team', rigId: 'rig-one', hostSelfId: 'host-one' },
+  { nodeId: 'node-new', logicalId: 'team.new', podId: 'pod-team', rigId: 'rig-one', hostSelfId: 'host-one' }];
 
 it('Apply then undo, each saved by the real map saver with the initiative tracker syncing, returns the saved baseline bytes', async () => {
   const memory = createInMemoryApp({ files: { [PATH]: `${JSON.stringify(validateAccount(exampleAccount()), null, 2)}\n` } });
@@ -59,7 +59,7 @@ it('Apply then undo, each saved by the real map saver with the initiative tracke
   const session = new MapmakingSession(memory.app, store, sources, { setGhosts: vi.fn() } as unknown as ProposalGhostRenderer, () => ({ x: 0, y: 0, width: 700, height: 700 }));
   session.open(); await vi.advanceTimersByTimeAsync(200);
   const key = session.getSnapshot().set.notOnMap[0]!.key;
-  await act(async () => { const applying = session.apply([{ key, caption: 'code.new' }]); await Promise.resolve(); publish(); await applying; });
+  await act(async () => { const applying = session.apply([{ key, caption: 'team.new' }]); await Promise.resolve(); publish(); await applying; });
   await act(async () => { await vi.advanceTimersByTimeAsync(600); });
   await store.flushStorage();
   expect(Object.keys(store.getState().objects.tokens)).toHaveLength(2);

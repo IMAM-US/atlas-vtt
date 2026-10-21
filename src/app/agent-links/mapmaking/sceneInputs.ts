@@ -1,4 +1,3 @@
-import type { Point } from '../../grid/hexGeometry';
 import type { ViewAtlasState } from '../../storeFactory';
 import { computeTokenPixelSize } from '../../pixi/token-renderer/tokenSizing';
 import type { AccountDocument, SeatSubject } from '../account/accountSchema';
@@ -45,7 +44,7 @@ export function footprints(state: ViewAtlasState): Footprint[] {
   const cell = cellSize(state);
   const tokens = Object.values(state.objects.tokens).map((token) => {
     const size = computeTokenPixelSize(cell, token.size ?? 1);
-    return { x: token.x, y: token.y, width: size, height: size };
+    return { x: token.x, y: token.y, width: size, height: size, round: true };
   });
   const texts = Object.values(state.objects.texts).map((text) => {
     const lines = text.text.split('\n'), scale = text.scale ?? 1, padding = 2 * (text.padding ?? 0);
@@ -56,8 +55,8 @@ export function footprints(state: ViewAtlasState): Footprint[] {
   return [...tokens, ...texts];
 }
 
-export const covered = (objects: readonly Footprint[], point: Point): boolean =>
-  objects.some((object) => Math.abs(point.x - object.x) < object.width / 2 && Math.abs(point.y - object.y) < object.height / 2);
+/** The drawn diameter of a new size-1 token, which placement and the Apply guard keep clear. */
+export const newTokenDiameter = (state: ViewAtlasState): number => computeTokenPixelSize(cellSize(state), 1);
 
 /** The validated nodes of every qualifying inventory, which place a proposal beside its pod and give group pods. */
 export function qualifiedNodes(inventories: readonly InventoryState[], qualifies: (state: InventoryState) => boolean): InventoryNode[] {

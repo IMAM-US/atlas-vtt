@@ -3,8 +3,8 @@ import type { GridState } from '../../services/MapPersistence';
 
 /** The map's area in world coordinates. */
 export interface MapBounds { x: number; y: number; width: number; height: number }
-/** Something already on the map: its centre and the size of the box it covers. */
-export interface Footprint { x: number; y: number; width: number; height: number }
+/** Something already on the map: its centre and the box it covers, or the circle of that width when `round` (tokens). */
+export interface Footprint { x: number; y: number; width: number; height: number; round?: boolean }
 export interface PlacementRequest { key: string; logicalId: string; anchors: readonly Point[] }
 
 /** How far beside its pod's tokens a seat may be placed before it goes to the staging strip, in cells. */
@@ -42,8 +42,16 @@ function cellsOf(grid: GridState | null, bounds: MapBounds): Cells {
   return { centers: [...seen.values()], cellOf, size };
 }
 
-const covers = (footprint: Footprint, point: Point): boolean =>
-  Math.abs(point.x - footprint.x) < footprint.width / 2 && Math.abs(point.y - footprint.y) < footprint.height / 2;
+/** Whether a round token of `radius` centred on `point` would overlap the footprint; touching is not overlapping. */
+function overlaps(footprint: Footprint, point: Point, radius: number): boolean {
+  if (footprint.round) return Math.hypot(point.x - footprint.x, point.y - footprint.y) < footprint.width / 2 + radius;
+  const dx = Math.max(Math.abs(point.x - footprint.x) - footprint.width / 2, 0);
+  const dy = Math.max(Math.abs(point.y - footprint.y) - footprint.height / 2, 0);
+  return Math.hypot(dx, dy) < radius;
+}
+
+export const overlapsAny = (objects: readonly Footprint[], point: Point, diameter: number): boolean =>
+  objects.some((object) => overlaps(object, point, diameter / 2));
 
 /** Right, below, left, above: the order a cell beside the pod is preferred in when distances tie. */
 function direction(from: Point, to: Point): number {
@@ -54,13 +62,18 @@ function direction(from: Point, to: Point): number {
 
 /**
  * Where each proposed seat goes: the free cell nearest its pod's tokens, else the first free
- * cell of the staging strip along the map's top edge, else nowhere (null). Deterministic: seats
- * are placed in logical-name order and each one's cell is taken before the next.
+ * cell of the staging strip along the map's top edge, else nowhere (null). A cell is free when a
+ * new token of `diameter` (default: the cell) on it would overlap nothing, wherever existing
+ * objects sit. Deterministic: seats are placed in logical-name order and each one's cell is taken
+ * before the next.
  */
-export function placeProposals(requests: readonly PlacementRequest[], objects: readonly Footprint[], grid: GridState | null, bounds: MapBounds): Map<string, Point | null> {
+export function placeProposals(requests: readonly PlacementRequest[], objects: readonly Footprint[], grid: GridState | null, bounds: MapBounds, diameter?: number): Map<string, Point | null> {
   const cells = cellsOf(grid, bounds);
-  const taken = new Set(cells.centers.filter((cell) => objects.some((object) => covers(object, cell))).map((cell) => cells.cellOf(cell)));
-  const free = (cell: Point): boolean => !taken.has(cells.cellOf(cell));
+  const size = diameter ?? cells.size;
+  const taken = new Set(cells.centers.filter((cell) => overlapsAny(objects, cell, size)).map((cell) => cells.cellOf(cell)));
+  /** The tokens placed so far, which every later seat keeps clear of like any other object. */
+  const reserved: Footprint[] = [];
+  const free = (cell: Point): boolean => !taken.has(cells.cellOf(cell)) && !overlapsAny(reserved, cell, size);
   const strip = [...cells.centers].sort((a, b) => a.y - b.y || a.x - b.x);
   const placed = new Map<string, Point | null>();
   for (const request of [...requests].sort((a, b) => a.logicalId.localeCompare(b.logicalId) || a.key.localeCompare(b.key))) {
@@ -74,7 +87,7 @@ export function placeProposals(requests: readonly PlacementRequest[], objects: r
       choice = near[0]?.cell ?? null;
     }
     choice ??= strip.find(free) ?? null;
-    if (choice) taken.add(cells.cellOf(choice));
+    if (choice) reserved.push({ x: choice.x, y: choice.y, width: size, height: size, round: true });
     placed.set(request.key, choice);
   }
   return placed;

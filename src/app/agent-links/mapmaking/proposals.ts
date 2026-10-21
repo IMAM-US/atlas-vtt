@@ -70,20 +70,27 @@ export function proposalsFor(inputs: ProposalInputs): ProposalSet {
   const target = inputs.accounts.get(inputs.targetPath)?.account;
   if (!target) return emptyProposals({ kind: 'blocked', reason: 'Choose the account new seats are added to.' });
   const represented: SeatSubject[] = [];
-  const groups: GroupSubject[] = [];
+  /** Each bound group with its members resolved in its own account; IDs never join across accounts. */
+  const groups: Array<{ path: string; group: GroupSubject; members: SeatSubject[] }> = [];
   const referenced = new Set<string>();
   for (const appearance of inputs.appearances) {
-    const account = inputs.accounts.get(appearance.accountPath)?.account;
-    const subject = account?.subjects.find((entry) => entry.id === appearance.subjectId);
+    const account = inputs.accounts.get(appearance.accountPath)!.account!;
+    const subject = account.subjects.find((entry) => entry.id === appearance.subjectId);
     if (appearance.accountPath === inputs.targetPath) referenced.add(appearance.subjectId);
+    // A binding nothing in its account resolves could be any seat, so it blocks every negative claim.
+    if (!subject && !account.work.some((work) => work.id === appearance.subjectId) && !account.artifacts.some((artifact) => artifact.id === appearance.subjectId)) {
+      return emptyProposals({ kind: 'blocked', reason: `${appearance.subjectId} is not in ${appearance.accountPath}; proposals need every binding on the map resolved.` });
+    }
     if (subject?.kind === 'seat') represented.push(subject);
-    if (subject?.kind !== 'group' || !account) continue;
+    if (subject?.kind !== 'group') continue;
+    const members: SeatSubject[] = [];
     for (const member of subject.members) {
       const seat = account.subjects.find((entry) => entry.id === member.subjectId);
       if (seat?.kind !== 'seat') return emptyProposals({ kind: 'blocked', reason: `${subject.caption}: member ${member.subjectId} is not a seat in ${appearance.accountPath}.` });
-      represented.push(seat);
+      members.push(seat);
     }
-    groups.push(subject);
+    represented.push(...members);
+    if (!groups.some((entry) => entry.path === appearance.accountPath && entry.group.id === subject.id)) groups.push({ path: appearance.accountPath, group: subject, members });
   }
   const result = emptyProposals({ kind: 'ready' });
   const scope = new Map<string, SeatSubject[]>();
@@ -100,7 +107,11 @@ export function proposalsFor(inputs: ProposalInputs): ProposalSet {
       continue;
     }
     const nodes: InventoryNode[] = [];
-    for (const raw of state.observation.value!.nodes) {
+    const raws = state.observation.value!.nodes;
+    /** A node is present when the inventory lists its ID, readable or not; only a readable one can be proposed. */
+    const listed = (seat: SeatSubject): boolean => raws.some((raw) => raw.nodeId === seat.seat.nodeId && raw.rigId === seat.seat.rigId
+      && (seat.seat.hostId === undefined || raw.hostSelfId === seat.seat.hostId));
+    for (const raw of raws) {
       const node = inventoryNode(state.sourceKey, raw);
       if (node) nodes.push(node);
       else result.cantPropose.push({ key: JSON.stringify(['unreadable', state.sourceKey, state.rigId, raw.nodeId]), reason: `A node in ${state.rigId} has unreadable fields.` });
@@ -117,20 +128,19 @@ export function proposalsFor(inputs: ProposalInputs): ProposalSet {
     }
     const inRig = represented.filter((seat) => seat.sourceKey === state.sourceKey && seat.seat.rigId === state.rigId);
     for (const seat of new Set(inRig)) {
-      if (nodes.some((node) => seatMatches(seat, node))) continue;
+      if (listed(seat)) continue;
       const renamed = nodes.find((node) => node.logicalId === seat.seat.logicalId && (seat.seat.hostId === undefined || node.hostId === seat.seat.hostId));
       const tuple: SeatTuple = { sourceKey: seat.sourceKey, hostId: seat.seat.hostId ?? '', rigId: seat.seat.rigId, nodeId: seat.seat.nodeId };
       // An absence is dismissed for the connection whose inventory showed it.
       const key = renamed ? rowKey('different-seat', tuple) : rowKey('not-in-openrig', tuple, state.observation.epoch);
       (renamed ? result.differentSeatNow : result.notInOpenRig).push({ key, subject: seat, node: renamed ?? null, observedAt: state.observation.observedAt });
     }
-    for (const group of groups) {
-      const members = group.members.flatMap((member) => represented.filter((seat) => seat.id === member.subjectId));
+    for (const { path, group, members } of groups) {
       const memberNodes = nodes.filter((node) => members.some((seat) => seatMatches(seat, node)));
       const pods = new Set(memberNodes.flatMap((node) => (node.podId ? [JSON.stringify([node.hostId, node.podId])] : [])));
       for (const node of nodes) {
         if (!node.podId || !pods.has(JSON.stringify([node.hostId, node.podId])) || members.some((seat) => seatMatches(seat, node))) continue;
-        result.newInGroupPod.push({ key: JSON.stringify(['group-pod', group.id, node.sourceKey, node.hostId, node.rigId, node.nodeId]), group, node });
+        result.newInGroupPod.push({ key: JSON.stringify(['group-pod', path, group.id, node.sourceKey, node.hostId, node.rigId, node.nodeId]), group, node });
       }
     }
   }

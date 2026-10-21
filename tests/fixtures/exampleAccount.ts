@@ -12,8 +12,8 @@ export function exampleAccount(): AccountDocument {
     ],
     subjects: [
       {
-        id: 'seat:builder', kind: 'seat', caption: 'code.builder', sourceKey: 'local',
-        seat: { rigId: 'rig-one', nodeId: 'node-builder', logicalId: 'code.builder', rigName: 'example', sessionAddress: 'builder@example' },
+        id: 'seat:builder', kind: 'seat', caption: 'team.builder', sourceKey: 'local',
+        seat: { rigId: 'rig-one', nodeId: 'node-builder', logicalId: 'team.builder', rigName: 'example', sessionAddress: 'builder@example' },
         participant: { runtime: 'claude-code', conversationId: 'conversation-one', generation: 'generation-one', cwd: '/repo/example', observedAt: '2026-01-01T10:00:00Z' },
         policy: 'current-seat', workIds: ['work:build-one'], notePath: 'notes/builder.md', observedAt: '2026-01-01T10:00:00Z', sourceIds: ['roster'],
       },
@@ -27,7 +27,7 @@ export function exampleAccount(): AccountDocument {
       },
       { id: 'seat:panel-a', kind: 'seat', caption: 'panel.a', sourceKey: 'local', seat: { rigId: 'rig-one', nodeId: 'node-a', logicalId: 'panel.a' }, policy: 'current-seat', workIds: [], observedAt: '2026-01-01T10:00:00Z' },
       { id: 'seat:panel-b', kind: 'seat', caption: 'panel.b', sourceKey: 'local', seat: { rigId: 'rig-one', nodeId: 'node-b', logicalId: 'panel.b' }, policy: 'current-seat', workIds: [], observedAt: '2026-01-01T10:00:00Z' },
-      { id: 'seat:lead', kind: 'seat', caption: 'orch.lead', sourceKey: 'local', seat: { rigId: 'rig-one', nodeId: 'node-lead', logicalId: 'orch.lead', sessionAddress: 'lead@example' }, policy: 'current-seat', workIds: [], observedAt: '2026-01-01T10:00:00Z' },
+      { id: 'seat:lead', kind: 'seat', caption: 'team.lead', sourceKey: 'local', seat: { rigId: 'rig-one', nodeId: 'node-lead', logicalId: 'team.lead', sessionAddress: 'lead@example' }, policy: 'current-seat', workIds: [], observedAt: '2026-01-01T10:00:00Z' },
     ],
     work: [
       {

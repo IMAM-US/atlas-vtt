@@ -14,7 +14,7 @@ export function ProposalsOverlay(): React.ReactElement | null {
   const preview = useCallback((choice: readonly ChosenRow[]): void => session?.preview(choice), [session]);
   if (!session || !snapshot?.open) return null;
   return <div className="atlas-proposals-overlay">
-    <ProposalsPanel snapshot={snapshot} onPreview={preview} onApply={(choice) => void session.apply(choice)}
+    <ProposalsPanel snapshot={snapshot} onPreview={preview} onApply={(choice, consent) => void session.apply(choice, consent)}
       onDismiss={(key) => session.dismiss(key)} onChooseTarget={session.chooseTarget} onClose={session.close} />
   </div>;
 }

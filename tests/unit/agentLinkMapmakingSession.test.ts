@@ -14,7 +14,7 @@ import { exampleAccount } from '../fixtures/exampleAccount';
 
 const PATH = 'atlas-vtt/collections/Example/accounts/team.json';
 const node = (nodeId: string, logicalId: string, podId: string): Record<string, unknown> => ({ nodeId, logicalId, podId, rigId: 'rig-one', hostSelfId: 'host-one', rigName: 'example' });
-const NODES = [node('node-builder', 'code.builder', 'pod-team'), node('node-new', 'code.new', 'pod-team'), node('node-lead', 'orch.lead', 'pod-lead'),
+const NODES = [node('node-builder', 'team.builder', 'pod-team'), node('node-new', 'team.new', 'pod-team'), node('node-lead', 'team.lead', 'pod-lead'),
   node('node-a', 'panel.a', 'pod-panel'), node('node-b', 'panel.b', 'pod-panel'), node('node-c', 'panel.c', 'pod-panel')];
 afterEach(() => vi.useRealTimers());
 
@@ -69,16 +69,16 @@ it('lists the diff with its scope, places ghosts beside the pod, and writes noth
   session.open(); await settle();
   const snapshot = session.getSnapshot();
   expect(snapshot.scope).toEqual([expect.stringMatching(/^example · inventory Live /)]);
-  expect(snapshot.reflowNeeded).toBe(false);
-  expect(snapshot.set.notOnMap.map((row) => [row.node.logicalId, row.reuse?.id ?? null])).toEqual([['code.new', null], ['orch.lead', 'seat:lead'], ['panel.c', null]]);
+  expect(snapshot.layout).toBe('kept');
+  expect(snapshot.set.notOnMap.map((row) => [row.node.logicalId, row.reuse?.id ?? null])).toEqual([['team.new', null], ['team.lead', 'seat:lead'], ['panel.c', null]]);
   expect(snapshot.set.newInGroupPod.map((row) => row.node.logicalId)).toEqual(['panel.c']);
   expect(snapshot.placements.get(keyOf(session, 'node-new'))).toEqual({ x: 175, y: 105 });
-  expect(snapshot.placements.get(keyOf(session, 'node-lead'))).toEqual({ x: 35, y: 35 });
+  expect(snapshot.placements.get(keyOf(session, 'node-lead'))).toEqual({ x: 105, y: 35 });
   expect(session.groupCount(PATH, 'group:panel')).toBe(1);
   session.preview([{ key: keyOf(session, 'node-new'), caption: 'New builder' }]);
   expect(ghosts.setGhosts).toHaveBeenLastCalledWith([expect.objectContaining({ position: { x: 175, y: 105 }, caption: 'New builder' })]);
   session.dismiss(keyOf(session, 'node-lead'));
-  expect(session.getSnapshot().set.notOnMap.map((row) => row.node.logicalId)).toEqual(['code.new', 'panel.c']);
+  expect(session.getSnapshot().set.notOnMap.map((row) => row.node.logicalId)).toEqual(['team.new', 'panel.c']);
   for (const leave of [() => store.getState().setGMView(false), () => store.setState({ isPlayerView: true })]) {
     leave();
     expect(ghosts.setGhosts).toHaveBeenLastCalledWith([]); expect(rig.refs()).toBe(0);
@@ -92,15 +92,15 @@ it('lists the diff with its scope, places ghosts beside the pod, and writes noth
 it('applies from a fresh inventory, reports the account line, and keeps the seats through undo and redo', async () => {
   const { memory, store, session, settle, rig } = await setup();
   session.open(); await settle();
-  const chosen = [{ key: keyOf(session, 'node-lead'), caption: 'orch.lead' }, { key: keyOf(session, 'node-new'), caption: 'New builder' }];
+  const chosen = [{ key: keyOf(session, 'node-lead'), caption: 'team.lead' }, { key: keyOf(session, 'node-new'), caption: 'New builder' }];
   const applying = session.apply(chosen);
   await Promise.resolve(); expect(session.getSnapshot().busy).toBe(true);
   rig.publish(); await applying; await settle();
   expect(session.getSnapshot().status).toBe('Added 2 tokens (hidden). Added 1 seat to team.json.');
   const written = JSON.parse(memory.files.get(PATH)!) as AccountDocument;
-  const seat = written.subjects.find((subject) => subject.id.startsWith('seat:code.new~'))!;
+  const seat = written.subjects.find((subject) => subject.id.startsWith('seat:team.new~'))!;
   const added = Object.values(store.getState().objects.tokens).filter((token) => token.initiativeAutoAdd === false);
-  expect(added.map((token) => [token.isHidden, token.x, token.y, token.sourceReference?.subjectId])).toEqual([[true, 35, 35, 'seat:lead'], [true, 175, 105, seat.id]]);
+  expect(added.map((token) => [token.isHidden, token.x, token.y, token.sourceReference?.subjectId])).toEqual([[true, 105, 35, 'seat:lead'], [true, 175, 105, seat.id]]);
   const afterApply = memory.files.get(PATH);
   store.temporal.getState().undo(); await settle();
   expect(written.sources.at(-1)).toMatchObject({ observedAt: '2026-01-01T12:06:00Z', origin: { kind: 'atlas-rig-inventory', hostId: 'host-one', rigId: 'rig-one' } });
@@ -118,32 +118,64 @@ it('asks once before re-serialising an account in another layout, and says when 
   const authored = JSON.stringify(exampleAccount());
   const { memory, session, settle, rig } = await setup(authored);
   session.open(); await settle();
-  expect(session.getSnapshot().reflowNeeded).toBe(true);
+  expect(session.getSnapshot().layout).toBe('reformat');
+  await session.apply([{ key: keyOf(session, 'node-new'), caption: 'team.new' }]);
+  expect(session.getSnapshot().status).toBe('Not applied: Apply would reformat team.json; confirm it first.');
+  await session.apply([{ key: keyOf(session, 'node-new'), caption: 'team.new' }], JSON.stringify([PATH, 'f'.repeat(64)]));
+  expect(vi.mocked(memory.app.vault.process)).not.toHaveBeenCalled();
   const process = memory.app.vault.process;
   memory.app.vault.process = vi.fn(async (file: TFile, fn: (data: string) => string) => { await process(file, fn); throw new Error('the save was interrupted'); });
-  const applying = session.apply([{ key: keyOf(session, 'node-new'), caption: 'code.new' }]);
+  const applying = session.apply([{ key: keyOf(session, 'node-new'), caption: 'team.new' }], session.getSnapshot().basis);
   await Promise.resolve(); rig.publish(); await applying;
   expect(session.getSnapshot().status).toBe('team.json may have been written (the save was interrupted); reloaded it. Nothing was added to the map.');
-  expect(memory.files.get(PATH)).toContain('"seat:code.new~');
+  expect(memory.files.get(PATH)).toContain('"seat:team.new~');
   session.dispose();
 });
 
 it('cancels a pending Apply when the panel closes or the scene changes, and refuses a stale read', async () => {
   const { memory, store, session, settle, rig } = await setup();
   session.open(); await settle();
-  const closing = session.apply([{ key: keyOf(session, 'node-new'), caption: 'code.new' }]);
+  const closing = session.apply([{ key: keyOf(session, 'node-new'), caption: 'team.new' }]);
   session.close(); await closing;
   session.open(); await settle();
   // The cancelled Apply's refresh left the inventory refreshing: nothing is proposed until a read completes.
   expect(session.getSnapshot().set.notOnMap).toEqual([]);
   rig.publish(); await settle();
-  const timedOut = session.apply([{ key: keyOf(session, 'node-new'), caption: 'code.new' }]);
+  const timedOut = session.apply([{ key: keyOf(session, 'node-new'), caption: 'team.new' }]);
   await vi.advanceTimersByTimeAsync(10_000); await timedOut;
   expect(session.getSnapshot().status).toBe('Not applied: Couldn\'t confirm the seats are current.');
   rig.publish(); await settle();
-  const switching = session.apply([{ key: keyOf(session, 'node-new'), caption: 'code.new' }]);
+  const switching = session.apply([{ key: keyOf(session, 'node-new'), caption: 'team.new' }]);
   store.getState().setMapPath('atlas-vtt/collections/Example/scenes/Other.atlasmap'); await switching;
   expect(vi.mocked(memory.app.vault.process)).not.toHaveBeenCalled();
+  expect(Object.values(store.getState().objects.tokens).some((token) => token.initiativeAutoAdd === false)).toBe(false);
+  session.dispose();
+});
+
+it('rechecks the whole placement after the write: a moved grid stops Apply before any token', async () => {
+  const { memory, store, session, settle, rig } = await setup();
+  session.open(); await settle();
+  const process = memory.app.vault.process;
+  memory.app.vault.process = vi.fn(async (file: TFile, fn: (data: string) => string) => {
+    await process(file, fn);
+    // Half a cell: every cell moves, though nothing covers the chosen centre.
+    store.getState().setGrid({ ...store.getState().grid!, offsetX: 35 });
+  });
+  const applying = session.apply([{ key: keyOf(session, 'node-new'), caption: 'team.new' }]);
+  await Promise.resolve(); rig.publish(); await applying;
+  expect(session.getSnapshot().status).toMatch(/^Added 1 seat to team\.json, then stopped before adding tokens: The map changed where team\.new would go/);
+  expect(Object.values(store.getState().objects.tokens).some((token) => token.initiativeAutoAdd === false)).toBe(false);
+  session.dispose();
+});
+
+it('refuses a reuse-only Apply when the account no longer holds the reused subject', async () => {
+  const { memory, store, session, settle, rig } = await setup();
+  session.open(); await settle();
+  const account = JSON.parse(memory.files.get(PATH)!) as AccountDocument;
+  memory.files.set(PATH, `${JSON.stringify({ ...account, subjects: account.subjects.filter((subject) => subject.id !== 'seat:lead') }, null, 2)}\n`);
+  const applying = session.apply([{ key: keyOf(session, 'node-lead'), caption: 'team.lead' }]);
+  await Promise.resolve(); rig.publish(); await applying;
+  expect(session.getSnapshot().status).toBe('Not applied: team.json changed since it was read.');
   expect(Object.values(store.getState().objects.tokens).some((token) => token.initiativeAutoAdd === false)).toBe(false);
   session.dispose();
 });

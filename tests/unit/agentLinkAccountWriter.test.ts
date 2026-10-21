@@ -63,6 +63,28 @@ describe('guarded account writes', () => {
       changedAfter.files.set(PATH, `${changedAfter.files.get(PATH)!} `);
     });
     await expect(writeAccount(changedAfter.app, PATH, textSha256(before), addSource)).resolves.toMatchObject({ kind: 'indeterminate' });
+
+    // A failed read-back and a replacement with the very same bytes are uncertain too, never confirmed.
+    const unreadable = createInMemoryApp({ files: { [PATH]: before } });
+    unreadable.app.vault.read = vi.fn(async () => { throw new Error('read-back unavailable'); });
+    await expect(writeAccount(unreadable.app, PATH, textSha256(before), addSource)).resolves.toMatchObject({ kind: 'indeterminate', reason: expect.stringContaining('read-back unavailable') });
+    expect(unreadable.files.get(PATH)).not.toBe(before);
+    const replaced = createInMemoryApp({ files: { [PATH]: before } });
+    const replace = replaced.app.vault.process;
+    replaced.app.vault.process = vi.fn(async (file: TFile, fn: (data: string) => string) => {
+      await replace(file, fn);
+      const written = replaced.files.get(PATH)!;
+      await replaced.app.vault.adapter.remove(PATH);
+      await replaced.app.vault.adapter.write(PATH, written);
+    });
+    await expect(writeAccount(replaced.app, PATH, textSha256(before), addSource)).resolves.toEqual({ kind: 'indeterminate', reason: 'team.json was moved or replaced during the write.' });
+  });
+
+  it('checks its precondition inside the write, writing nothing when it no longer holds', async () => {
+    const before = text();
+    const memory = createInMemoryApp({ files: { [PATH]: before } });
+    await expect(writeAccount(memory.app, PATH, textSha256(before), addSource, () => 'Apply was cancelled.')).resolves.toEqual({ kind: 'refused', reason: 'Apply was cancelled.' });
+    expect(memory.files.get(PATH)).toBe(before);
   });
 
   it('says whether re-serialising an account gives back its exact text', () => {

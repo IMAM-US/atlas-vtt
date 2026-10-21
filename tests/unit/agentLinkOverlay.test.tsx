@@ -61,7 +61,7 @@ afterEach(cleanup);
 /** An open Proposals panel with nothing to propose: enough to see where it mounts. */
 const proposalsSnapshot = {
   open: true, set: { status: { kind: 'blocked', reason: 'Bind a token to an account first.' }, notOnMap: [], notInOpenRig: [], differentSeatNow: [], newInGroupPod: [], cantPropose: [], unused: [], waiting: [], candidateKeys: new Set() },
-  scope: [], targets: [], targetPath: null, reflowNeeded: false, placements: new Map(), busy: false, status: null,
+  scope: [], targets: [], targetPath: null, basis: null, layout: 'checking', placements: new Map(), busy: false, status: null,
 };
 const proposals = {
   subscribe: () => () => undefined, getSnapshot: () => proposalsSnapshot,

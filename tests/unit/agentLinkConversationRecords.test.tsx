@@ -24,8 +24,8 @@ const FIRST = 'first001-conversation';
 const SECOND = 'second01-conversation';
 
 const subject: SeatSubject = {
-  id: 'seat:code.example', kind: 'seat', caption: 'code.example', sourceKey: 'local',
-  seat: { rigId: 'rig-1', nodeId: 'node-1', logicalId: 'code.example' },
+  id: 'seat:team.example', kind: 'seat', caption: 'team.example', sourceKey: 'local',
+  seat: { rigId: 'rig-1', nodeId: 'node-1', logicalId: 'team.example' },
   participant: { runtime: 'claude-code', conversationId: MAP, observedAt: '2026-01-01T10:00:00Z' },
   policy: 'current-seat', workIds: [], observedAt: '2026-01-01T10:00:00Z',
 };
@@ -78,7 +78,7 @@ describe('conversation record rows', () => {
 
     fireEvent.click(within(rowOf('Previous conversation record')).getByRole('button', { name: 'Open record' }));
     await act(async () => undefined);
-    expect(opened.calls).toEqual([{ sourceKey: 'local', runtime: 'claude-code', conversationId: MAP, cwd: null, seatCaption: 'code.example' }]);
+    expect(opened.calls).toEqual([{ sourceKey: 'local', runtime: 'claude-code', conversationId: MAP, cwd: null, seatCaption: 'team.example' }]);
   });
 
   it('shows no earlier occupant\'s record once the current identity changes', async () => {

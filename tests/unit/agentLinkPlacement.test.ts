@@ -53,4 +53,20 @@ describe('placing proposed seats', () => {
     }
     expect(new Set([...forward.values()].map((point) => JSON.stringify(point))).size).toBe(3);
   });
+
+  it('keeps a whole new token clear of objects that sit off the grid, and of the seats placed before it', () => {
+    const strip = { x: 0, y: 0, width: 300, height: 100 };
+    expect(placeProposals([request('a.first')], [{ x: 60, y: 50, width: 100, height: 100, round: true }], square, strip).get('a.first')).toEqual({ x: 250, y: 50 });
+    expect(placeProposals([request('a.first')], [{ x: 60, y: 50, width: 80, height: 20 }], square, strip).get('a.first')).toEqual({ x: 150, y: 50 });
+    const wide = placeProposals([request('a.first'), request('b.second')], [], square, strip, 150);
+    expect([...wide.values()]).toEqual([{ x: 50, y: 50 }, { x: 250, y: 50 }]);
+  });
+
+  it('lets round tokens sit in neighbouring hexes', () => {
+    const hex: GridState = { enabled: true, type: 'hex-vertical', size: 100, offsetX: 0, offsetY: 0, opacity: 1 };
+    const layout = createHexLayout('hex-vertical', 100, 0, 0);
+    const center = axialToPixel(layout, { q: 3, r: 2 });
+    const placed = placeProposals([request('a.first', [center])], [{ x: center.x, y: center.y, width: 90, height: 90, round: true }], hex, bounds, 90).get('a.first')!;
+    expect(Math.hypot(placed.x - center.x, placed.y - center.y)).toBeCloseTo(100);
+  });
 });
