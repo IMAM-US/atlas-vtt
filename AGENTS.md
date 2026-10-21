@@ -97,6 +97,7 @@ History lives in `src/app/stores/history.ts` (zundo on top of the view store) an
 
 - **One gesture = one undo step**: any interaction that writes to the store while the pointer is down (token drag, pin drag, wall vertex/light drag, eraser sweep, live-updating config panels) must call `beginHistoryTransaction(store)` when it starts and `endHistoryTransaction(store)` when it ends, including on cancel/destroy. Multi-step edits use `runHistoryTransaction(store, fn)`; writes that must never be undoable use `runUntracked`.
 - **Prefer a single store action** for bulk edits (`updateTokens`, `setTokenPositions`) over raw `store.setState` with an Immer draft.
+- **Undo and redo are saved**: zundo applies them with the raw `set`, beneath persist, so `createHistoryOptions` takes a `save` that writes their result through the store's own `setState` (untracked, so the redo stack stays).
 - Renderers that derive state from `objects` (vision, spatial audio) subscribe to the `objects` reference, so undo/redo refreshes them without dirty flags.
 
 ## Widgets
