@@ -49,8 +49,16 @@ import { mapMeasurementSettings } from './services/mapMeasurementSettings';
 import { findAtlasLeafByViewId } from './utils/atlasLeafLookup';
 import { destroyTree } from './pixi/utils/destroyTree';
 import { requestRender } from './pixi/RenderScheduler';
+import { NativeSources } from './agent-links/NativeSources';
+import { LiveLayer } from './agent-links/overlay/LiveLayer';
+import { LiveLinkRenderer } from './agent-links/overlay/LiveLinkRenderer';
 
 export class PixiRendererOrchestrator { // Renamed class
+  private liveLayer: LiveLayer | null = null;
+  private liveLinkRenderer: LiveLinkRenderer | null = null;
+
+  getLiveLayer(): LiveLayer | null { return this.liveLayer; }
+  getLiveLinkRenderer(): LiveLinkRenderer | null { return this.liveLinkRenderer; }
   private _isDestroyed: boolean = false;
   private pixiAppManager: PixiAppManager;
   private tokenRenderer?: TokenRenderer; // Add TokenRenderer instance
@@ -372,6 +380,10 @@ export class PixiRendererOrchestrator { // Renamed class
     });
     viewport.addChild(this.hexLinkRenderer.container);
     this.keepHexLinksAboveGrid();
+    this.liveLayer = new LiveLayer(this.obsApp, this.store, NativeSources.forApp(this.obsApp));
+    this.liveLinkRenderer = new LiveLinkRenderer({ viewport, store: this.store, eventBus: this.eventBus, layer: this.liveLayer,
+      sprites: () => this.tokenRenderer?.getTokenSprites() ?? {}, canvas: this.getCanvasElement() });
+    viewport.addChild(this.liveLinkRenderer.container);
     this.hexLinkInteraction = new HexLinkInteraction({
       viewport,
       store: this.store,
@@ -756,6 +768,7 @@ export class PixiRendererOrchestrator { // Renamed class
     const layers: LayerVisibility[] = [];
     if (this.pinRenderer) layers.push({ layer: this.pinRenderer.getPinContainer(), visible: false });
     if (this.hexLinkRenderer) layers.push({ layer: this.hexLinkRenderer.container, visible: false });
+    if (this.liveLinkRenderer) layers.push({ layer: this.liveLinkRenderer.container, visible: false });
     const grid = this.gridSystem?.getGridSprite();
     if (grid) layers.push({ layer: grid, visible: settings.showGrid });
     layers.push(...(this.tokenRenderer?.getPlayerViewLayers(settings) ?? []));
@@ -1414,6 +1427,8 @@ export class PixiRendererOrchestrator { // Renamed class
     
     // Remove drawing tool handlers
 
+    this.liveLinkRenderer?.destroy(); this.liveLinkRenderer = null;
+    this.liveLayer?.dispose(); this.liveLayer = null;
     this.tokenRenderer?.destroy(); // Destroy TokenRenderer
     this.pinRenderer?.destroy(); // Destroy PinRenderer
     this.hexLinkInteraction?.destroy();

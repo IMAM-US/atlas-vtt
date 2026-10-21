@@ -1,0 +1,12 @@
+.atlas-live-hover-anchor {
+  position: fixed;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
+.atlas-live-hover .tooltip-label {
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  max-width: 360px;
+}

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Container, Graphics, Sprite, Texture } from 'pixi.js';
+import { EventEmitter } from 'events';
 import { TokenRenderer } from '../../src/app/pixi/TokenRenderer';
 import { updateInstanceBadge } from '../../src/app/pixi/token-renderer/InstanceBadge';
 
@@ -61,8 +62,12 @@ describe('TokenRenderer ring updates', () => {
     const refreshInstanceBadges = vi.fn();
     const updateTokenSize = vi.fn();
     const syncUIScale = vi.fn();
+    const eventBus = new EventEmitter();
+    const visualChanged = vi.fn(() => expect(updateTokenSize).toHaveBeenCalledTimes(1));
+    eventBus.on('token-visual-changed', visualChanged);
 
     const harness = {
+      eventBus,
       store: {
         getState: () => ({
           objects: {
@@ -102,5 +107,6 @@ describe('TokenRenderer ring updates', () => {
     expect(syncUIScale).toHaveBeenCalledTimes(1);
     expect(updateTokenRing).toHaveBeenCalledWith(tokenId, tokenGroup, expect.any(Number), undefined);
     expect(refreshInstanceBadges).toHaveBeenCalledTimes(1);
+    expect(visualChanged).toHaveBeenCalledTimes(1);
   });
 });

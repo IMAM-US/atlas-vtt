@@ -19,6 +19,7 @@ export function SeatCard({ subject }: { subject: SeatSubject }): React.ReactElem
   const mapWork = mapWorkOf(loaded.account, subject);
   const reads = useSeatReads(subject, mapWork);
   const activity = activityLabel(subject, reads.snapshot?.inventory);
+  const absence = reads.snapshot?.absence;
   const activityChanged = useFactChange(reads.snapshot?.inventory.value ? activity ?? 'unknown' : null);
   const headline = headlineOf(subject, loaded.account.capturedAt, reads.seat, reads.owned, mapWork, reads.snapshot?.conversation);
   const runtime = reads.seat?.state === 'current' ? reads.seat.process.runtime : subject.participant?.runtime ?? '';
@@ -39,7 +40,7 @@ export function SeatCard({ subject }: { subject: SeatSubject }): React.ReactElem
       <Button variant="ghost" size="sm" onClick={reads.refresh}>Refresh</Button>
       {groups.map((group) => <Button key={group.id} variant="ghost" size="sm" onClick={() => openSubject(group.id)}>in {group.caption}</Button>)}
     </p>
-    <p className={`agent-link-muted${activityChanged ? ' agent-link-row--changed' : ''}`}>{reads.snapshot?.inventory.value ? activity ? `Activity: ${activity}` : 'Activity not confirmed' : 'Activity'} · {freshnessLabel(reads.snapshot?.inventory)}</p>
+    <p className={`agent-link-muted${activityChanged ? ' agent-link-row--changed' : ''}`}>{absence ?? (reads.snapshot?.inventory.value ? activity ? `Activity: ${activity}` : 'Activity not confirmed' : 'Activity')} · {freshnessLabel(reads.snapshot?.inventory)}</p>
     <ConversationSection subject={subject} seat={reads.seat} conversation={reads.snapshot?.conversation} recheck={reads.recheckConversation} />
     <WorkSection subject={subject} owned={reads.owned} mapWork={mapWork} liveMapWork={reads.mapWork} observation={reads.snapshot?.owned} mapObservations={reads.snapshot?.mapWork} />
     <ArtifactSection groups={artifactGroups} />

@@ -20,11 +20,12 @@ const Tooltip = TooltipPrimitive.Root
 
 const TooltipTrigger = TooltipPrimitive.Trigger
 
+type TooltipContentProps = React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content> & { portalContainer?: HTMLElement | undefined };
 const TooltipContent = React.forwardRef<
   React.ComponentRef<typeof TooltipPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content>
->(({ className, sideOffset = 4, ...props }, ref) => (
-  <TooltipPrimitive.Portal>
+  TooltipContentProps
+>(({ className, sideOffset = 4, portalContainer, ...props }, ref) => (
+  <TooltipPrimitive.Portal container={portalContainer}>
     <TooltipPrimitive.Content
       ref={ref}
       sideOffset={sideOffset}
@@ -37,6 +38,9 @@ TooltipContent.displayName = TooltipPrimitive.Content.displayName
 
 interface LabelTooltipProps {
   label: string
+  open?: boolean
+  contentClassName?: string
+  portalContainer?: HTMLElement
   side?: React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content>["side"]
   /** Describes `children` instead of naming them, for controls whose visible text already names them. */
   describe?: boolean
@@ -49,14 +53,14 @@ interface LabelTooltipProps {
  * `aria-label` on `children`. Never give `children` a `title`: it adds the browser's
  * tooltip. Obsidian's `aria-label` tooltip is off throughout Atlas (styles/_native-tooltips.scss).
  */
-function LabelTooltip({ label, side = "top", describe = false, children }: LabelTooltipProps): React.ReactElement {
+function LabelTooltip({ label, side = "top", describe = false, children, open, contentClassName, portalContainer }: LabelTooltipProps): React.ReactElement {
   const labelId = React.useId()
   const hasProvider = React.useContext(ProviderMounted)
   const tooltip = (
-    <Tooltip>
+    <Tooltip {...(open !== undefined ? { open } : {})}>
       <TooltipTrigger asChild {...(describe ? { "aria-describedby": labelId } : { "aria-labelledby": labelId })}>{children}</TooltipTrigger>
       <span id={labelId} hidden>{label}</span>
-      <TooltipContent side={side} sideOffset={10}>
+      <TooltipContent side={side} sideOffset={10} className={contentClassName} portalContainer={portalContainer}>
         <div className="tooltip-inner">
           <span className="tooltip-label">{label}</span>
         </div>

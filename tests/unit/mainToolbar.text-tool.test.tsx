@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createViewAtlasStore } from '../../src/app/storeFactory';
 
@@ -12,6 +12,12 @@ const setSelection = vi.fn();
 const openAssetManager = vi.fn();
 const closeAssetManager = vi.fn();
 const setInitiativeTrackerOpen = vi.fn();
+let actualPlayerView = false;
+let liveEnabled = true;
+const liveListeners = new Set<() => void>();
+const liveLayer = { isEnabled: (): boolean => liveEnabled, subscribe: (listener: () => void): (() => void) => {
+  liveListeners.add(listener); return () => liveListeners.delete(listener);
+}, toggle: (): void => { liveEnabled = !liveEnabled; liveListeners.forEach((listener) => listener()); } };
 
 let capturedShortcuts: Record<string, (event: KeyboardEvent) => void> = {};
 
@@ -50,7 +56,7 @@ vi.mock('../../src/app/react/ViewStoreContext', () => ({
 vi.mock('../../src/app/react/root/AtlasUIContext', () => ({
   useAtlasUI: () => ({
     view: {
-      getViewType: () => 'atlas-vtt',
+      getViewType: () => actualPlayerView ? 'atlas-vtt-player' : 'atlas-vtt',
       serviceManager: {
         getEventBus: () => null,
         getToolController: () => null,
@@ -60,6 +66,7 @@ vi.mock('../../src/app/react/root/AtlasUIContext', () => ({
       clearAllFog: vi.fn(),
     },
     mapData: null,
+    renderer: { getLiveLayer: () => liveLayer },
   }),
 }));
 
@@ -128,6 +135,7 @@ import { MainToolbar } from '../../src/app/packages/components/MainToolbar';
 
 describe('MainToolbar text tool', () => {
   beforeEach(() => {
+    actualPlayerView = false; liveEnabled = true;
     capturedShortcuts = {};
     setActiveTool.mockReset();
     setSelectionMode.mockReset();
@@ -171,5 +179,20 @@ describe('MainToolbar text tool', () => {
     store.getState().setActiveTool('audio');
 
     expect(store.getState().activeTool).toBe('move');
+  });
+
+  it('toggles the per-view live layer without changing the tool, selection, or GM mode', () => {
+    render(<MainToolbar viewId="live-toggle" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Live layer' }));
+    expect(liveEnabled).toBe(false);
+    fireEvent.click(screen.getByRole('button', { name: 'Live layer' }));
+    expect(liveEnabled).toBe(true);
+    expect(setActiveTool).not.toHaveBeenCalled(); expect(setGMView).not.toHaveBeenCalled(); expect(setSelection).not.toHaveBeenCalled();
+  });
+
+  it('omits the live control from the actual player view', () => {
+    actualPlayerView = true;
+    render(<MainToolbar viewId="player-live-toggle" />);
+    expect(screen.queryByRole('button', { name: 'Live layer' })).toBeNull();
   });
 });

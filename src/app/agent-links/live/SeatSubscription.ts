@@ -6,6 +6,7 @@ import type { LiveSources } from './LiveSources';
 import type { OpenRigLive, InventoryRead } from './OpenRigLive';
 import type { HerdrLive } from './HerdrLive';
 import type { ConnectionState, Observation, ObservationHandle } from './types';
+import { InventoryAbsenceProof } from './inventoryFacts';
 
 export interface SeatSnapshot {
   seat: SeatRead | null;
@@ -13,6 +14,8 @@ export interface SeatSnapshot {
   conversation: ConversationObservationState;
   owned: Observation<OwnedWork>;
   inventory: Observation<InventoryRead>;
+  inventoryReady: boolean;
+  absence: string | null;
   mapWork: ReadonlyMap<string, Observation<Work>>;
   connections: ReadonlyMap<string, ConnectionState>;
   herdr: readonly { connection: ConnectionState; observation: Observation<HerdrSnapshot> }[];
@@ -32,8 +35,11 @@ export class SeatSubscription {
   private readonly cleanups: (() => void)[] = [];
   private snapshot: SeatSnapshot;
   private disposed = false;
+  private readonly absenceProof: InventoryAbsenceProof;
+  private publishComparison: () => void = (): void => {};
 
   constructor(registry: LiveSources, subject: SeatSubject, mapWork: readonly AccountWork[], readExact: (signal: AbortSignal) => Promise<SeatRead>) {
+    this.absenceProof = new InventoryAbsenceProof(subject);
     const releases: (() => void)[] = [];
     const retain = <T>(handle: ObservationHandle<T>): ObservationHandle<T> => { releases.push(handle.release); return handle; };
     let conversation: ConversationObservation | undefined;
@@ -50,6 +56,9 @@ export class SeatSubscription {
         this.work.set(entry.id, retain(model.watchWork(entry.qitemId)));
       }
       this.conversation = conversation = new ConversationObservation(this.process, readExact);
+      let sourceRevision = registry.getRevision(subject.sourceKey);
+      this.publishComparison = (): void => registry.setConversation(subject, this, sourceRevision, this.conversation.getSnapshot());
+      this.cleanups.push(() => registry.setConversation(subject, this, sourceRevision, null));
       this.snapshot = this.collect();
       const changed = (): void => { if (!this.disposed) { this.snapshot = this.collect(); for (const listener of this.listeners) listener(); } };
       for (const handle of [this.process, this.owned, this.inventory, ...this.work.values()]) {
@@ -69,6 +78,7 @@ export class SeatSubscription {
         const next = registry.getRevision(subject.sourceKey);
         if (next === revision) return;
         revision = next;
+        sourceRevision = next;
         this.conversation.sourceChanged(); bindViews();
       }));
     } catch (error) {
@@ -88,9 +98,11 @@ export class SeatSubscription {
   recheckConversation = (): void => this.conversation.recheck();
 
   private collect(): SeatSnapshot {
+    this.publishComparison();
     const process = this.process.getSnapshot(), conversation = this.conversation.getSnapshot();
     return { seat: seatWithConversation(process.value, conversation), process, conversation,
-      owned: this.owned.getSnapshot(), inventory: this.inventory.getSnapshot(),
+      owned: this.owned.getSnapshot(), inventory: this.inventory.getSnapshot(), inventoryReady: this.inventory.isReady(),
+      absence: this.absenceProof.read(this.inventory.getSnapshot(), this.inventory.isReady()),
       mapWork: new Map([...this.work].map(([id, handle]) => [id, handle.getSnapshot()])),
       connections: new Map([...this.models].map(([key, model]) => [key, model.getConnection()])),
       herdr: this.views.map((view) => ({ connection: view.model.getConnection(), observation: view.observation.getSnapshot() })) };

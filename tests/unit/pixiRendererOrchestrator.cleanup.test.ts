@@ -64,4 +64,20 @@ describe('renderer lifecycle across map switches', () => {
     expect(() => eventBus.emit('wall-drawing-cancelled')).not.toThrow();
     expect(externalListener).toHaveBeenCalledTimes(1);
   });
+
+  it('excludes the native live layer from the real player-frame path and restores it after a failed capture', () => {
+    const liveContainer = new Container(), stage = new Container();
+    stage.addChild(liveContainer);
+    const rendered: boolean[] = [];
+    const manager = { getApp: () => ({ stage, renderer: { render: () => rendered.push(liveContainer.visible) } }), getViewport: () => null };
+    const renderer = new PixiRendererOrchestrator({} as any, manager as any, new EventEmitter(), createStore(() => ({})) as any, 'capture');
+    (renderer as any).liveLinkRenderer = { container: liveContainer };
+    try {
+      expect(() => renderer.withPlayerSafeFrame(() => {
+        expect(liveContainer.visible).toBe(false); throw new Error('Capture failed');
+      }, { showGrid: true } as any)).toThrow('Capture failed');
+      expect(rendered).toEqual([false, true]);
+      expect(liveContainer.visible).toBe(true);
+    } finally { stage.destroy({ children: true }); }
+  });
 });
