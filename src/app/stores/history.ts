@@ -48,10 +48,14 @@ function partializeHistory<S extends HistorySnapshot>(state: S): TrackedSlice<S>
 
 /**
  * Builds the zundo options for a view store. `getState` must return the
- * live state of the store the options are attached to.
+ * live state of the store the options are attached to. zundo applies undo
+ * and redo with the store's raw `set`, beneath middleware such as persist,
+ * so `save` (a write through the store's own `setState`) records their
+ * result the way any other change is recorded; it runs untracked.
  */
 export function createHistoryOptions<S extends HistorySnapshot>(
   getState: () => S,
+  save?: () => void,
 ): ZundoOptions<S, TrackedSlice<S>> {
   let transactionDepth = 0;
   let untrackedDepth = 0;
@@ -113,7 +117,13 @@ export function createHistoryOptions<S extends HistorySnapshot>(
         }
       };
 
-      const history = { ...base, beginTransaction, endTransaction, transaction, untracked };
+      const saved = (move: (steps?: number) => void) => (steps?: number): void => {
+        const before = getState();
+        move(steps);
+        if (save && getState() !== before) untracked(save);
+      };
+
+      const history = { ...base, undo: saved(base.undo), redo: saved(base.redo), beginTransaction, endTransaction, transaction, untracked };
       return history;
     },
   };

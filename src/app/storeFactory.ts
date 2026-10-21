@@ -403,7 +403,7 @@ function applyTokenUpdates(token: TokenEntity | undefined, updates: TokenUpdates
  */
 export function createViewAtlasStore(app: App, viewId: string, plugin?: AtlasVTTPlugin, isPlayerView: boolean = false): ViewAtlasStore {
   // Create a storage factory that will access the store once it's created
-  let storeRef: Pick<StoreApi<ViewAtlasState>, 'getState'> | null = null;
+  let storeRef: Pick<StoreApi<ViewAtlasState>, 'getState' | 'setState'> | null = null;
 
   // Keep a reference to the delayed storage so we can expose flush() on the store
   let delayedStorageRef: ReturnType<typeof createDelayedStorage> | null = null;
@@ -1476,18 +1476,19 @@ export function createViewAtlasStore(app: App, viewId: string, plugin?: AtlasVTT
     ),
     // Undo/redo tracks objects, grid, background and widgetValues only;
     // selection, camera, tool and loading state never enter the history.
-    // storeRef is assigned right after creation, before any history call.
-    createHistoryOptions<ViewAtlasState>(() => storeRef!.getState())
+    // storeRef is assigned right after creation, before any history call. Undo and redo
+    // are saved through the store's setState, which persist wraps.
+    createHistoryOptions<ViewAtlasState>(() => storeRef!.getState(), () => storeRef!.setState({}))
   )
 );
-
-  // Set the store reference after creation
-  storeRef = store;
 
   // Immer types `setState` with draft updaters, and WritableDraft<ViewAtlasState> is not
   // assignable back to ViewAtlasState because the state holds the Obsidian `plugin`.
   // The public type keeps the plain StoreApi `setState`, which the Immer store also honours.
   const publicStore = store as unknown as Omit<ViewAtlasStore, 'flushStorage'>;
+
+  // Set the store reference after creation
+  storeRef = publicStore;
 
   // Expose the storage flush method on the store for tab-switch save coordination
   return Object.assign(publicStore, {

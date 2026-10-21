@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { temporal } from 'zundo';
@@ -23,7 +23,7 @@ interface TestState {
   setSelection: (ids: string[]) => void;
 }
 
-function createTestStore() {
+function createTestStore(save?: () => void) {
   const store = create<TestState>()(
     temporal(
       immer<TestState>((set) => ({
@@ -45,7 +45,7 @@ function createTestStore() {
             draft.selectedIds = ids;
           }),
       })),
-      createHistoryOptions(() => store.getState()),
+      createHistoryOptions(() => store.getState(), save),
     ),
   );
   const history = getHistoryStore(store) as ReturnType<typeof getHistoryStore> & { getState: () => HistoryState };
@@ -157,5 +157,24 @@ describe('history', () => {
     expect(runHistoryTransaction(plain, () => 42)).toBe(42);
     expect(runUntracked(plain, () => 'ok')).toBe('ok');
     expect(() => beginHistoryTransaction(plain)).not.toThrow();
+  });
+
+  it('saves the result of an undo or redo that changed the scene, without recording or clearing a step', () => {
+    let saves = 0, futureAtSave: number | null = null;
+    const save = vi.fn(() => {
+      saves++;
+      futureAtSave = history().futureStates.length;
+      store.setState({});
+    });
+    const { store, history } = createTestStore(() => save());
+    store.getState().moveToken('a', 5, 5);
+    history().undo();
+    expect(tokenA(store)).toEqual({ x: 0, y: 0 });
+    expect([saves, futureAtSave, history().pastStates.length, history().futureStates.length]).toEqual([1, 1, 0, 1]);
+    history().redo();
+    expect(tokenA(store)).toEqual({ x: 5, y: 5 });
+    expect([saves, history().pastStates.length, history().futureStates.length]).toEqual([2, 1, 0]);
+    history().redo();
+    expect(saves).toBe(2);
   });
 });
