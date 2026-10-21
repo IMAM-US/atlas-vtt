@@ -177,7 +177,7 @@ export class TokenRenderer {
     // Set up interaction controller callbacks
     this.interactionController.setTokenSpriteProvider((tokenId: string) => this.tokenSprites[tokenId] || null);
     this.interactionController.setUIPositionUpdater((tokenId: string, x: number, y: number) => 
-      this.uiManager.syncUIPosition(tokenId, x, y)
+      this.syncUIPosition(tokenId, x, y)
     );
     this.interactionController.setControlsPositionUpdater((x: number, y: number, tokenSize: number) =>
       this.uiManager.updateControlsPosition(x, y, tokenSize)
@@ -210,13 +210,13 @@ export class TokenRenderer {
     // Set up sync service callbacks
     this.syncService.setTokenSpriteProvider((tokenId: string) => this.tokenSprites[tokenId] || null);
     this.syncService.setUIPositionUpdater((tokenId: string, x: number, y: number) => 
-      this.uiManager.syncUIPosition(tokenId, x, y)
+      this.syncUIPosition(tokenId, x, y)
     );
     this.syncService.setControlsPositionUpdater((x: number, y: number, tokenSize: number) =>
       this.uiManager.updateControlsPosition(x, y, tokenSize)
     );
     this.syncService.setTokensChangedCallback((newTokens, prevTokens) =>
-      runInBackground(this.syncTokens(newTokens, prevTokens), 'Token sync')
+      runInBackground(this.syncTokens(newTokens, prevTokens).finally(() => { this.eventBus.emit('token-visual-changed'); }), 'Token sync')
     );
     this.syncService.setAnimationStartCallback((tokenId: string) => {
       // Could add visual feedback for animation start
@@ -399,6 +399,7 @@ export class TokenRenderer {
             const tokenGroup = this.tokenSprites[tokenId];
             if (tokenGroup instanceof Container) {
               this.spriteFactory.updateTokenSize(tokenId, tokenGroup, tempSize);
+              this.eventBus.emit('token-visual-changed');
               const tokenSize = computeTokenPixelSize(this.gridSystem.getOptions().size, tempSize);
               this.uiManager.syncUIScale(tokenId, tokenSize);
               this.updateTokenRing(tokenId, tokenGroup, tokenSize, token.ringColor);
@@ -591,6 +592,7 @@ export class TokenRenderer {
 
   private syncUIPosition(tokenId: string, x: number, y: number): void {
     this.uiManager.syncUIPosition(tokenId, x, y);
+    this.eventBus.emit('token-visual-changed');
   }
 
 
@@ -811,7 +813,7 @@ export class TokenRenderer {
             // Cancel any ongoing animation for this token to ensure store position takes precedence
             this.syncService.cancelAnimation(token.id);
             existingTokenGroup.position.set(token.x, token.y);
-            this.uiManager.syncUIPosition(token.id, token.x, token.y);
+            this.syncUIPosition(token.id, token.x, token.y);
           }
           
           // Update rotation handle positions when token moves
@@ -850,6 +852,7 @@ export class TokenRenderer {
           if (tempSize === undefined) {
             const newSize = token.size || 1;
             this.spriteFactory.updateTokenSize(token.id, existingTokenGroup, newSize);
+            this.eventBus.emit('token-visual-changed');
             const tokenSize = computeTokenPixelSize(this.gridSystem.getOptions().size, newSize);
             
             // Update UI scale
@@ -965,6 +968,7 @@ export class TokenRenderer {
           
           // Store sprite reference
           this.tokenSprites[token.id] = tokenGroup;
+          this.eventBus.emit('token-visual-changed');
 
           // The sync that added this token refreshed badges before its sprite existed
           this.refreshInstanceBadge(token.id);
@@ -1343,7 +1347,7 @@ export class TokenRenderer {
       if (Math.abs(snappedPos.x - currentPos.x) > 0.1 || Math.abs(snappedPos.y - currentPos.y) > 0.1) {
         // Update sprite position immediately for visual feedback
         tokenSprite.position.set(snappedPos.x, snappedPos.y);
-        this.uiManager.syncUIPosition(tokenId, snappedPos.x, snappedPos.y);
+        this.syncUIPosition(tokenId, snappedPos.x, snappedPos.y);
         tokenUpdates.push({id: tokenId, x: snappedPos.x, y: snappedPos.y});
       }
     }
@@ -1717,6 +1721,11 @@ export class TokenRenderer {
    * left behind would open its note or statblock preview on every later
    * Cmd/Ctrl press, anywhere in Obsidian.
    */
+  private handleLiveTokenHover(tokenId: string | null, event?: FederatedPointerEvent): void {
+    this.interactionController.handleViewportTokenHover(tokenId, event);
+    this.eventBus.emit('token-live-hover', tokenId);
+  }
+
   private onCanvasPointerLeave = (): void => {
     if (this.interactionController.isDraggingTokens()) return;
     if (this.lastHoveredPinId) {
@@ -1724,7 +1733,7 @@ export class TokenRenderer {
       this.lastHoveredPinId = null;
     }
     this.hexLinkHandlers?.hover(null);
-    this.interactionController.handleViewportTokenHover(null);
+    this.handleLiveTokenHover(null);
     this.uiManager.setHoverState(null);
   };
 
@@ -1752,7 +1761,7 @@ export class TokenRenderer {
         this.lastHoveredPinId = pinId;
       }
       if (pinId) {
-        this.interactionController.handleViewportTokenHover(null);
+        this.handleLiveTokenHover(null);
         this.uiManager.setHoverState(null);
         this.hexLinkHandlers?.hover(null, e);
         this.applyCursor('pointer');
@@ -1784,7 +1793,7 @@ export class TokenRenderer {
 
     // Token hover: only for select/move tools
     if (activeTool !== 'select' && activeTool !== 'move') {
-      this.interactionController.handleViewportTokenHover(null);
+      this.handleLiveTokenHover(null);
       this.uiManager.setHoverState(null);
       this.viewport.cursor = 'default';
       return;
@@ -1793,7 +1802,7 @@ export class TokenRenderer {
     const tokenId = this.hitTestTokens(worldPos.x, worldPos.y);
     const hexLinkId = tokenId ? null : this.hexLinkHandlers?.hitTest(worldPos.x, worldPos.y) ?? null;
 
-    this.interactionController.handleViewportTokenHover(tokenId, e);
+    this.handleLiveTokenHover(tokenId, e);
     this.uiManager.setHoverState(tokenId, isModHeld(e));
     this.hexLinkHandlers?.hover(hexLinkId, e);
 
@@ -1839,6 +1848,7 @@ export class TokenRenderer {
       if (tokenGroup instanceof Container) {
         const size = token.size || 1;
         this.spriteFactory.updateTokenSize(tokenId, tokenGroup, size);
+        this.eventBus.emit('token-visual-changed');
         
         // Calculate token size based on grid
         const tokenSize = computeTokenPixelSize(this.gridSystem.getOptions().size, size);

@@ -59,10 +59,10 @@ beforeEach(() => {
 afterEach(cleanup);
 
 const viewport = { toScreen: (x: number, y: number) => ({ x, y }), scale: { x: 1 }, on: () => undefined, off: () => undefined };
-const ui = { app: {}, view: null, pixiApp: null, renderer: { getViewportInstance: () => viewport } } as unknown as AtlasUIContextValue;
+const ui = { app: {}, view: null, pixiApp: null, renderer: { getViewportInstance: () => viewport, getLiveLayer: () => null, getLiveLinkRenderer: () => null } } as unknown as AtlasUIContextValue;
 
-function Overlays({ isPlayerView = false }: { isPlayerView?: boolean }): React.ReactElement {
-  return <ViewStoreProvider store={store as unknown as ViewAtlasStore}><AtlasUIContext.Provider value={ui}><TooltipProvider>
+function Overlays({ isPlayerView = false, context = ui }: { isPlayerView?: boolean; context?: AtlasUIContextValue }): React.ReactElement {
+  return <ViewStoreProvider store={store as unknown as ViewAtlasStore}><AtlasUIContext.Provider value={context}><TooltipProvider>
     <SourceOverlays isPlayerView={isPlayerView} />
   </TooltipProvider></AtlasUIContext.Provider></ViewStoreProvider>;
 }
@@ -127,5 +127,28 @@ describe('the account card overlay', () => {
     expect(screen.queryByRole('region', { name: 'Choose a subject' })).toBeNull();
     expect(screen.queryByRole('region', { name: 'Source account' })).toBeNull();
     expect(cards.mounted).toEqual(['seat:build-a']);
+  });
+
+  it('shows the passive live tooltip at a moving canvas anchor and removes its portal/listeners for preview', () => {
+    const canvas = document.createElement('canvas');
+    let point = { x: 100, y: 200 };
+    const anchors = new Set<() => void>(), listeners = new Set<() => void>();
+    const hover = { id: 'build', lines: ['Current seat', 'Seat activity now: working · Live 12:00:00Z'] };
+    const context = { ...ui, renderer: { ...ui.renderer, getCanvasElement: () => canvas,
+      getLiveLayer: () => ({ getHover: () => hover, subscribe: (listener: () => void) => { listeners.add(listener); return () => listeners.delete(listener); } }),
+      getLiveLinkRenderer: () => ({ hoverAnchor: () => point, subscribeAnchors: (listener: () => void) => { anchors.add(listener); return () => anchors.delete(listener); } }),
+    } } as unknown as AtlasUIContextValue;
+    render(<Overlays context={context} />);
+    const anchor = document.querySelector<HTMLElement>('.atlas-live-hover-anchor')!;
+    expect(anchor.style.left).toBe('100px'); expect(anchor.style.top).toBe('200px');
+    expect(document.querySelector('.atlas-live-hover')?.textContent).toContain('Seat activity now: working · Live 12:00:00Z');
+    expect(cards.mounted).toHaveLength(0);
+    act(() => { point = { x: 350, y: 125 }; anchors.forEach((listener) => listener()); });
+    expect(document.querySelector('.atlas-live-hover-anchor')).toBe(anchor);
+    expect(anchor.style.left).toBe('350px'); expect(anchor.style.top).toBe('125px');
+    act(() => store.setState({ isGMView: false }));
+    expect(document.querySelector('.atlas-live-hover-anchor')).toBeNull();
+    expect(document.querySelector('.atlas-live-hover')).toBeNull();
+    expect(anchors.size).toBe(0); expect(listeners.size).toBe(0);
   });
 });

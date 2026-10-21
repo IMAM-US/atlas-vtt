@@ -15,6 +15,7 @@ import { activityLabel, freshnessLabel } from './freshnessLabels';
 
 function memberNow(subject: SeatSubject | null, state: MemberState | undefined): string {
   if (!subject || !state) return 'Refreshing…';
+  if (state.absence) return state.absence;
   const activity = activityLabel(subject, state.inventory);
   const processAvailable = state.seat?.state === 'current' && ['read', 'live', 'refreshing'].includes(state.process.freshness);
   const rows = processAvailable && state.owned?.state === 'current' ? `owns ${state.owned.items.length}${state.owned.truncated ? '+' : ''} row${state.owned.items.length === 1 ? '' : 's'}` : '';

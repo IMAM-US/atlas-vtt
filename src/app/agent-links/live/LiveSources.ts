@@ -2,6 +2,9 @@ import { expandRoot } from '../sourceSettings';
 import { HerdrLive } from './HerdrLive';
 import { OpenRigLive } from './OpenRigLive';
 import type { LiveConfiguration } from './types';
+import { seatKey } from './types';
+import type { SeatSubject } from '../account/accountSchema';
+import type { ConversationObservationState } from './ConversationObservation';
 
 /** Plugin-instance owner. Two views share subscribers; source keys never share native IDs. */
 export class LiveSources {
@@ -11,6 +14,7 @@ export class LiveSources {
   private readonly revisions = new Map<string, number>();
   private readonly listeners = new Set<() => void>();
   private revision = 0;
+  private readonly conversations = new Map<object, { key: string; sourceKey: string; revision: number; state: ConversationObservationState }>();
 
   constructor(private readonly configuration: (sourceKey: string) => LiveConfiguration) {}
 
@@ -39,6 +43,20 @@ export class LiveSources {
   getRevision = (sourceKey?: string): number => sourceKey ? this.revisions.get(sourceKey) ?? 0 : this.revision;
   subscribe = (listener: () => void): (() => void) => { this.listeners.add(listener); return () => this.listeners.delete(listener); };
 
+  /** Existing explicit card observations only; peeking never creates a read demand or retains the card. */
+  setConversation(subject: SeatSubject, owner: object, revision: number, state: ConversationObservationState | null): void {
+    if (this.conversations.get(owner)?.state === state) return;
+    if (state) this.conversations.set(owner, { key: JSON.stringify([subject.sourceKey, seatKey(subject)]), sourceKey: subject.sourceKey, revision, state });
+    else this.conversations.delete(owner);
+    for (const listener of this.listeners) listener();
+  }
+
+  peekConversation(subject: SeatSubject): ConversationObservationState | null {
+    const key = JSON.stringify([subject.sourceKey, seatKey(subject)]);
+    return [...this.conversations.values()].filter((entry) => entry.key === key && entry.revision === this.getRevision(entry.sourceKey))
+      .sort((a, b) => (b.state.value?.observedAt ?? '').localeCompare(a.state.value?.observedAt ?? ''))[0]?.state ?? null;
+  }
+
   settingsChanged(): void {
     let changed = false;
     for (const [key, previous] of this.fingerprints) {
@@ -62,6 +80,6 @@ export class LiveSources {
   dispose(): void {
     for (const model of this.openRigModels.values()) model.dispose();
     for (const { model } of this.herdrModels.values()) model.dispose();
-    this.openRigModels.clear(); this.herdrModels.clear(); this.listeners.clear();
+    this.openRigModels.clear(); this.herdrModels.clear(); this.listeners.clear(); this.conversations.clear();
   }
 }

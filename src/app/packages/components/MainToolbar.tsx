@@ -1,6 +1,6 @@
-import React, { useState, useCallback, useRef, useMemo, forwardRef } from "react"
+import React, { useState, useCallback, useRef, useMemo, useSyncExternalStore, forwardRef } from "react"
 import { useAtlasStore, useViewStoreHook } from "src/app/react/ViewStoreContext"
-import { Command, Dices, Eye, EyeOff, ImageIcon, MapPin, Volume2 } from "lucide-react"
+import { Command, Dices, Eye, EyeOff, ImageIcon, MapPin, Volume2, Radio } from "lucide-react"
 
 import { TooltipProvider } from "./primitives/tooltip"
 import { useHotkeyLabels } from "../../keyboard/useMapHotkeys"
@@ -46,6 +46,7 @@ const PRIORITY = {
   pin: 70,
   draw: 65,
   palette: 55,
+  live: 60,
   text: 50,
   loot: 45,
   wall: 40,
@@ -60,7 +61,9 @@ export const MainToolbar = forwardRef<HTMLDivElement, MainToolbarProps>(({ viewI
   const activeTool = useAtlasStore(state => state.activeTool)
   const setActiveTool = useAtlasStore(state => state.setActiveTool)
   const store = useViewStoreHook()
-  const { view } = useAtlasUI()
+  const { view, renderer } = useAtlasUI()
+  const liveLayer = renderer?.getLiveLayer();
+  const liveEnabled = useSyncExternalStore(liveLayer?.subscribe ?? (() => (): void => {}), liveLayer?.isEnabled ?? (() => false));
   const isGMView = useAtlasStore(state => state.isGMView)
   const setGMView = useAtlasStore(state => state.setGMView)
   const hotkeyLabel = useHotkeyLabels()
@@ -200,6 +203,7 @@ export const MainToolbar = forwardRef<HTMLDivElement, MainToolbarProps>(({ viewI
       menuEntry: { icon: Dices, label: "Roll Dice", shortcut: hotkeyLabel('diceTray'), isActive: isDiceTrayOpen, onSelect: toggleDiceTray },
     },
     ...(dm ? [
+      buttonItem('live', { icon: Radio, label: "Live layer", shortcut: '', isActive: liveEnabled, onClick: () => liveLayer?.toggle() }, false),
       buttonItem('loot', { icon: CoinIcon, label: "Loot Roller", shortcut: hotkeyLabel('lootRoller'), isActive: lootRollerOpen, onClick: () => setLootRollerOpen(!lootRollerOpen) }, false),
       buttonItem('assets', { icon: ImageIcon, label: "Asset Manager", shortcut: hotkeyLabel('assets'), isActive: isAssetManagerOpen, onClick: handleAssetManagerClick }, false),
       buttonItem('palette', { icon: Command, label: "Command Palette", shortcut: hotkeyLabel('palette'), isActive: isCommandPaletteOpen, onClick: () => setCommandPaletteOpen(!isCommandPaletteOpen) }, false),

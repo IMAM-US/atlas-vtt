@@ -15,13 +15,13 @@ import type { CurrentSeat, LoadedAccount, OwnedWork } from '../../src/app/agent-
 import { TooltipProvider } from '../../src/app/packages/components/primitives/tooltip';
 
 const transport = vi.hoisted(() => ({ seq: 10, event: null as null | ((event: NativeEvent) => void), lost: null as null | ((error: Error) => void), close: vi.fn() }));
-const inventory = vi.hoisted(() => ({ display: 'working', failure: null as string | null }));
+const inventory = vi.hoisted(() => ({ display: 'working', failure: null as string | null, present: true }));
 vi.mock('timers', () => { const timers = { setTimeout: (callback: () => void, ms: number) => globalThis.setTimeout(callback, ms), clearTimeout: (timer: ReturnType<typeof setTimeout>) => globalThis.clearTimeout(timer) }; return { ...timers, default: timers }; });
 vi.mock('../../src/app/agent-links/live/openRigEvents', () => ({
   readFrontier: vi.fn(async () => ({ hostId: 'host-a', bootEpoch: 'boot-a', seq: String(transport.seq) })),
   subscribeOpenRig: vi.fn(async (_source, _frontier, _signal, event, lost) => { transport.event = event; transport.lost = lost; return { close: transport.close }; }),
 }));
-vi.mock('../../src/app/agent-links/native/httpRead', () => ({ readNativeJson: vi.fn(async () => { if (inventory.failure) throw new Error(inventory.failure); return [{ rigId: 'rig-a', nodeId: 'node-a', hostSelfId: 'host-a', activityState: { display: inventory.display } }]; }) }));
+vi.mock('../../src/app/agent-links/native/httpRead', () => ({ readNativeJson: vi.fn(async () => { if (inventory.failure) throw new Error(inventory.failure); return inventory.present ? [{ rigId: 'rig-a', nodeId: 'node-a', hostSelfId: 'host-a', activityState: { display: inventory.display } }] : []; }) }));
 const subject: SeatSubject = { id: 'builder', kind: 'seat', caption: 'Builder', sourceKey: 'a', policy: 'current-seat', workIds: [], observedAt: '2026-01-01T10:00:00Z',
   seat: { rigId: 'rig-a', nodeId: 'node-a', logicalId: 'team.builder' }, participant: { runtime: 'codex', conversationId: 'map-conversation', observedAt: '2026-01-01T10:00:00Z' } };
 const settings = { ...defaultSourceSettings('a'), openRigEndpoint: 'http://127.0.0.1:1', openRigHostId: 'host-a' };
@@ -47,7 +47,7 @@ function Card({ sources, selected = subject }: { sources: NativeSources; selecte
 }
 const settle = async (ms = 300): Promise<void> => { await act(async () => { await vi.advanceTimersByTimeAsync(ms); }); };
 const emit = async (type: string): Promise<void> => { await act(async () => { transport.event?.({ type, seq: ++transport.seq }); }); await settle(); };
-afterEach(() => { cleanup(); vi.useRealTimers(); transport.seq = 10; transport.close.mockClear(); inventory.display = 'working'; inventory.failure = null; });
+afterEach(() => { cleanup(); vi.useRealTimers(); transport.seq = 10; transport.close.mockClear(); inventory.display = 'working'; inventory.failure = null; inventory.present = true; });
 
 it('updates the open card from native invalidations, keeps one exact opening read, and closes the last subscriber', async () => {
   vi.useFakeTimers();
@@ -79,6 +79,7 @@ it('updates the open card from native invalidations, keeps one exact opening rea
   fireEvent.click(screen.getByRole('button', { name: 'Read screen' })); await settle();
   expect(f.sources.readScreen).toHaveBeenCalledWith(subject, expect.objectContaining({ participant: null }), expect.anything());
   view.unmount();
+  expect(f.registry.peekConversation(subject)).toBeNull();
   expect(f.registry.openRig('a').getConnection().status).toBe('closed');
   expect(transport.close).toHaveBeenCalledTimes(2);
   f.registry.dispose();
@@ -129,6 +130,7 @@ it('discards old exact observations on source settings replacement without anoth
   await act(async () => { settings.allowedRoots = ['/synthetic/new-root']; f.registry.settingsChanged(); });
   await settle();
   expect(f.exact).toHaveBeenCalledTimes(1);
+  expect(f.registry.peekConversation(subject)?.value).toBeNull();
   expect(screen.queryByText(/Exact conversation · Read/)).toBeNull();
   expect(screen.getByRole('button', { name: 'Recheck conversation' })).toBeTruthy();
   cleanup(); f.registry.dispose(); settings.allowedRoots = [];
@@ -226,4 +228,23 @@ it('labels the map work handoff time as an event rather than a read time', () =>
   render(<TooltipProvider><CardContext.Provider value={value}><WorkSection subject={subject} owned={null} mapWork={[work]} liveMapWork={new Map([[work.id, current]])} /></CardContext.Provider></TooltipProvider>);
   expect(screen.getByText('Mapped work · handed off at 21:20Z')).toBeTruthy();
   cleanup(); f.registry.dispose();
+});
+
+it('uses the qualified inventory absence wording without promoting a process refusal into absence', async () => {
+  vi.useFakeTimers(); vi.setSystemTime(new Date('2026-01-01T12:00:00Z'));
+  const f = fixture();
+  f.process.mockResolvedValue({ state: 'unavailable', message: 'Native seat missing.', observedAt: new Date().toISOString() });
+  inventory.display = 'unknown';
+  const view = render(<Card sources={f.sources} />); await settle();
+  expect(screen.queryByText(/Not in OpenRig now/)).toBeNull();
+  inventory.present = false; await emit('seat.activity_changed');
+  expect(screen.getByText(/^Not in OpenRig now \(inventory 12:00Z\)/)).toBeTruthy();
+  const child = transport.seq += 2;
+  await act(async () => transport.event?.({ type: 'view.changed', seq: child })); await settle(50);
+  expect(screen.getByText(/^Not in OpenRig now \(inventory 12:00Z\)/)).toBeTruthy();
+  await act(async () => transport.event?.({ type: 'queue.created', seq: child - 1 })); await settle();
+  inventory.failure = 'Native inventory refused'; await emit('seat.activity_changed');
+  expect(screen.queryByText(/Not in OpenRig now/)).toBeNull();
+  expect(screen.getAllByText(/Last known/).length).toBeGreaterThan(0);
+  view.unmount(); f.registry.dispose();
 });
