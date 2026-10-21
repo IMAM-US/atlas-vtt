@@ -8,9 +8,11 @@
   code { overflow-wrap: anywhere; }
   button:focus-visible, summary:focus-visible { outline: 2px solid var(--interactive-accent); outline-offset: 2px; }
 
-  // The view scrolls its own content, so a read can open at the newest entry and paging back keeps the reader's place.
+  // The header stays in view; only the entries scroll, so a read opens at the newest entry and paging back keeps the reader's place.
   &.view-content { padding: 0; overflow: hidden; }
-  &__content { display: flex; flex-direction: column; gap: var(--record-space); padding: var(--record-space); height: 100%; box-sizing: border-box; overflow-y: auto; }
+  &__content { display: flex; flex-direction: column; gap: var(--record-space); padding: var(--record-space); height: 100%; box-sizing: border-box; overflow: hidden; }
+  &__header { flex-shrink: 0; }
+  &__scroller { flex: 1; min-height: 0; overflow-y: auto; }
   &__header, &__entries { width: 100%; max-width: 960px; margin: 0 auto; }
   &__header { display: flex; flex-direction: column; gap: $spacing-xs; }
   &__header h2 { font-size: $font-ui-large; font-weight: $font-weight-semibold; overflow-wrap: anywhere; }

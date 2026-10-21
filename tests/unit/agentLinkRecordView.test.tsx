@@ -169,7 +169,7 @@ describe('the conversation record view', () => {
   it('opens at the newest entry and keeps the reader in place when loading earlier entries', async () => {
     const native = deferredSources();
     const { container } = render(<RecordViewContent identity={identity} sources={native.sources} />);
-    const view = container.querySelector<HTMLElement>('.atlas-record-view__content')!;
+    const view = container.querySelector<HTMLElement>('.atlas-record-view__scroller')!;
     let scrollTop = 0;
     Object.defineProperty(view, 'scrollHeight', { configurable: true, get: () => 5000 });
     Object.defineProperty(view, 'scrollTop', { configurable: true, get: () => scrollTop, set: (value: number) => { scrollTop = value; } });
@@ -188,6 +188,36 @@ describe('the conversation record view', () => {
     tops.set(firstKey, 640);
     await act(async () => native.reads[1]!.answer(windowOf([turn('earlier'), turn('older'), turn('newest')], 1024 * 1024 - turn('earlier').length - 1)));
     expect(scrollTop).toBe(700);
+    vi.restoreAllMocks();
+  });
+
+  it('keeps the header outside the entries\' scroller, with Load earlier at the top of the list, and leaves the read boundary and clock as they were', async () => {
+    const native = deferredSources();
+    const { container } = render(<RecordViewContent identity={identity} sources={native.sources} />);
+    await act(async () => native.reads[0]!.answer(windowOf([turn('older'), turn('newest')], 1024 * 1024)));
+    const scroller = container.querySelector<HTMLElement>('.atlas-record-view__scroller')!;
+    for (const fixed of [screen.getByText(ID), screen.getByText('Read 11:00Z'), screen.getByRole('button', { name: 'Reload' }), screen.getByRole('button', { name: /^Show in / })]) {
+      expect(scroller.contains(fixed)).toBe(false);
+    }
+    const entries = scroller.querySelector('.atlas-record-view__entries')!;
+    expect(entries.firstElementChild?.textContent).toBe('Load earlier');
+    fireEvent.click(screen.getByRole('button', { name: 'Load earlier' }));
+    expect(native.reads[1]!.options).toMatchObject({ pin: samePin(4096) });
+    await act(async () => native.reads[1]!.answer({ ...windowOf([turn('earlier'), turn('older'), turn('newest')], 1024 * 1024 - turn('earlier').length - 1), observedAt: '2026-01-01T11:05:00Z' }));
+    expect(screen.getByText('Read 11:05Z')).toBeTruthy();
+    expect(scroller.contains(screen.getByText('Read 11:05Z'))).toBe(false);
+  });
+
+  it('never moves focus itself: not on a late read, a reload or paging', async () => {
+    const focus = vi.spyOn(HTMLElement.prototype, 'focus');
+    const native = deferredSources();
+    render(<RecordViewContent identity={identity} sources={native.sources} />);
+    await act(async () => native.reads[0]!.answer(windowOf([turn('x')], 1024 * 1024)));
+    fireEvent.click(screen.getByRole('button', { name: 'Load earlier' }));
+    await act(async () => native.reads[1]!.answer(windowOf([turn('y'), turn('x')], 1024 * 1024 - turn('y').length - 1)));
+    fireEvent.click(screen.getByRole('button', { name: 'Reload' }));
+    await act(async () => native.reads[2]!.answer(windowOf([turn('x')], 1024 * 1024)));
+    expect(focus).not.toHaveBeenCalled();
     vi.restoreAllMocks();
   });
 

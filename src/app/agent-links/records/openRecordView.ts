@@ -3,8 +3,10 @@ import { ConversationRecordView, RECORD_VIEW_TYPE } from './ConversationRecordVi
 import { recordIdentityKey, recordViewIdentity, type RecordViewIdentity } from './recordViewState';
 
 /**
- * Opens the record view of one exact conversation in a tab of the main window. A view that
- * already shows that record is brought forward and reads it again rather than duplicated.
+ * Opens the record view of one exact conversation in a tab of the main window and makes it
+ * the active, focused leaf. A view that already shows that record is brought forward, focused
+ * and reads it again rather than duplicated. Only this explicit open moves focus; the view's
+ * own reads, reloads and paging never do.
  */
 export async function openRecordView(app: App, identity: RecordViewIdentity): Promise<void> {
   const { workspace } = app;
@@ -15,6 +17,7 @@ export async function openRecordView(app: App, identity: RecordViewIdentity): Pr
   });
   if (existing) {
     await workspace.revealLeaf(existing);
+    workspace.setActiveLeaf(existing, { focus: true });
     if (existing.view instanceof ConversationRecordView) existing.view.reread();
     return;
   }
@@ -24,4 +27,5 @@ export async function openRecordView(app: App, identity: RecordViewIdentity): Pr
     throw new Error('Conversation records open only in the main window.');
   }
   await leaf.setViewState({ type: RECORD_VIEW_TYPE, state: { ...identity }, active: true });
+  workspace.setActiveLeaf(leaf, { focus: true });
 }

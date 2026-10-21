@@ -160,7 +160,8 @@ export function RecordViewContent({ identity, sources }: { identity: RecordViewI
   }, [page]);
 
   const before = page ? earlier(page, request.current) : null;
-  return <div ref={scroller} className="atlas-record-view__content">
+  // The header stays put above the entries' own scroller, so identity, read time and Reload are always in view.
+  return <div className="atlas-record-view__content">
     <header className="atlas-record-view__header">
       <h2>{identity.seatCaption || 'Conversation record'}</h2>
       <p className="atlas-record-view__identity">{identity.runtime === 'codex' ? 'Codex' : 'Claude Code'} · conversation <code>{identity.conversationId}</code></p>
@@ -176,15 +177,17 @@ export function RecordViewContent({ identity, sources }: { identity: RecordViewI
       {page && <p className="atlas-record-view__summary">{rangeSummary(page)}</p>}
       {page && rangeNotes(page, request.current.entryLimit).map((note) => <p key={note} className="atlas-record-view__status">{note}</p>)}
     </header>
-    {page && <section className="atlas-record-view__entries" aria-label="Record entries">
-      {before && <Button variant="secondary" disabled={busy === 'reading'} onClick={() => { void read(before, anchor()); }}>Load earlier</Button>}
-      {page.entries.map((entry) => <RecordEntryView key={entryKey(entry)} entryKey={entryKey(entry)} entry={entry} />)}
-      {!page.latest && <Button variant="secondary" disabled={busy === 'reading'}
-        onClick={() => { void read({ ...FIRST_READ, pin: request.current.pin }); }}>Back to latest</Button>}
-      {page.notShown.length > 0 && <details className="atlas-record-view__not-shown">
-        <summary>Not shown: {count(page.notShown.reduce((sum, [, n]) => sum + n, 0), 'entry', 'entries')} without conversation text</summary>
-        <ul>{page.notShown.map(([type, n]) => <li key={type}><code>{type}</code> × {n.toLocaleString()}</li>)}</ul>
-      </details>}
-    </section>}
+    <div ref={scroller} className="atlas-record-view__scroller">
+      {page && <section className="atlas-record-view__entries" aria-label="Record entries">
+        {before && <Button variant="secondary" disabled={busy === 'reading'} onClick={() => { void read(before, anchor()); }}>Load earlier</Button>}
+        {page.entries.map((entry) => <RecordEntryView key={entryKey(entry)} entryKey={entryKey(entry)} entry={entry} />)}
+        {!page.latest && <Button variant="secondary" disabled={busy === 'reading'}
+          onClick={() => { void read({ ...FIRST_READ, pin: request.current.pin }); }}>Back to latest</Button>}
+        {page.notShown.length > 0 && <details className="atlas-record-view__not-shown">
+          <summary>Not shown: {count(page.notShown.reduce((sum, [, n]) => sum + n, 0), 'entry', 'entries')} without conversation text</summary>
+          <ul>{page.notShown.map(([type, n]) => <li key={type}><code>{type}</code> × {n.toLocaleString()}</li>)}</ul>
+        </details>}
+      </section>}
+    </div>
   </div>;
 }
