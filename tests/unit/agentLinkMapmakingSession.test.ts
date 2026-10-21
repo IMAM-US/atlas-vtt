@@ -163,8 +163,10 @@ it('rechecks the whole placement after the write: a moved grid stops Apply befor
   });
   const applying = session.apply([{ key: keyOf(session, 'node-new'), caption: 'team.new' }]);
   await Promise.resolve(); rig.publish(); await applying;
-  expect(session.getSnapshot().status).toMatch(/^Added 1 seat to team\.json, then stopped before adding tokens: The map changed where team\.new would go/);
+  expect(session.getSnapshot().status).toMatch(/^Added 1 seat to team\.json, then stopped before adding tokens: The map changed where team\.new would go.* The seats are listed under Unused seats added by Atlas\.$/);
   expect(Object.values(store.getState().objects.tokens).some((token) => token.initiativeAutoAdd === false)).toBe(false);
+  await settle();
+  expect(session.getSnapshot().set.unused.map((row) => row.subject.seat.nodeId)).toEqual(['node-new']);
   session.dispose();
 });
 
@@ -225,5 +227,26 @@ it('reads every account before writing: another account changed without an event
   expect(memory.files.get(PATH)).toBe(before);
   expect(vi.mocked(memory.app.vault.process)).not.toHaveBeenCalled();
   expect(session.getSnapshot().status).toBe('Not applied: other.json changed since it was read.');
+  session.dispose();
+});
+
+it('says the account changed after the write, and lists nothing as unused it can no longer vouch for', async () => {
+  const { memory, store, session, rig } = await twoAccounts();
+  const read = memory.app.vault.read;
+  let removed = false;
+  memory.app.vault.read = vi.fn(async (file: TFile) => {
+    const text = await read(file);
+    if (file.path === OTHER && !removed && vi.mocked(memory.app.vault.process).mock.calls.length > 0) {
+      removed = true;
+      const account = JSON.parse(memory.files.get(PATH)!) as AccountDocument;
+      memory.files.set(PATH, JSON.stringify({ ...account, subjects: account.subjects.filter((subject) => subject.kind !== 'seat' || subject.seat.nodeId !== 'node-new') }));
+      vaultEvent(memory, PATH);
+    }
+    return text;
+  });
+  const applying = session.apply([{ key: keyOf(session, 'node-new'), caption: 'team.new' }]);
+  await Promise.resolve(); rig.publish(); await applying;
+  expect([removed, appliedTokens(store)]).toEqual([true, 0]);
+  expect(session.getSnapshot().status).toBe('Stopped: team.json changed during Apply and the new seat is no longer in it. No tokens were added to the map.');
   session.dispose();
 });

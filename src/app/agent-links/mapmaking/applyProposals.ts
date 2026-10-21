@@ -48,8 +48,11 @@ export type ApplyOutcome =
   | { kind: 'applied'; tokenIds: string[]; seatsAdded: number }
   | { kind: 'partial'; tokenIds: string[]; seatsAdded: number; reason: string }
   | { kind: 'refused'; reason: string }
-  /** The account write happened, then a guard stopped before any token was published. */
-  | { kind: 'stopped'; seatsAdded: number; reason: string }
+  /**
+   * The account write happened, then a guard stopped before any token was published. With
+   * `accountChanged` the target itself no longer holds what was written, so what it lists now is unknown.
+   */
+  | { kind: 'stopped'; seatsAdded: number; reason: string; accountChanged?: boolean; seatIds?: readonly string[] }
   | { kind: 'indeterminate'; reason: string };
 
 const WAIT_MS = 10_000;
@@ -110,9 +113,9 @@ export async function applyProposals(request: ApplyRequest): Promise<ApplyOutcom
     // Every account, the target too, is qualified before anything is written and held through every later step.
     const receipts = new AccountReceipts(request.app, [...request.bases.filter((basis) => basis.path !== target.path), { path: target.path, sha256: target.sha256 }], request.eventsOf);
     const qualified = await receipts.qualify();
-    if (qualified) return { kind: 'refused', reason: qualified };
+    if (qualified) return { kind: 'refused', reason: qualified.reason };
     const asRead = (seat: ChosenSeat): string | null => seat.proposal.reuse?.id ?? null;
-    const unchanged = (): string | null => sceneReason() ?? receipts.held() ?? request.guard(target.account, asRead);
+    const unchanged = (): string | null => sceneReason() ?? receipts.held()?.reason ?? request.guard(target.account, asRead);
     const first = unchanged();
     if (first) return { kind: 'refused', reason: first };
     const appliedAt = (request.now?.() ?? new Date()).toISOString();
@@ -147,9 +150,12 @@ export async function applyProposals(request: ApplyRequest): Promise<ApplyOutcom
       if (missing) return { kind: 'stopped', seatsAdded: created.size, reason: `${missing.id} is not in the written account.` };
     }
     // Read back again, the target as written or as first read, then publish with no await in between.
-    const requalified = await receipts.qualify();
-    if (requalified) return created.size ? { kind: 'stopped', seatsAdded: created.size, reason: requalified } : { kind: 'refused', reason: requalified };
-    const again = sceneReason() ?? receipts.held() ?? request.guard(account, (seat) => created.get(seat)?.id ?? seat.proposal.reuse?.id ?? null);
+    const lapse = (await receipts.qualify()) ?? receipts.held();
+    if (lapse) {
+      if (!created.size) return { kind: 'refused', reason: lapse.reason };
+      return { kind: 'stopped', seatsAdded: created.size, reason: lapse.reason, accountChanged: lapse.path === null || lapse.path === target.path, seatIds: [...created.values()].map((subject) => subject.id) };
+    }
+    const again = sceneReason() ?? request.guard(account, (seat) => created.get(seat)?.id ?? seat.proposal.reuse?.id ?? null);
     if (again) return created.size ? { kind: 'stopped', seatsAdded: created.size, reason: again } : { kind: 'refused', reason: again };
     const tokens: TokenInput[] = request.seats.map((seat) => ({
       id: tokenId(), kind: 'character', name: seat.caption, x: seat.position.x, y: seat.position.y, imagePath: '', size: 1,

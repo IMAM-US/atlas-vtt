@@ -250,8 +250,8 @@ export class MapmakingSession {
         eventsOf: (path) => this.events.get(path) ?? 0,
       }).catch((error: unknown): ApplyOutcome => ({ kind: 'indeterminate', reason: error instanceof Error ? error.message : 'Apply failed.' }));
       let reload: Reload | undefined;
-      if (outcome.kind === 'indeterminate') {
-        reload = await this.sources.loadAccount(targetPath).then((): Reload => ({ ok: true }), (error: unknown): Reload => ({ ok: false, reason: error instanceof Error ? error.message : 'unreadable' }));
+      if (outcome.kind === 'indeterminate' || (outcome.kind === 'stopped' && outcome.accountChanged)) {
+        reload = await this.sources.loadAccount(targetPath).then((loaded): Reload => ({ ok: true, account: loaded.account }), (error: unknown): Reload => ({ ok: false, reason: error instanceof Error ? error.message : 'unreadable' }));
       }
       // Our own write is read back at once, without waiting for the vault's modify event.
       if (outcome.kind !== 'refused') this.loads?.invalidate(targetPath);
