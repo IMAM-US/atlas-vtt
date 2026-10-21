@@ -25,6 +25,8 @@ export interface ConnectionState {
   since: string | null;
   message: string | null;
   epoch: number;
+  /** Prior snapshots are frozen while new coverage waits for an ordered prefix. */
+  checkingOrder?: boolean;
 }
 export interface LiveBackend {
   /** Process-only: never background-read provider transcript suffixes. */
