@@ -64,6 +64,8 @@ export interface BaseToken {
   isHidden?: boolean;
   /** Whether this token generates a vision source (player character tokens) */
   hasVision?: boolean;
+  /** `false` keeps the initiative tracker from adding this token on its own; it can still be added by hand. */
+  initiativeAutoAdd?: boolean;
   /** Whether to show the nameplate (defaults to false) */
   showNameplate?: boolean;
   /** Rotation in degrees (0-360) */

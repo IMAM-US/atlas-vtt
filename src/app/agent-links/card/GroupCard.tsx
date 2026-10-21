@@ -12,6 +12,7 @@ import { clock } from './timeLabels';
 import { useActionSignal } from './useActionSignal';
 import { useGroupReads, type MemberState } from './useGroupReads';
 import { activityLabel, freshnessLabel } from './freshnessLabels';
+import { useGroupProposals } from '../mapmaking/useGroupProposals';
 
 function memberNow(subject: SeatSubject | null, state: MemberState | undefined): string {
   if (!subject || !state) return 'Refreshing…';
@@ -31,6 +32,7 @@ export function GroupCard({ subject }: { subject: GroupSubject }): React.ReactEl
   const convener = subject.convenerId ? subjectOf(loaded.account, subject.convenerId) : null;
   const reads = useGroupReads(members.flatMap(({ seat }) => seat ? [seat] : []));
   const states = reads.members;
+  const proposals = useGroupProposals(loaded.path, subject.id);
   const [panelTab, setPanelTab] = useState<{ status: string; previous: HerdrViewWitness | null; sourceKey: string } | null>(null);
   const [busy, setBusy] = useState(false);
   /** Derived at action time from the members' resolved views, never from a tab's name. */
@@ -83,6 +85,7 @@ export function GroupCard({ subject }: { subject: GroupSubject }): React.ReactEl
       <RouteRow label="Show group tab" onPress={() => { void showGroupTab(); }} disabledReason={busy ? 'Resolving…' : null} detail={panelTab?.status ?? `only when all ${members.length} members are in one tab`}>
         {panelTab?.previous && <Button variant="secondary" onClick={() => { void returnToPrevious(); }}>Return to previous view · {panelTab.previous.label}</Button>}
       </RouteRow>
+      {proposals && <RouteRow label={`${proposals.count} seat${proposals.count === 1 ? '' : 's'} not on this map`} onPress={proposals.open} detail="in the members' pods; review them in Proposals" />}
       {convener && <RouteRow label={`${convener.caption} ▸`} onPress={() => openSubject(convener.id)} detail="consulting the group goes through the convener" />}
       {subject.earlierParticipation?.map((entry) => <RouteRow key={entry.caption} label="Earlier participation" detail={`${entry.caption} · ${entry.lenses.join(', ')} · ${entry.attribution}`} tone="muted" />)}
     </section>

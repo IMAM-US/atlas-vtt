@@ -52,13 +52,18 @@ import { requestRender } from './pixi/RenderScheduler';
 import { NativeSources } from './agent-links/NativeSources';
 import { LiveLayer } from './agent-links/overlay/LiveLayer';
 import { LiveLinkRenderer } from './agent-links/overlay/LiveLinkRenderer';
+import { MapmakingSession } from './agent-links/mapmaking/MapmakingSession';
+import { ProposalGhostRenderer } from './agent-links/mapmaking/ProposalGhostRenderer';
 
 export class PixiRendererOrchestrator { // Renamed class
   private liveLayer: LiveLayer | null = null;
   private liveLinkRenderer: LiveLinkRenderer | null = null;
+  private proposalGhosts: ProposalGhostRenderer | null = null;
+  private mapmaking: MapmakingSession | null = null;
 
   getLiveLayer(): LiveLayer | null { return this.liveLayer; }
   getLiveLinkRenderer(): LiveLinkRenderer | null { return this.liveLinkRenderer; }
+  getMapmaking(): MapmakingSession | null { return this.mapmaking; }
   private _isDestroyed: boolean = false;
   private pixiAppManager: PixiAppManager;
   private tokenRenderer?: TokenRenderer; // Add TokenRenderer instance
@@ -384,6 +389,9 @@ export class PixiRendererOrchestrator { // Renamed class
     this.liveLinkRenderer = new LiveLinkRenderer({ viewport, store: this.store, eventBus: this.eventBus, layer: this.liveLayer,
       sprites: () => this.tokenRenderer?.getTokenSprites() ?? {}, canvas: this.getCanvasElement() });
     viewport.addChild(this.liveLinkRenderer.container);
+    this.proposalGhosts = new ProposalGhostRenderer(this.store);
+    viewport.addChild(this.proposalGhosts.container);
+    this.mapmaking = new MapmakingSession(this.obsApp, this.store, NativeSources.forApp(this.obsApp), this.proposalGhosts, () => this.getMapRect());
     this.hexLinkInteraction = new HexLinkInteraction({
       viewport,
       store: this.store,
@@ -769,6 +777,7 @@ export class PixiRendererOrchestrator { // Renamed class
     if (this.pinRenderer) layers.push({ layer: this.pinRenderer.getPinContainer(), visible: false });
     if (this.hexLinkRenderer) layers.push({ layer: this.hexLinkRenderer.container, visible: false });
     if (this.liveLinkRenderer) layers.push({ layer: this.liveLinkRenderer.container, visible: false });
+    if (this.proposalGhosts) layers.push({ layer: this.proposalGhosts.container, visible: false });
     const grid = this.gridSystem?.getGridSprite();
     if (grid) layers.push({ layer: grid, visible: settings.showGrid });
     layers.push(...(this.tokenRenderer?.getPlayerViewLayers(settings) ?? []));
@@ -1427,6 +1436,8 @@ export class PixiRendererOrchestrator { // Renamed class
     
     // Remove drawing tool handlers
 
+    this.mapmaking?.dispose(); this.mapmaking = null;
+    this.proposalGhosts?.destroy(); this.proposalGhosts = null;
     this.liveLinkRenderer?.destroy(); this.liveLinkRenderer = null;
     this.liveLayer?.dispose(); this.liveLayer = null;
     this.tokenRenderer?.destroy(); // Destroy TokenRenderer

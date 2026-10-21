@@ -1,0 +1,44 @@
+@use '../../../../styles/tokens' as *;
+@use '../../../../styles/mixins' as *;
+
+.atlas-proposals-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: var(--layer-popover, 40);
+}
+
+.atlas-proposals {
+  --proposals-space: #{$spacing-m};
+  @include atlas-elevated-surface;
+  @include atlas-panel-radius($radius-2xl);
+  position: absolute;
+  top: $spacing-l;
+  right: $spacing-l;
+  width: min(380px, calc(100% - 2 * #{$spacing-l}));
+  max-height: calc(100% - 2 * #{$spacing-l});
+  display: flex;
+  flex-direction: column;
+  pointer-events: auto;
+  color: var(--text-normal);
+  font-size: $font-ui-small;
+  box-sizing: border-box;
+  h3, h4, p { margin: 0; }
+  h3 { font-size: $font-ui-medium; font-weight: $font-weight-semibold; flex: 1; }
+  h4 { font-size: $font-ui-smaller; font-weight: $font-weight-semibold; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); }
+  section { display: flex; flex-direction: column; gap: $spacing-xs; }
+
+  &__header { @include atlas-close-header; display: flex; gap: var(--proposals-space); flex-shrink: 0; }
+  &__content { display: flex; flex-direction: column; gap: var(--proposals-space); padding: var(--proposals-space); min-height: 0; overflow: auto; }
+  &__row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: $spacing-xs;
+    input[type='text'] { @include atlas-text-input; }
+  }
+  &__detail { grid-column: 2 / -1; }
+  &__target { display: flex; align-items: center; gap: $spacing-s; }
+  &__muted { color: var(--text-muted); font-size: $font-ui-smaller; overflow-wrap: anywhere; }
+  &__note { font-weight: $font-weight-medium; overflow-wrap: anywhere; }
+}

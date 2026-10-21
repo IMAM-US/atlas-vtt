@@ -92,7 +92,7 @@ function seatIdentity(raw: Record<string, unknown>, at: string): NativeSeatIdent
   const f = new Fields(raw, at);
   return withUnknown(raw, {
     rigId: f.string('rigId'), nodeId: f.string('nodeId'), logicalId: f.string('logicalId'),
-    ...optional({ rigName: f.optionalString('rigName'), sessionAddress: f.optionalString('sessionAddress') }),
+    ...optional({ rigName: f.optionalString('rigName'), sessionAddress: f.optionalString('sessionAddress'), hostId: f.optionalString('hostId') }),
   });
 }
 

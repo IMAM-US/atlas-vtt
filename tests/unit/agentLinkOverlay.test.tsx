@@ -58,8 +58,17 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
+/** An open Proposals panel with nothing to propose: enough to see where it mounts. */
+const proposalsSnapshot = {
+  open: true, set: { status: { kind: 'blocked', reason: 'Bind a token to an account first.' }, notOnMap: [], notInOpenRig: [], differentSeatNow: [], newInGroupPod: [], cantPropose: [], unused: [], waiting: [], candidateKeys: new Set() },
+  scope: [], targets: [], targetPath: null, reflowNeeded: false, placements: new Map(), busy: false, status: null,
+};
+const proposals = {
+  subscribe: () => () => undefined, getSnapshot: () => proposalsSnapshot,
+  preview: () => undefined, close: () => undefined, chooseTarget: () => undefined,
+};
 const viewport = { toScreen: (x: number, y: number) => ({ x, y }), scale: { x: 1 }, on: () => undefined, off: () => undefined };
-const ui = { app: {}, view: null, pixiApp: null, renderer: { getViewportInstance: () => viewport, getLiveLayer: () => null, getLiveLinkRenderer: () => null } } as unknown as AtlasUIContextValue;
+const ui = { app: {}, view: null, pixiApp: null, renderer: { getViewportInstance: () => viewport, getLiveLayer: () => null, getLiveLinkRenderer: () => null, getMapmaking: () => proposals } } as unknown as AtlasUIContextValue;
 
 function Overlays({ isPlayerView = false, context = ui }: { isPlayerView?: boolean; context?: AtlasUIContextValue }): React.ReactElement {
   return <ViewStoreProvider store={store as unknown as ViewAtlasStore}><AtlasUIContext.Provider value={context}><TooltipProvider>
@@ -110,13 +119,15 @@ describe('the account card overlay', () => {
     expect(cards.mounted).toEqual(['seat:build-a', 'group:panel']);
   });
 
-  it("unmounts in the DM's player preview, cancelling the card's pending action, and never mounts in player view", () => {
+  it("unmounts in the DM's player preview, cancelling the card's pending action, and never mounts in player view; nor does the Proposals panel", () => {
     const { unmount } = render(<Overlays />);
     click('build');
     const pending = cards.signals.get('seat:build-a');
     expect(pending?.aborted).toBe(false);
+    expect(screen.getByRole('region', { name: 'Proposals' })).toBeTruthy();
     act(() => store.setState({ isGMView: false }));
     expect(pending?.aborted).toBe(true);
+    expect(screen.queryByRole('region', { name: 'Proposals' })).toBeNull();
     expect(screen.queryByRole('region', { name: 'Source account' })).toBeNull();
     click('panel', true);
     expect(screen.queryByRole('region', { name: 'Choose a subject' })).toBeNull();
@@ -124,6 +135,7 @@ describe('the account card overlay', () => {
 
     act(() => store.setState({ isGMView: true }));
     render(<Overlays isPlayerView />);
+    expect(screen.queryByRole('region', { name: 'Proposals' })).toBeNull();
     expect(screen.queryByRole('region', { name: 'Choose a subject' })).toBeNull();
     expect(screen.queryByRole('region', { name: 'Source account' })).toBeNull();
     expect(cards.mounted).toEqual(['seat:build-a']);

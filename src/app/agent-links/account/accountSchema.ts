@@ -26,6 +26,8 @@ export interface NativeSeatIdentity {
   logicalId: string;
   rigName?: string;
   sessionAddress?: string;
+  /** The verified OpenRig host the seat was read from; older subjects lack it and compare on source, rig and node. */
+  hostId?: string;
 }
 
 export type ParticipantRuntime = 'claude-code' | 'codex';
