@@ -49,7 +49,7 @@ describe('headlineOf', () => {
   it('ranks differences worst first and names what matched', () => {
     expect(headlineOf(subject, account.capturedAt, null, null, account.work).identity).toBe('Checking… On map 10:00Z');
     expect(headlineOf(subject, account.capturedAt, { state: 'different-seat', message: 'm', observedAt: 't' }, null, account.work))
-      .toMatchObject({ identity: 'A different seat now uses code.builder', tone: 'changed' });
+      .toMatchObject({ identity: 'A different seat now uses team.builder', tone: 'changed' });
     expect(headlineOf(subject, account.capturedAt, { state: 'unavailable', message: 'OpenRig did not answer.', observedAt: 't' }, null, account.work))
       .toMatchObject({ identity: 'Unavailable: OpenRig did not answer.', tone: 'unavailable' });
     expect(headlineOf(subject, account.capturedAt, current('other-conversation'), null, account.work))

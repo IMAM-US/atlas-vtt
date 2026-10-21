@@ -4,14 +4,14 @@ import { nodeRoute, ownedWorkRoute, paneFocusRoute, reviewedFileRoute, screenRou
 
 const local = { key: 'local', openRigEndpoint: 'http://127.0.0.1:1/' };
 const other = { key: 'studio', openRigEndpoint: 'http://10.0.0.2:18764' };
-const seat = { rigId: 'rig one', nodeId: 'node', logicalId: 'code.builder' };
+const seat = { rigId: 'rig one', nodeId: 'node', logicalId: 'team.builder' };
 
 describe('native routes', () => {
   it('copies typed requests that name the source endpoint, so two sources never copy the same text', () => {
     expect(workRoute(local, 'qitem-1').text).toBe('GET http://127.0.0.1:1/api/queue/qitem-1  # source local');
     expect(workRoute(other, 'qitem-1').text).toBe('GET http://10.0.0.2:18764/api/queue/qitem-1  # source studio');
     expect(workRoute(local, 'qitem-1').text).not.toBe(workRoute(other, 'qitem-1').text);
-    expect(screenRoute(other, seat).text).toBe('GET http://10.0.0.2:18764/api/rigs/rig%20one/nodes/code.builder/preview?lines=40  # source studio');
+    expect(screenRoute(other, seat).text).toBe('GET http://10.0.0.2:18764/api/rigs/rig%20one/nodes/team.builder/preview?lines=40  # source studio');
     expect(nodeRoute(local, seat).label).toBe('OpenRig node read · source local');
     expect(ownedWorkRoute(local, 'builder@example').text).toContain('destinationSession=builder%40example');
     expect(workRoute({ key: 'unset', openRigEndpoint: '' }, 'q').text).toBe('GET <endpoint of source unset>/api/queue/q  # source unset');

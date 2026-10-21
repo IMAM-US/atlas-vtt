@@ -193,7 +193,7 @@ export const InitiativeTracker: React.FC = () => {
       if (removedSet.has(tokenId)) return;
 
       const token = tokens[tokenId];
-      if (!token) return;
+      if (!token || token.initiativeAutoAdd === false) return;
 
       const character = token.kind === 'character' ? token : null;
       const hp = (character && readHp(character)) ?? { current: 10, max: 10 };

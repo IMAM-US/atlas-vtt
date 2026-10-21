@@ -56,20 +56,34 @@ export function createInMemoryApp(seed: InMemoryVaultSeed = {}): InMemoryApp {
   const moveFile = async (file: TAbstractFile, newPath: string): Promise<void> => move(file.path, newPath);
 
   for (const path of files.keys()) addParentFolders(path);
+  /** One handle per file, as Obsidian keeps; a deleted or moved path gets a new one. */
+  const handles = new Map<string, TFile>();
+  const fileAt = (path: string): TFile => {
+    let file = handles.get(path);
+    if (!file) {
+      file = new TFile(path);
+      handles.set(path, file);
+    }
+    return file;
+  };
+  const forget = (path: string): void => {
+    files.delete(path);
+    handles.delete(path);
+  };
   /** A folder handle whose `children` list what lies directly inside it, as Obsidian's does. */
   const folderAt = (path: string): TFolder => {
     const folder = new TFolder(path);
     const inside = (candidate: string): boolean => parentOf(candidate) === path;
     folder.children = [
       ...[...folders].filter(inside).map((child) => new TFolder(child)),
-      ...[...files.keys()].filter(inside).map((child) => new TFile(child)),
+      ...[...files.keys()].filter(inside).map(fileAt),
     ];
     return folder;
   };
   /** Deletes a file, or a folder with everything inside it. */
   const removeWithin = (target: string): void => {
     const within = (path: string): boolean => path === target || path.startsWith(`${target}/`);
-    for (const path of [...files.keys()].filter(within)) files.delete(path);
+    for (const path of [...files.keys()].filter(within)) forget(path);
     for (const path of [...folders].filter(within)) folders.delete(path);
   };
   /** Moves a file, or a folder with everything inside it. */
@@ -79,7 +93,7 @@ export function createInMemoryApp(seed: InMemoryVaultSeed = {}): InMemoryApp {
     const within = (path: string): boolean => path === from || path.startsWith(`${from}/`);
     for (const path of [...files.keys()].filter(within)) {
       writeFile(moved(path), files.get(path) ?? '');
-      files.delete(path);
+      forget(path);
     }
     for (const path of [...folders].filter(within)) {
       folders.delete(path);
@@ -102,7 +116,7 @@ export function createInMemoryApp(seed: InMemoryVaultSeed = {}): InMemoryApp {
       read: vi.fn(async (path: string) => files.get(path) ?? ''),
       writeBinary: vi.fn(async (path: string, content: ArrayBuffer) => writeFile(path, new TextDecoder().decode(content))),
       readBinary: vi.fn(async (path: string) => new TextEncoder().encode(files.get(path) ?? '').buffer),
-      remove: vi.fn(async (path: string) => { files.delete(path); }),
+      remove: vi.fn(async (path: string) => { forget(path); }),
       list: vi.fn(async (path: string) => ({
         files: [...files.keys()].filter((candidate) => parentOf(candidate) === path),
         folders: [...folders].filter((candidate) => parentOf(candidate) === path),
@@ -120,14 +134,14 @@ export function createInMemoryApp(seed: InMemoryVaultSeed = {}): InMemoryApp {
     },
     on: vi.fn(() => ({})),
     offref: vi.fn(),
-    getFiles: vi.fn(() => Array.from(files.keys()).filter((path) => !isHiddenPath(path)).map((path) => new TFile(path))),
+    getFiles: vi.fn(() => Array.from(files.keys()).filter((path) => !isHiddenPath(path)).map(fileAt)),
     getAbstractFileByPath: vi.fn((path: string): TAbstractFile | null => {
       if (isHiddenPath(path)) return null;
-      if (files.has(path)) return new TFile(path);
+      if (files.has(path)) return fileAt(path);
       if (folders.has(path)) return folderAt(path);
       return null;
     }),
-    getFileByPath: vi.fn((path: string): TFile | null => (files.has(path) && !isHiddenPath(path) ? new TFile(path) : null)),
+    getFileByPath: vi.fn((path: string): TFile | null => (files.has(path) && !isHiddenPath(path) ? fileAt(path) : null)),
     getFolderByPath: vi.fn((path: string): TFolder | null => (folders.has(path) && !isHiddenPath(path) ? folderAt(path) : null)),
     rename: vi.fn(moveFile),
     createFolder: vi.fn(async (path: string) => {
@@ -148,7 +162,7 @@ export function createInMemoryApp(seed: InMemoryVaultSeed = {}): InMemoryApp {
     createBinary: vi.fn(async (path: string, content: ArrayBuffer) => {
       assertFree(path);
       writeFile(path, new TextDecoder().decode(content));
-      return new TFile(path);
+      return fileAt(path);
     }),
     modifyBinary: vi.fn(async (file: TFile, content: ArrayBuffer) => {
       files.set(file.path, new TextDecoder().decode(content));
@@ -183,7 +197,7 @@ export function createInMemoryApp(seed: InMemoryVaultSeed = {}): InMemoryApp {
     getFileCache: vi.fn(() => null),
     getFirstLinkpathDest: vi.fn((linkpath: string): TFile | null => {
       const path = [...files.keys()].find((candidate) => candidate === linkpath || candidate.endsWith(`/${linkpath}`));
-      return path ? new TFile(path) : null;
+      return path ? fileAt(path) : null;
     }),
   };
 

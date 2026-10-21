@@ -18,6 +18,9 @@ const liveListeners = new Set<() => void>();
 const liveLayer = { isEnabled: (): boolean => liveEnabled, subscribe: (listener: () => void): (() => void) => {
   liveListeners.add(listener); return () => liveListeners.delete(listener);
 }, toggle: (): void => { liveEnabled = !liveEnabled; liveListeners.forEach((listener) => listener()); } };
+let proposalsOpen = false;
+const mapmaking = { getSnapshot: () => ({ open: proposalsOpen }), subscribe: liveLayer.subscribe,
+  toggle: (): void => { proposalsOpen = !proposalsOpen; liveListeners.forEach((listener) => listener()); } };
 
 let capturedShortcuts: Record<string, (event: KeyboardEvent) => void> = {};
 
@@ -66,7 +69,7 @@ vi.mock('../../src/app/react/root/AtlasUIContext', () => ({
       clearAllFog: vi.fn(),
     },
     mapData: null,
-    renderer: { getLiveLayer: () => liveLayer },
+    renderer: { getLiveLayer: () => liveLayer, getMapmaking: () => mapmaking },
   }),
 }));
 
@@ -135,7 +138,7 @@ import { MainToolbar } from '../../src/app/packages/components/MainToolbar';
 
 describe('MainToolbar text tool', () => {
   beforeEach(() => {
-    actualPlayerView = false; liveEnabled = true;
+    actualPlayerView = false; liveEnabled = true; proposalsOpen = false; storeState.isGMView = true;
     capturedShortcuts = {};
     setActiveTool.mockReset();
     setSelectionMode.mockReset();
@@ -194,5 +197,19 @@ describe('MainToolbar text tool', () => {
     actualPlayerView = true;
     render(<MainToolbar viewId="player-live-toggle" />);
     expect(screen.queryByRole('button', { name: 'Live layer' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Proposals' })).toBeNull();
+  });
+
+  it('opens and closes the Proposals panel from a GM-view control that the session view does not show', () => {
+    const { unmount } = render(<MainToolbar viewId="proposals-toggle" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Proposals' }));
+    expect(proposalsOpen).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Proposals' }));
+    expect(proposalsOpen).toBe(false);
+    expect(setActiveTool).not.toHaveBeenCalled(); expect(setGMView).not.toHaveBeenCalled();
+    unmount();
+    storeState.isGMView = false;
+    render(<MainToolbar viewId="proposals-session-view" />);
+    expect(screen.queryByRole('button', { name: 'Proposals' })).toBeNull();
   });
 });
