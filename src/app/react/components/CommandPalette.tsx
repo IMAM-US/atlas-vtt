@@ -173,6 +173,12 @@ export function CommandPalette({ isOpen, onClose, toolbarRef }: CommandPalettePr
   // Position starts as null so the first paint already sits at the measured spot
   const [position, setPosition] = useState<PalettePosition | null>(null);
   const [hasCalculatedInitialPosition, setHasCalculatedInitialPosition] = useState(false);
+  /** The pending switch-on of transitions after the first placement, cleared on close and unmount. */
+  const transitionTimerRef = useRef<number | null>(null);
+  const clearTransitionTimer = useCallback((): void => {
+    if (transitionTimerRef.current !== null) window.clearTimeout(transitionTimerRef.current);
+    transitionTimerRef.current = null;
+  }, []);
 
   // Get sorted widgets for individual widget controls - memoized to prevent unnecessary re-renders
   const sortedWidgets = useMemo(() => {
@@ -407,11 +413,13 @@ export function CommandPalette({ isOpen, onClose, toolbarRef }: CommandPalettePr
 
     if (isInitial) {
       // Small delay to ensure the position is set before enabling transitions
-      window.setTimeout(() => {
+      clearTransitionTimer();
+      transitionTimerRef.current = window.setTimeout(() => {
+        transitionTimerRef.current = null;
         setHasCalculatedInitialPosition(true);
       }, 50); // Allow one frame for position to be applied
     }
-  }, [toolbarRef]);
+  }, [toolbarRef, clearTransitionTimer]);
 
   // Measure before the first paint so the palette never flashes at a stale spot
   // The position is kept after closing so the palette leaves from where it was.
@@ -419,9 +427,13 @@ export function CommandPalette({ isOpen, onClose, toolbarRef }: CommandPalettePr
     if (isOpen) {
       updatePosition(true);
     } else {
+      clearTransitionTimer();
       setHasCalculatedInitialPosition(false);
     }
-  }, [isOpen, updatePosition]);
+  }, [isOpen, updatePosition, clearTransitionTimer]);
+
+  // A timer left running would set state after unmount, or fire after the window is gone.
+  useEffect(() => clearTransitionTimer, [clearTransitionTimer]);
 
   // Reset search and tab when opening
   useEffect(() => {
@@ -462,15 +474,19 @@ export function CommandPalette({ isOpen, onClose, toolbarRef }: CommandPalettePr
   // Focus input when opened
   useEffect(() => {
     if (isOpen && !isTemporarilyHidden) {
+      // Every retry is cleared with the effect, so none runs after the palette closes or unmounts.
+      const retries = new Set<number>();
       const focusInput = (): void => {
         if (inputRef.current) {
           inputRef.current.focus();
           // Retry focus if it didn't take (e.g. animation timing)
-          window.setTimeout(() => {
+          const retry = window.setTimeout(() => {
+            retries.delete(retry);
             if (document.activeElement !== inputRef.current && inputRef.current) {
               inputRef.current.focus();
             }
           }, 10);
+          retries.add(retry);
         }
       };
 
@@ -479,7 +495,7 @@ export function CommandPalette({ isOpen, onClose, toolbarRef }: CommandPalettePr
       focusInput();
 
       // RAF attempt
-      window.requestAnimationFrame(() => {
+      const frameId = window.requestAnimationFrame(() => {
         focusInput();
       });
 
@@ -489,7 +505,9 @@ export function CommandPalette({ isOpen, onClose, toolbarRef }: CommandPalettePr
       }, 50);
 
       return () => {
+        window.cancelAnimationFrame(frameId);
         window.clearTimeout(timeoutId);
+        for (const retry of retries) window.clearTimeout(retry);
       };
     }
   }, [isOpen, isTemporarilyHidden]);
@@ -625,6 +643,7 @@ export function CommandPalette({ isOpen, onClose, toolbarRef }: CommandPalettePr
 
   // Close on click outside
   useEffect(() => {
+    const pending = new Set<number>();
     const handleMouseDown = (e: MouseEvent): void => {
       // Don't handle outside clicks when temporarily hidden
       if (isTemporarilyHidden) {
@@ -632,7 +651,8 @@ export function CommandPalette({ isOpen, onClose, toolbarRef }: CommandPalettePr
       }
 
       // Add a small delay to allow dropdown menus to properly handle their events first
-      window.setTimeout(() => {
+      const timer = window.setTimeout(() => {
+        pending.delete(timer);
         const target = e.target as Element;
         if (target?.closest?.('.atlas-onboarding-overlay')) return;
         // Dialogs opened from a page (naming or deleting a snapshot) sit outside the palette.
@@ -665,6 +685,7 @@ export function CommandPalette({ isOpen, onClose, toolbarRef }: CommandPalettePr
           }
         }
       }, 10); // Small delay to allow menu events to complete
+      pending.add(timer);
     };
 
     if (isOpen && !isTemporarilyHidden) {
@@ -673,6 +694,7 @@ export function CommandPalette({ isOpen, onClose, toolbarRef }: CommandPalettePr
 
     return () => {
       document.removeEventListener("mousedown", handleMouseDown);
+      for (const timer of pending) window.clearTimeout(timer);
     };
   }, [isOpen, isTemporarilyHidden, onClose, toolbarRef, activeSubmenu]);
 

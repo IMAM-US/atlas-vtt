@@ -1,6 +1,7 @@
 import React from 'react';
-import { render } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { act, render } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { trackOwnedTimers } from '../mocks/ownedTimers';
 
 const state = {
   initiativeTrackerOpen: true,
@@ -71,5 +72,18 @@ describe('InitiativeTracker auto-add', () => {
   it('adds map tokens on its own except those marked to stay out, such as seats added by map-making', () => {
     render(<InitiativeTracker />);
     expect(state.addToInitiative.mock.calls.map(([entry]) => (entry as { tokenId: string }).tokenId)).toEqual(['token-1']);
+  });
+});
+
+describe('InitiativeTracker timers', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('clears the hotkey highlight timer when it unmounts', () => {
+    const timers = trackOwnedTimers('InitiativeTracker.tsx');
+    const { unmount } = render(<InitiativeTracker />);
+    act(() => { window.dispatchEvent(new CustomEvent('atlas-initiative-hotkey', { detail: 'next' })); });
+    expect(timers.live().length).toBeGreaterThan(0);
+    unmount();
+    expect(timers.live()).toEqual([]);
   });
 });

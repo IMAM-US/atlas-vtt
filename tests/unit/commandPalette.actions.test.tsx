@@ -19,6 +19,7 @@ vi.mock('../../src/app/react/components/command-palette/WidgetSettingsPanel', ()
 vi.mock('../../src/app/react/components/command-palette/LocalPlayerViewSettingsPanel', () => ({ LocalPlayerViewSettingsPanel: () => null }));
 
 import { CommandPalette } from '../../src/app/react/components/CommandPalette';
+import { trackOwnedTimers } from '../mocks/ownedTimers';
 
 describe('Atlas search actions', () => {
   const originalScrollIntoView = Object.getOwnPropertyDescriptor(Element.prototype, 'scrollIntoView');
@@ -31,6 +32,22 @@ describe('Atlas search actions', () => {
     vi.restoreAllMocks();
     if (originalScrollIntoView) Object.defineProperty(Element.prototype, 'scrollIntoView', originalScrollIntoView);
     else Reflect.deleteProperty(Element.prototype, 'scrollIntoView');
+  });
+
+  it('leaves no timer or frame of its own running once it closes or unmounts', () => {
+    const timers = trackOwnedTimers('CommandPalette.tsx');
+    const store = create(() => ({}));
+    const palette = (isOpen: boolean): React.ReactElement => <ViewStoreProvider store={store}><CommandPalette isOpen={isOpen} onClose={vi.fn()} /></ViewStoreProvider>;
+    const { rerender, unmount } = render(palette(true));
+    // Its transition switch-on, focus retries, the focus frame and an outside click's delayed check.
+    fireEvent.mouseDown(document.body);
+    expect(timers.live().length).toBeGreaterThan(0);
+    rerender(palette(false));
+    expect(timers.live()).toEqual([]);
+    rerender(palette(true));
+    fireEvent.mouseDown(document.body);
+    unmount();
+    expect(timers.live()).toEqual([]);
   });
 
   it.each([
