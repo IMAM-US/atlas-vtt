@@ -35,21 +35,25 @@ const entryKey = (entry: RecordEntry): string => `${entry.offset}#${entry.ordina
 type Scroll = { to: 'newest' } | { to: 'anchor'; key: string; top: number };
 
 /**
- * The next *Load earlier*: show more of the range already read, then read further back, and
- * once a cap is reached move back a page, dropping the newest one. Null when nothing is earlier.
+ * The next *Load earlier*: show more of the range already read, then read further back while
+ * the page has room, and once a cap is reached move back a page, dropping the newest one.
+ * Room is counted in entries actually shown, so a range of oversized or unshown lines keeps
+ * reading back instead of filling the cap with nothing. Null when nothing is earlier.
  */
 function earlier(page: RecordPage, current: ReadRequest): ReadRequest | null {
-  const atEntryCap = current.entryLimit >= RECORD_ENTRY_MAX;
-  const entryLimit = Math.min(current.entryLimit + RECORD_ENTRY_STEP, RECORD_ENTRY_MAX);
-  if (!atEntryCap && page.parsedEntries > page.entries.length) return { ...current, entryLimit };
-  if (!atEntryCap && !page.complete && current.windowBytes < RECORD_WINDOW_MAX) {
-    return { ...current, entryLimit, windowBytes: Math.min(current.windowBytes + RECORD_WINDOW_STEP, RECORD_WINDOW_MAX) };
+  const shown = page.entries.length;
+  const room = Math.min(shown + RECORD_ENTRY_STEP, RECORD_ENTRY_MAX);
+  if (shown < RECORD_ENTRY_MAX && page.parsedEntries > shown) return { ...current, entryLimit: room };
+  if (shown < RECORD_ENTRY_MAX && !page.complete && current.windowBytes < RECORD_WINDOW_MAX) {
+    return { ...current, entryLimit: room, windowBytes: Math.min(current.windowBytes + RECORD_WINDOW_STEP, RECORD_WINDOW_MAX) };
   }
-  if (page.complete && page.parsedEntries <= page.entries.length) return null;
+  if (page.complete && page.parsedEntries <= shown) return null;
   // The new page ends just before the first dropped entry, even inside a line holding many.
-  const first = page.entries[page.entries.length - Math.min(RECORD_ENTRY_STEP, Math.max(page.entries.length - 1, 0))] ?? page.entries[0];
+  const first = shown > 1 ? page.entries[shown - Math.min(RECORD_ENTRY_STEP, shown - 1)] : page.entries[0];
   if (first) return { ...current, end: first.lineEnd, before: { offset: first.offset, ordinal: first.ordinal } };
-  return page.firstLineOffset > 0 && page.firstLineOffset < page.end ? { ...current, end: page.firstLineOffset, before: null } : null;
+  // Nothing shown: end before the range's first whole line, or, inside one line longer than the range, where the range began.
+  const end = page.firstLineOffset < page.end ? page.firstLineOffset : page.start;
+  return end > 0 && end < page.end ? { ...current, end, before: null } : null;
 }
 
 /** What the range covers: a total only when the read started at the record's first byte. */
