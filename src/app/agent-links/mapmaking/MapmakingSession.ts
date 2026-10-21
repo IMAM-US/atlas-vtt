@@ -5,7 +5,7 @@ import type { ViewAtlasState, ViewAtlasStore } from '../../storeFactory';
 import { getHistoryStore } from '../../stores/history';
 import type { NativeSources } from '../NativeSources';
 import type { AccountDocument } from '../account/accountSchema';
-import { accountLayout, accountUnchanged, textSha256 } from '../account/accountWriter';
+import { accountLayout, textSha256 } from '../account/accountWriter';
 import { freshnessLabel } from '../card/freshnessLabels';
 import { AccountLoads } from '../overlay/AccountLoads';
 import { appearanceReferences, type AppearanceReference } from '../overlay/appearanceBindings';
@@ -49,6 +49,8 @@ export class MapmakingSession {
   private readonly listeners = new Set<() => void>();
   private readonly cleanups: (() => void)[] = [];
   private readonly dismissed = new Map<string, string>();
+  /** Vault events seen per path, which tell Apply an account must be read again. */
+  private readonly events = new Map<string, number>();
   private chosenTarget: string | null = null;
   private derived: Derived | null = null;
   private nodes: ReturnType<typeof qualifiedNodes> = [];
@@ -81,8 +83,11 @@ export class MapmakingSession {
       if (applied?.removed && now.futureStates.length > before.futureStates.length) this.say(undoLine(applied.tokenIds.length, applied.seats, applied.path));
       if (applied) applied.removed = false;
     }));
-    // AccountLoads acts only on the accounts this scene uses and reports its own change.
-    const invalidate = (path: string): void => this.loads?.invalidate(path);
+    // AccountLoads acts only on the accounts this scene uses and reports its own change; Apply counts the events.
+    const invalidate = (path: string): void => {
+      this.events.set(path, (this.events.get(path) ?? 0) + 1);
+      this.loads?.invalidate(path);
+    };
     const refs = [
       app.vault.on('modify', (file) => invalidate(file.path)),
       app.vault.on('create', (file) => invalidate(file.path)),
@@ -217,6 +222,8 @@ export class MapmakingSession {
     });
     if (!seats.length) return;
     const basis = JSON.stringify([loaded.path, loaded.sha256]), layout = this.layout?.basis === basis ? this.layout.state : 'checking';
+    const unread = [...derived.paths].find((path) => !this.loads?.get(path)?.value);
+    if (unread) { this.say(`Not applied: ${fileName(unread)} is not read yet.`); return; }
     if (seats.some((seat) => !seat.proposal.reuse)) {
       if (layout === 'checking') { this.say(`Not applied: still checking the layout of ${fileName(targetPath)}.`); return; }
       if (layout === 'reformat' && consent !== basis) { this.say(`Not applied: Apply would reformat ${fileName(targetPath)}; confirm it first.`); return; }
@@ -239,14 +246,8 @@ export class MapmakingSession {
         settingsCurrent: () => [...revisions].every(([source, revision]) => this.sources.live.getRevision(source) === revision),
         sceneCurrent: () => this.sceneEpoch === epoch && this.opened,
         guard: (account, expected) => this.basesHeld(bases, targetPath) ?? this.guard(seats, targetPath, account, expected),
-        accountsCurrent: async () => {
-          for (const [path, sha256] of bases) {
-            if (path === targetPath) continue;
-            const reason = sha256 ? await accountUnchanged(this.app, path, sha256) : `${fileName(path)} was not read.`;
-            if (reason) return reason;
-          }
-          return null;
-        },
+        bases: [...bases].flatMap(([path, sha256]) => (sha256 ? [{ path, sha256 }] : [])),
+        eventsOf: (path) => this.events.get(path) ?? 0,
       }).catch((error: unknown): ApplyOutcome => ({ kind: 'indeterminate', reason: error instanceof Error ? error.message : 'Apply failed.' }));
       let reload: Reload | undefined;
       if (outcome.kind === 'indeterminate') {

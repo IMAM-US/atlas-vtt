@@ -94,16 +94,24 @@ export async function writeAccount(
   return { kind: 'confirmed', text, sha256: textSha256(text) };
 }
 
-/** Whether the account at `path` still holds the text whose SHA-256 was read; a reason when it doesn't or can't be read. */
-export async function accountUnchanged(app: App, path: string, expectedSha256: string): Promise<string | null> {
+/**
+ * Reads the account at `path` and confirms it is still the qualified file holding the text whose
+ * SHA-256 was read: the same TFile (`expected`, when one was qualified before) at that path before
+ * and after the read. Equal bytes in a replacement are not the same file.
+ */
+export async function readAccountReceipt(app: App, path: string, expectedSha256: string, expected?: TFile): Promise<{ file: TFile } | string> {
   const name = path.split('/').pop() ?? path;
   const file = app.vault.getAbstractFileByPath(path);
   if (!(file instanceof TFile)) return `${name} is no longer in the vault.`;
+  if (expected && file !== expected) return `${name} was moved or replaced.`;
+  let text: string;
   try {
-    return textSha256(await app.vault.read(file)) === expectedSha256 ? null : `${name} changed since it was read.`;
+    text = await app.vault.read(file);
   } catch (error) {
     return `${name} could not be read${error instanceof Error ? `: ${error.message}` : ''}.`;
   }
+  if (file.path !== path || app.vault.getAbstractFileByPath(path) !== file) return `${name} was moved or replaced.`;
+  return textSha256(text) === expectedSha256 ? { file } : `${name} changed since it was read.`;
 }
 
 const exclusions = new Map<string, Promise<unknown>>();

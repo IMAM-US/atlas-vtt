@@ -13,6 +13,7 @@ import { exampleAccount } from '../fixtures/exampleAccount';
 
 const PATH = 'atlas-vtt/collections/Example/accounts/team.json';
 const SCENE = 'atlas-vtt/collections/Example/scenes/Example.atlasmap';
+const OTHER = 'atlas-vtt/collections/Example/accounts/other.json';
 const node = (nodeId: string, logicalId: string): InventoryNode => ({ sourceKey: 'local', hostId: 'host-one', rigId: 'rig-one', nodeId, logicalId, podId: 'pod-team', rigName: 'example' });
 const connection: ConnectionState = { status: 'connected', since: '2026-01-01T10:00:00Z', message: null, epoch: 3 };
 
@@ -39,7 +40,7 @@ function setup(): { request: (seats: ChosenSeat[], extra?: Partial<ApplyRequest>
   const inventory = inventoryHandle();
   const request = (seats: ChosenSeat[], extra: Partial<ApplyRequest> = {}): ApplyRequest => ({
     app, store, scenePath: SCENE, sceneName: 'Example', target: { path: PATH, sha256: textSha256(text), account: exampleAccount() }, seats,
-    inventories: [{ sourceKey: 'local', rigId: 'rig-one', handle: inventory.handle, connection: () => connection }], settingsCurrent: () => true, sceneCurrent: () => true, accountsCurrent: async () => null, guard: () => null,
+    inventories: [{ sourceKey: 'local', rigId: 'rig-one', handle: inventory.handle, connection: () => connection }], settingsCurrent: () => true, sceneCurrent: () => true, bases: [], eventsOf: () => 0, guard: () => null,
     signal: new AbortController().signal, now: () => new Date('2026-01-01T10:06:00Z'), waitMs: 200, ...extra,
   });
   return { request, app, files, store, inventory };
@@ -163,10 +164,27 @@ describe('applying proposals', () => {
     expect(queued.files.get(PATH)).toBe(before);
   });
 
-  it('stops before publishing when another account the scene uses changed meanwhile', async () => {
+  it('qualifies every account the scene uses before writing, so a changed one writes nothing', async () => {
     const context = setup();
-    const outcome = await run(context, context.request([addNew()], { accountsCurrent: async () => 'other.json changed since it was read.' }));
-    expect(outcome).toEqual({ kind: 'stopped', seatsAdded: 1, reason: 'other.json changed since it was read.' });
-    expect(Object.keys(context.store.getState().objects.tokens)).toHaveLength(0);
+    const before = context.files.get(PATH);
+    context.files.set(OTHER, '{"changed": true}');
+    const outcome = await run(context, context.request([addNew()], { bases: [{ path: OTHER, sha256: textSha256('{"as": "read"}') }] }));
+    expect(outcome).toEqual({ kind: 'refused', reason: 'other.json changed since it was read.' });
+    expect([context.files.get(PATH), vi.mocked(context.app.vault.process).mock.calls.length]).toEqual([before, 0]);
+  });
+
+  it('reads the accounts again when Atlas hears of a change during a read, and stops when they keep changing', async () => {
+    const once = setup();
+    let events = 0, reads = 0;
+    const read = once.app.vault.read;
+    once.app.vault.read = vi.fn(async (file: TFile) => { const text = await read(file); if (++reads === 2) events++; return text; });
+    // The second read is the read-back after the write: its event (the write's own) only makes Atlas read again.
+    expect(await run(once, once.request([addNew()], { eventsOf: () => events }))).toMatchObject({ kind: 'applied', seatsAdded: 1 });
+    const churning = setup();
+    let ticks = 0;
+    const churn = churning.app.vault.read;
+    churning.app.vault.read = vi.fn(async (file: TFile) => { const text = await churn(file); ticks++; return text; });
+    expect(await run(churning, churning.request([reuseLead()], { eventsOf: () => ticks }))).toEqual({ kind: 'refused', reason: 'The accounts this map uses kept changing during Apply.' });
+    expect(Object.keys(churning.store.getState().objects.tokens)).toHaveLength(0);
   });
 });

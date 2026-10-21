@@ -5,7 +5,8 @@ import type { TokenInput } from '../../storeFactory';
 import { runHistoryTransaction } from '../../stores/history';
 import type { AccountDocument, SeatSubject } from '../account/accountSchema';
 import { validateAccount } from '../account/accountValidation';
-import { accountUnchanged, withAccountExclusion, writeAccount } from '../account/accountWriter';
+import { withAccountExclusion, writeAccount } from '../account/accountWriter';
+import { AccountReceipts, type AccountBasis } from './accountReceipts';
 import type { InventoryRead } from '../live/OpenRigLive';
 import type { ConnectionState, Observation, ObservationHandle } from '../live/types';
 import { newSeatId, newSeatSubject, provenanceSource, withNewSeats } from './newSeats';
@@ -28,8 +29,10 @@ export interface ApplyRequest {
   settingsCurrent: () => boolean;
   /** False once the scene was switched or reloaded since the panel showed these proposals. */
   sceneCurrent: () => boolean;
-  /** Reads every other account the scene references; a reason when one no longer holds the text the proposals were made from. */
-  accountsCurrent: () => Promise<string | null>;
+  /** Every other account the scene references, as the proposals read it. */
+  bases: readonly AccountBasis[];
+  /** How many vault events Atlas has seen for a path; any change since an account was qualified means it must be read again. */
+  eventsOf: (path: string) => number;
   /**
    * Re-derives, from the current scene, every referenced account and the live inventory, whether
    * each chosen seat is still unrepresented, still resolves to `expected(seat)` in the target
@@ -104,8 +107,12 @@ export async function applyProposals(request: ApplyRequest): Promise<ApplyOutcom
       if (state.mapPath !== request.scenePath || state.isMapLoading || !request.sceneCurrent()) return 'The scene changed.';
       return request.settingsCurrent() ? null : 'The source settings changed.';
     };
+    // Every account, the target too, is qualified before anything is written and held through every later step.
+    const receipts = new AccountReceipts(request.app, [...request.bases.filter((basis) => basis.path !== target.path), { path: target.path, sha256: target.sha256 }], request.eventsOf);
+    const qualified = await receipts.qualify();
+    if (qualified) return { kind: 'refused', reason: qualified };
     const asRead = (seat: ChosenSeat): string | null => seat.proposal.reuse?.id ?? null;
-    const unchanged = (): string | null => sceneReason() ?? request.guard(target.account, asRead);
+    const unchanged = (): string | null => sceneReason() ?? receipts.held() ?? request.guard(target.account, asRead);
     const first = unchanged();
     if (first) return { kind: 'refused', reason: first };
     const appliedAt = (request.now?.() ?? new Date()).toISOString();
@@ -131,20 +138,18 @@ export async function applyProposals(request: ApplyRequest): Promise<ApplyOutcom
       const outcome = await writeAccount(request.app, target.path, target.sha256, (current) => groups.reduce((next, group) => withNewSeats(group.source, group.subjects)(next), current), unchanged);
       if (outcome.kind === 'refused') return { kind: 'refused', reason: outcome.reason };
       if (outcome.kind === 'indeterminate') return { kind: 'indeterminate', reason: outcome.reason };
+      receipts.wrote(target.path, outcome.sha256);
       account = validateAccount(JSON.parse(outcome.text) as unknown);
       const missing = [...created.values()].find((subject) => {
         const written = account.subjects.find((entry) => entry.id === subject.id);
         return written?.kind !== 'seat' || !seatMatches(written, { sourceKey: subject.sourceKey, hostId: subject.seat.hostId!, rigId: subject.seat.rigId, nodeId: subject.seat.nodeId });
       });
       if (missing) return { kind: 'stopped', seatsAdded: created.size, reason: `${missing.id} is not in the written account.` };
-    } else {
-      // Nothing to write, but the reused subjects must still be in the account as it is now.
-      const changed = await accountUnchanged(request.app, target.path, target.sha256);
-      if (changed) return { kind: 'refused', reason: changed };
     }
-    const others = await request.accountsCurrent();
-    if (others) return created.size ? { kind: 'stopped', seatsAdded: created.size, reason: others } : { kind: 'refused', reason: others };
-    const again = sceneReason() ?? request.guard(account, (seat) => created.get(seat)?.id ?? seat.proposal.reuse?.id ?? null);
+    // Read back again, the target as written or as first read, then publish with no await in between.
+    const requalified = await receipts.qualify();
+    if (requalified) return created.size ? { kind: 'stopped', seatsAdded: created.size, reason: requalified } : { kind: 'refused', reason: requalified };
+    const again = sceneReason() ?? receipts.held() ?? request.guard(account, (seat) => created.get(seat)?.id ?? seat.proposal.reuse?.id ?? null);
     if (again) return created.size ? { kind: 'stopped', seatsAdded: created.size, reason: again } : { kind: 'refused', reason: again };
     const tokens: TokenInput[] = request.seats.map((seat) => ({
       id: tokenId(), kind: 'character', name: seat.caption, x: seat.position.x, y: seat.position.y, imagePath: '', size: 1,

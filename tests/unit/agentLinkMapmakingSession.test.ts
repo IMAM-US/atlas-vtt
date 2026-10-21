@@ -179,3 +179,51 @@ it('refuses a reuse-only Apply when the account no longer holds the reused subje
   expect(Object.values(store.getState().objects.tokens).some((token) => token.initiativeAutoAdd === false)).toBe(false);
   session.dispose();
 });
+
+const OTHER = 'atlas-vtt/collections/Example/accounts/other.json';
+/** A scene whose builder is bound through a second account, so Apply depends on both. */
+async function twoAccounts(): Promise<Awaited<ReturnType<typeof setup>>> {
+  const context = await setup();
+  context.memory.files.set(OTHER, context.memory.files.get(PATH)!);
+  const id = context.store.getState().addToken({ imagePath: 'art/example.webp', x: 595, y: 595, size: 1 });
+  context.store.getState().updateToken(id, { sourceReference: { accountPath: OTHER, subjectId: 'seat:builder' } });
+  context.session.chooseTarget(PATH); context.session.open(); await context.settle();
+  return context;
+}
+const vaultEvent = (memory: Awaited<ReturnType<typeof setup>>['memory'], path: string): void => {
+  for (const [event, callback] of vi.mocked(memory.app.vault.on).mock.calls) if (event === 'modify') (callback as (file: TFile) => void)(memory.app.vault.getAbstractFileByPath(path) as TFile);
+};
+const appliedTokens = (store: Awaited<ReturnType<typeof setup>>['store']): number => Object.values(store.getState().objects.tokens).filter((token) => token.initiativeAutoAdd === false).length;
+
+it('holds every account through Apply: a target edit Atlas hears of during another account\'s read publishes nothing', async () => {
+  const { memory, store, session, rig } = await twoAccounts();
+  const read = memory.app.vault.read;
+  let edited = false;
+  memory.app.vault.read = vi.fn(async (file: TFile) => {
+    const text = await read(file);
+    if (file.path === OTHER && !edited) {
+      edited = true;
+      const account = JSON.parse(memory.files.get(PATH)!) as AccountDocument;
+      memory.files.set(PATH, JSON.stringify({ ...account, subjects: account.subjects.filter((subject) => subject.id !== 'seat:lead') }));
+      vaultEvent(memory, PATH);
+    }
+    return text;
+  });
+  const applying = session.apply([{ key: keyOf(session, 'node-lead'), caption: 'team.lead' }]);
+  await Promise.resolve(); rig.publish(); await applying;
+  expect([edited, appliedTokens(store)]).toEqual([true, 0]);
+  expect(session.getSnapshot().status).toBe('Not applied: team.json changed since it was read.');
+  session.dispose();
+});
+
+it('reads every account before writing: another account changed without an event leaves the target untouched', async () => {
+  const { memory, session, rig } = await twoAccounts();
+  const before = memory.files.get(PATH);
+  memory.files.set(OTHER, `${memory.files.get(OTHER)!}\n`);
+  const applying = session.apply([{ key: keyOf(session, 'node-new'), caption: 'team.new' }]);
+  await Promise.resolve(); rig.publish(); await applying;
+  expect(memory.files.get(PATH)).toBe(before);
+  expect(vi.mocked(memory.app.vault.process)).not.toHaveBeenCalled();
+  expect(session.getSnapshot().status).toBe('Not applied: other.json changed since it was read.');
+  session.dispose();
+});

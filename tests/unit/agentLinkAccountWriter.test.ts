@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { TFile } from 'obsidian';
-import { accountLayout, textSha256, withAccountExclusion, writeAccount } from '../../src/app/agent-links/account/accountWriter';
+import { accountLayout, readAccountReceipt, textSha256, withAccountExclusion, writeAccount } from '../../src/app/agent-links/account/accountWriter';
 import type { AccountDocument } from '../../src/app/agent-links/account/accountSchema';
 import { createInMemoryApp } from '../mocks/inMemoryVault';
 import { exampleAccount } from '../fixtures/exampleAccount';
@@ -78,6 +78,24 @@ describe('guarded account writes', () => {
       await replaced.app.vault.adapter.write(PATH, written);
     });
     await expect(writeAccount(replaced.app, PATH, textSha256(before), addSource)).resolves.toEqual({ kind: 'indeterminate', reason: 'team.json was moved or replaced during the write.' });
+  });
+
+  it('reads an account back as the same file, so identical bytes in a replacement are not a receipt', async () => {
+    const before = text();
+    const memory = createInMemoryApp({ files: { [PATH]: before } });
+    const file = memory.app.vault.getAbstractFileByPath(PATH) as TFile;
+    await expect(readAccountReceipt(memory.app, PATH, textSha256(before))).resolves.toEqual({ file });
+    await expect(readAccountReceipt(memory.app, PATH, textSha256('other'))).resolves.toBe('team.json changed since it was read.');
+    const read = memory.app.vault.read;
+    memory.app.vault.read = vi.fn(async (handle: TFile) => {
+      const current = await read(handle);
+      await memory.app.vault.adapter.remove(PATH);
+      await memory.app.vault.adapter.write(PATH, current);
+      return current;
+    });
+    await expect(readAccountReceipt(memory.app, PATH, textSha256(before))).resolves.toBe('team.json was moved or replaced.');
+    memory.app.vault.read = read;
+    await expect(readAccountReceipt(memory.app, PATH, textSha256(before), file)).resolves.toBe('team.json was moved or replaced.');
   });
 
   it('checks its precondition inside the write, writing nothing when it no longer holds', async () => {
