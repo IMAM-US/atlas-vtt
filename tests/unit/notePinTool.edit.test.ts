@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { EventEmitter } from 'events';
 import { NotePinTool } from '../../src/app/tools/NotePinTool';
 import { createViewAtlasStore } from '../../src/app/storeFactory';
@@ -65,5 +65,23 @@ describe('NotePinTool editing a pin', () => {
     await settle();
 
     expect(store.getState().objects.pins).toBe(pinsBefore);
+  });
+});
+
+describe('NotePinTool closing its dropdown', () => {
+  afterEach(() => {
+    cleanup?.();
+    cleanup = null;
+    vi.restoreAllMocks();
+  });
+
+  it('never starts listening for outside clicks once the dropdown closed before the listener was due', async () => {
+    const { store, pinId } = setup('pin');
+    const listen = vi.spyOn(document, 'addEventListener');
+    await editPin(store, pinId);
+    cleanup?.();
+    cleanup = null;
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    expect(listen.mock.calls.filter(([type]) => type === 'mousedown')).toHaveLength(0);
   });
 });
