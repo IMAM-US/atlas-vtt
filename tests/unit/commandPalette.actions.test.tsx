@@ -1,5 +1,5 @@
 import React from 'react';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { create } from 'zustand';
 import { ViewStoreProvider } from '../../src/app/react/ViewStoreContext';
@@ -53,6 +53,24 @@ describe('Atlas search actions', () => {
       rerender(palette(second, false));
       vi.advanceTimersByTime(10);
       expect(second).toHaveBeenCalledTimes(1);
+    } finally {
+      toolbar.remove();
+      vi.useRealTimers();
+    }
+  });
+
+  it('drops a pending outside-click check when grid alignment hides the palette', () => {
+    vi.useFakeTimers();
+    const toolbar = document.body.appendChild(document.createElement('div'));
+    try {
+      const store = create(() => ({ isGridAlignmentOpen: false }));
+      const onClose = vi.fn();
+      render(<ViewStoreProvider store={store}><CommandPalette isOpen onClose={onClose} toolbarRef={{ current: toolbar }} /></ViewStoreProvider>);
+      fireEvent.click(screen.getByRole('button', { name: 'Grid settings' }));
+      fireEvent.mouseDown(document.body);
+      act(() => store.setState({ isGridAlignmentOpen: true }));
+      vi.advanceTimersByTime(15);
+      expect(onClose).not.toHaveBeenCalled();
     } finally {
       toolbar.remove();
       vi.useRealTimers();

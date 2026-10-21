@@ -643,7 +643,7 @@ export function CommandPalette({ isOpen, onClose, toolbarRef }: CommandPalettePr
 
   // Close on click outside. The toolbar passes a new onClose on every render, so the listener's
   // effect re-runs often: a pending check outlives those re-runs and reads the current handlers when
-  // it runs, but never a close or an unmount.
+  // it runs, but never a close, a temporary hide or an unmount.
   const outsideClickRef = useRef({ onClose, toolbarRef, activeSubmenu });
   useLayoutEffect(() => {
     outsideClickRef.current = { onClose, toolbarRef, activeSubmenu };
@@ -654,8 +654,8 @@ export function CommandPalette({ isOpen, onClose, toolbarRef }: CommandPalettePr
     pendingOutsideChecksRef.current.clear();
   }, []);
   useEffect(() => {
-    if (!isOpen) clearOutsideChecks();
-  }, [isOpen, clearOutsideChecks]);
+    if (!isOpen || isTemporarilyHidden) clearOutsideChecks();
+  }, [isOpen, isTemporarilyHidden, clearOutsideChecks]);
   useEffect(() => clearOutsideChecks, [clearOutsideChecks]);
 
   useEffect(() => {
