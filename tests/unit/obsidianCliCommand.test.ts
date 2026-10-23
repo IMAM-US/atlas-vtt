@@ -10,6 +10,7 @@ const {
   buildObsidianArgs,
   parseWrapperArgs,
   resolveObsidianCliBinary,
+  runObsidianCliCommand,
 } = require('../../scripts/obsidian-cli.js');
 
 const WRAPPER = require.resolve('../../scripts/obsidian-cli.js');
@@ -115,26 +116,33 @@ describe('obsidian cli command helper', () => {
 });
 
 describe('obsidian cli wrapper', () => {
-  /** Runs the wrapper against a stand-in binary that prints its argv and writes to stderr. */
-  function runWrapper(argv: string[], exitCode = 0): { status: number | null; stdout: string; stderr: string } {
+  /** Calls `run` with the path of a stand-in binary whose body is `lines`. */
+  function withStandInBinary<T>(lines: string[], run: (binary: string) => T): T {
     const dir = mkdtempSync(join(tmpdir(), 'obsidian-cli-test-'));
     try {
       const binary = join(dir, 'obsidian');
-      writeFileSync(binary, [
-        `#!${process.execPath}`,
-        'process.stdout.write(JSON.stringify(process.argv.slice(2)));',
-        "process.stderr.write('binary warning\\n');",
-        `process.exitCode = ${exitCode};`,
-      ].join('\n'));
+      writeFileSync(binary, [`#!${process.execPath}`, ...lines].join('\n'));
       chmodSync(binary, 0o755);
+      return run(binary);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }
+
+  /** Runs the wrapper against a stand-in binary that prints its argv and writes to stderr. */
+  function runWrapper(argv: string[], exitCode = 0): { status: number | null; stdout: string; stderr: string } {
+    const lines = [
+      'process.stdout.write(JSON.stringify(process.argv.slice(2)));',
+      "process.stderr.write('binary warning\\n');",
+      `process.exitCode = ${exitCode};`,
+    ];
+    return withStandInBinary(lines, (binary) => {
       const result = spawnSync(process.execPath, [WRAPPER, '--obsidian-bin', binary, ...argv], {
         encoding: 'utf8',
         env: { ...process.env, OBSIDIAN_CLI_VAULT: '' },
       });
       return { status: result.status, stdout: result.stdout, stderr: result.stderr };
-    } finally {
-      rmSync(dir, { recursive: true, force: true });
-    }
+    });
   }
 
   it.each([
@@ -155,5 +163,31 @@ describe('obsidian cli wrapper', () => {
     expect(failed.status).toBe(1);
     expect(failed.stderr).toContain('binary warning\n');
     expect(failed.stderr).toContain('exited with 3');
+  });
+
+  it('keeps the spawn error and everything captured when the output overflows the buffer', () => {
+    const lines = [
+      "process.stderr.write('diagnostic before overflow\\n');",
+      "process.stdout.write('x'.repeat(2 * 1024 * 1024));",
+    ];
+    const forwarded: string[] = [];
+    const error = withStandInBinary(lines, (binary) => {
+      try {
+        runObsidianCliCommand('eval', ['code=1'], {
+          obsidianBin: binary,
+          env: {},
+          stderr: { write: (chunk: string) => forwarded.push(chunk) },
+        });
+      } catch (thrown) {
+        return thrown as NodeJS.ErrnoException & { signal: string; stdout: string; stderr: string };
+      }
+      throw new Error('the overflowing call did not throw');
+    });
+
+    expect(error.code).toBe('ENOBUFS');
+    expect(error.signal).toBe('SIGTERM');
+    expect(error.stdout.length).toBeGreaterThan(0);
+    expect(error.stderr).toBe('diagnostic before overflow\n');
+    expect(forwarded).toEqual(['diagnostic before overflow\n']);
   });
 });

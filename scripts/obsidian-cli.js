@@ -158,18 +158,20 @@ function runObsidianCliCommand(command, args = [], deps = {}) {
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
   });
-  if (result.error) {
-    throw result.error;
-  }
-
-  // Forward stderr whatever the exit status, so nothing the binary reports is lost.
+  // Forward stderr whatever the outcome, so nothing the binary reports is lost.
   if (result.stderr) {
     (deps.stderr || process.stderr).write(result.stderr);
   }
 
-  if (result.status !== 0) {
-    const error = new Error(`${binary} exited with ${result.signal || result.status}`);
-    Object.assign(error, { status: result.status, stdout: result.stdout, stderr: result.stderr });
+  // A spawn error (ENOENT, or ENOBUFS once output passes maxBuffer) keeps its code.
+  if (result.error || result.status !== 0) {
+    const error = result.error || new Error(`${binary} exited with ${result.signal || result.status}`);
+    Object.assign(error, {
+      status: result.status,
+      signal: result.signal,
+      stdout: result.stdout,
+      stderr: result.stderr,
+    });
     throw error;
   }
 
