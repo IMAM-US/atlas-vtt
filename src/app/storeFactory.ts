@@ -327,11 +327,14 @@ export const DEFAULT_TOKEN_SETTINGS: Readonly<ViewAtlasState['tokenSettings']> =
   tokenRingSize: 1,
 };
 
-const createInitialState = (): Pick<ViewAtlasState, 'schema' | 'version' | 'mapPath' | 'background' | 'grid' | 'objects' | 'camera' | 'persistenceEnabled' | 'widgetSettings' | 'widgetValues' | 'dmNotePath' | 'tokenSettings' | 'initiative' | 'diceLog' | 'pinnedNotePreviews' | 'lootRoller'> => ({
-  schema: ATLAS_SCHEMA,
-  version: ATLAS_VERSION,
-  mapPath: null,
-  background: null,
+type SceneState = Pick<ViewAtlasState, 'grid' | 'objects' | 'camera' | 'widgetSettings' | 'widgetValues' | 'dmNotePath' | 'tokenSettings' | 'initiative' | 'initiativeTrackerOpen' | 'diceLog' | 'pinnedNotePreviews' | 'lootRoller'>;
+
+/**
+ * What a scene holds before its file is read: a new view starts from it and
+ * `clearMapState` returns to it, so a scene whose file lacks a field never keeps
+ * the previous scene's value.
+ */
+const createInitialSceneState = (): SceneState => ({
   grid: {
     enabled: true,
     visible: true,
@@ -355,21 +358,24 @@ const createInitialState = (): Pick<ViewAtlasState, 'schema' | 'version' | 'mapP
     audios: {},
   },
   camera: { x: 0, y: 0, scale: 1 },
-  persistenceEnabled: true,
   widgetSettings: createDefaultWidgets(),
   widgetValues: {}, // Widget values stored separately
   dmNotePath: null, // DM note linking
-  tokenSettings: {
-    showNameplates: false,
-    showHPBars: true,
-    showStressBars: true,
-    showInstanceBadges: true,
-    tokenRingSize: 1
-  },
+  tokenSettings: { ...DEFAULT_TOKEN_SETTINGS },
   initiative: createDefaultInitiativeState(),
+  initiativeTrackerOpen: false,
   diceLog: [],
   pinnedNotePreviews: {},
   lootRoller: createInitialLootRollerState(),
+});
+
+const createInitialState = (): Pick<ViewAtlasState, 'schema' | 'version' | 'mapPath' | 'background' | 'persistenceEnabled'> & SceneState => ({
+  schema: ATLAS_SCHEMA,
+  version: ATLAS_VERSION,
+  mapPath: null,
+  background: null,
+  persistenceEnabled: true,
+  ...createInitialSceneState(),
 });
 
 /**
@@ -505,12 +511,6 @@ export function createViewAtlasStore(app: App, viewId: string, plugin?: AtlasVTT
           // Collection management (not persisted)
           ...(plugin && { plugin }),
           currentCollectionId: 'default', // Default to 'default' collection
-          
-          // DM Dashboard state
-          dmNotePath: null,
-          
-          // Token settings
-          tokenSettings: { ...DEFAULT_TOKEN_SETTINGS },
           
           // Per-store persistence control (not persisted)
           persistenceEnabled: true,
@@ -1229,47 +1229,11 @@ export function createViewAtlasStore(app: App, viewId: string, plugin?: AtlasVTT
             draft._audioDirty = true;
           }),
 
-          // Clear all map state when switching maps
+          // Clear all map state when switching maps. The map path stays, because storage
+          // saves to it; the new map sets its own background.
           clearMapState: () => set((draft) => {
-            // Preserve the mapPath as it's needed for storage operations
-            
-            // Create completely fresh empty objects to ensure no state bleeds through
-            draft.objects = {
-              tokens: {},
-              fog: {},
-              pins: {},
-              texts: {},
-              drawings: {},
-              walls: {},
-              lights: {},
-              audios: {},
-            };
-            // Reset grid to defaults
-            draft.grid = {
-              enabled: true,
-              visible: true,
-              snapToGrid: true,
-              type: 'square',
-              size: 70,
-              offsetX: 0,
-              offsetY: 0,
-              opacity: 0.5,
-              lineType: 'solid',
-              lineWidth: 1
-            };
-            // Reset camera to origin
-            draft.camera = { x: 0, y: 0, scale: 1 };
+            Object.assign(draft, createInitialSceneState());
             draft.selectedIds = [];
-            draft.dmNotePath = null;
-            // Maps without saved widgets must not inherit the previous map's
-            draft.widgetSettings = createDefaultWidgets();
-            draft.widgetValues = {};
-            draft.pinnedNotePreviews = {};
-            draft.lootRoller = createInitialLootRollerState();
-
-            // Note: We don't clear background here - it will be set by the new map
-            // Note: We don't clear mapPath - it must be preserved for storage adapter
-            
           }),
 
           // Token ring actions
@@ -1381,13 +1345,10 @@ export function createViewAtlasStore(app: App, viewId: string, plugin?: AtlasVTT
             draft.objects.tokens = updatedTokens;
           }),
 
-          // --- Initiative Tracker State & Actions (from initiativeSlice.ts) ---
-          initiative: createDefaultInitiativeState(),
-          initiativeTrackerOpen: false,
+          // --- Initiative Tracker Actions (from initiativeSlice.ts) ---
           ...createInitiativeActions(set, viewId),
 
           // --- Dice Roll Log (persisted per map) ---
-          diceLog: [],
           addDiceLogEntry: (entry: DiceRollResult) => set((draft) => {
             draft.diceLog.unshift(entry);
             if (draft.diceLog.length > 20) {
@@ -1399,11 +1360,9 @@ export function createViewAtlasStore(app: App, viewId: string, plugin?: AtlasVTT
           }),
 
           // --- Pinned note previews (persisted per map) ---
-          pinnedNotePreviews: {},
           ...createPinnedNotePreviewActions(set),
 
           // --- Loot roller window (persisted per map) ---
-          lootRoller: createInitialLootRollerState(),
           ...createLootRollerActions(set),
 
           // --- Per-view UI visibility (from uiSlice.ts) ---
