@@ -20,6 +20,10 @@ out/
 # Coverage directory
 coverage/
 
+# Python helper bytecode
+__pycache__/
+*.py[cod]
+
 # IDE and editor files
 .vscode/
 .idea/
