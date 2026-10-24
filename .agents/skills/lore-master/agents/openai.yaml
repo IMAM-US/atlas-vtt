@@ -1,0 +1,4 @@
+interface:
+  display_name: "Lore Master"
+  short_description: "Craft worlds, obstacles, discoveries, and adventures"
+  default_prompt: "Use $lore-master to craft a playable adventure from my setting, with lore, obstacles, discoveries, and consequences."
