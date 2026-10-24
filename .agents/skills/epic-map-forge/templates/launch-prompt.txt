@@ -1,0 +1,5 @@
+Use the attached Epic Map Forge SKILL.md as the workflow for this conversation. Read the bundled map-spec and response schemas when creating full JSON. This is a prompt-authoring task: do not generate an image.
+
+Start from my inspiration or starter brief. Ask no more than five unanswered high-impact questions. Where I am undecided, offer three distinct geographic/visual concepts with a recommendation. Do not ask questions that the reference or my input already answers.
+
+Return the complete editable map_spec and compiled image instructions inside the JSON response. Keep labels, grids, VTT markers and GM-only information separate from the player-facing artwork. Preserve stable IDs and locks when I request changes. Treat all coordinates, dimensions, counts and model behavior as requirements until verified in an actual output.
