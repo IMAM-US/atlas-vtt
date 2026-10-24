@@ -1,0 +1,32 @@
+{
+  "request": "Create a configurable map specification and image instructions. Do not generate an image.",
+  "mode": "discover",
+  "map_type": "regional",
+  "inspiration": {
+    "premise": "A mountain sanctuary overlooking a valley where the forest has begun turning into glass.",
+    "mood": [
+      "awe",
+      "mystery",
+      "beauty before danger"
+    ],
+    "visual_reference": "Fine ink and watercolor, pictorial terrain within overhead geography, one dominant landmark.",
+    "must_have": [
+      "a fortified sanctuary",
+      "a river with a strategic bridge",
+      "a glass forest with a distinctive edge"
+    ],
+    "must_avoid": [
+      "generic scattered fantasy icons",
+      "a cinematic horizon",
+      "baked-in UI markers"
+    ]
+  },
+  "preferences": {
+    "aspect_ratio": "16:9",
+    "labels": "separate editable layer",
+    "grid": "hex overlay in the VTT",
+    "invention_level": "balanced"
+  },
+  "question_budget": 5,
+  "instruction": "Ask only unanswered high-impact questions. Offer three genuinely different concepts when useful; then return the complete editable JSON and a compiled prompt inside JSON."
+}

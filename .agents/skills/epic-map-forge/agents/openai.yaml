@@ -1,0 +1,6 @@
+interface:
+  display_name: "Epic Map Forge"
+  short_description: "Editable JSON map briefs and VTT image prompts"
+  default_prompt: "Use $epic-map-forge to develop a fantasy map from my inspiration, ask only high-impact unanswered questions, and return editable JSON with compiled image instructions. Do not generate an image."
+policy:
+  allow_implicit_invocation: true
